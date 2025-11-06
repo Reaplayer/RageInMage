@@ -41,7 +41,7 @@ struct FEffectProperties
 };
 
 template<class T>
-using TStaticFuncPtr = typename TBaseStaticDelegateInstance<T, FDefaultDelegateUserPolicy>::FFuncPtr;
+using TStaticFuncPtr = TBaseStaticDelegateInstance<T, FDefaultDelegateUserPolicy>::FFuncPtr;
 
 /*
  * 
@@ -59,10 +59,9 @@ public:
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 
 	TMap<FGameplayTag, TStaticFuncPtr<FGameplayAttribute()>> TagsToAttributes;
+
 	
-	/*
-	 * Primary Attributes
-	 */
+	/* Primary Attributes */
 	
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Strength, Category = "Primary Attributes")
 	FGameplayAttributeData Strength;
@@ -86,9 +85,8 @@ public:
 	FGameplayAttributeData Endurance;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Endurance);
 
-	/*
-	 * Secondary Attributes
-	 */
+	
+	/* Secondary Attributes */
 	
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_PhysicalAttack, Category = "Secondary Attributes")
 	FGameplayAttributeData PhysicalAttack;
@@ -127,9 +125,54 @@ public:
 	FGameplayAttributeData MaxMana;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, MaxMana);
 
-	/*
-	 * Vital Attributes
-	 */
+
+	/* Resistance Attributes */
+	
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Resistance_PhysicalDamage, Category = "Resistance Attributes")
+	FGameplayAttributeData Resistance_PhysicalDamage;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Resistance_PhysicalDamage);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Resistance_PhysicalDamage_Slashing, Category = "Resistance Attributes")
+	FGameplayAttributeData Resistance_PhysicalDamage_Slashing;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Resistance_PhysicalDamage_Slashing);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Resistance_PhysicalDamage_Piercing, Category = "Resistance Attributes")
+	FGameplayAttributeData Resistance_PhysicalDamage_Piercing;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Resistance_PhysicalDamage_Piercing);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Resistance_PhysicalDamage_Bludgeoning, Category = "Resistance Attributes")
+	FGameplayAttributeData Resistance_PhysicalDamage_Bludgeoning;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Resistance_PhysicalDamage_Bludgeoning);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Resistance_MagicalDamage, Category = "Resistance Attributes")
+	FGameplayAttributeData Resistance_MagicalDamage;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Resistance_MagicalDamage);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Resistance_MagicalDamage_Fire, Category = "Resistance Attributes")
+	FGameplayAttributeData Resistance_MagicalDamage_Fire;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Resistance_MagicalDamage_Fire);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Resistance_MagicalDamage_Cold, Category = "Resistance Attributes")
+	FGameplayAttributeData Resistance_MagicalDamage_Cold;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Resistance_MagicalDamage_Cold);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Resistance_MagicalDamage_Electric, Category = "Resistance Attributes")
+	FGameplayAttributeData Resistance_MagicalDamage_Electric;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Resistance_MagicalDamage_Electric);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Resistance_MagicalDamage_Poison, Category = "Resistance Attributes")
+	FGameplayAttributeData Resistance_MagicalDamage_Poison;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Resistance_MagicalDamage_Poison);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Resistance_MagicalDamage_Acid, Category = "Resistance Attributes")
+	FGameplayAttributeData Resistance_MagicalDamage_Acid;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Resistance_MagicalDamage_Acid);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Resistance_MagicalDamage_Shadow, Category = "Resistance Attributes")
+	FGameplayAttributeData Resistance_MagicalDamage_Shadow;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Resistance_MagicalDamage_Shadow);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Resistance_MagicalDamage_Radiant, Category = "Resistance Attributes")
+	FGameplayAttributeData Resistance_MagicalDamage_Radiant;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Resistance_MagicalDamage_Radiant);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Resistance_MagicalDamage_Force, Category = "Resistance Attributes")
+	FGameplayAttributeData Resistance_MagicalDamage_Force;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Resistance_MagicalDamage_Force);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Resistance_MagicalDamage_Psychic, Category = "Resistance Attributes")
+	FGameplayAttributeData Resistance_MagicalDamage_Psychic;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Resistance_MagicalDamage_Psychic);
+
+	
+	/* Vital Attributes */
 	
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Health, Category = "Vital Attributes")
 	FGameplayAttributeData Health;
@@ -138,17 +181,35 @@ public:
 	FGameplayAttributeData Mana;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Mana);
 
-	/*
-	 * Meta Attributes
-	 */
 
+	/* Item Specific Attributes */
+	
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_PhysicalDefencePenetrationPercentage, Category = "Item Specific Attributes")
+	FGameplayAttributeData PhysicalDefencePenetrationPercentage;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, PhysicalDefencePenetrationPercentage);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MagicalDefencePenetrationPercentage, Category = "Item Specific Attributes")
+	FGameplayAttributeData MagicalDefencePenetrationPercentage;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, MagicalDefencePenetrationPercentage);
+
+	
+	/* Meta Attributes */
+	
 	UPROPERTY(BlueprintReadOnly, Category = "Meta Attributes")
 	FGameplayAttributeData IncomingDamage;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, IncomingDamage);
 
-	/*
-	 * Primary Attributes
-	 */
+
+	/* Mechanics Attributes */
+	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	FGameplayAttributeData Heat;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Heat);
+	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	FGameplayAttributeData Charge;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Charge);
+	
+
+	
+	/* Primary Attributes */
 	
 	UFUNCTION()
 	void OnRep_Strength(const FGameplayAttributeData& OldStrength) const;
@@ -165,9 +226,8 @@ public:
 	UFUNCTION()
 	void OnRep_Endurance(const FGameplayAttributeData& OldEndurance) const;
 
-	/*
-	 * Secondary Attributes
-	 */
+	
+	/* Secondary Attributes */
 	
 	UFUNCTION()
 	void OnRep_PhysicalAttack(const FGameplayAttributeData& OldPhysicalAttack) const;
@@ -194,16 +254,64 @@ public:
 	UFUNCTION()
 	void OnRep_MaxMana(const FGameplayAttributeData& OldMaxMana) const;
 
-	/*
-	 * Vital Attributes
-	 */
+	
+	/* Vital Attributes */
 	
 	UFUNCTION()
 	void OnRep_Health(const FGameplayAttributeData& OldHealth) const;
 	UFUNCTION()
 	void OnRep_Mana(const FGameplayAttributeData& OldMana) const;
+
+
+	/* Resistance Attributes */
+	
+	UFUNCTION()
+	void OnRep_Resistance_PhysicalDamage(const FGameplayAttributeData& OldResistance_PhysicalDamage) const;
+	UFUNCTION()
+	void OnRep_Resistance_PhysicalDamage_Slashing(const FGameplayAttributeData& OldResistance_PhysicalDamage_Slashing) const;
+	UFUNCTION()
+	void OnRep_Resistance_PhysicalDamage_Piercing(const FGameplayAttributeData& OldResistance_PhysicalDamage_Piercing) const;
+	UFUNCTION()
+	void OnRep_Resistance_PhysicalDamage_Bludgeoning(const FGameplayAttributeData& OldResistance_PhysicalDamage_Bludgeoning) const;
+	UFUNCTION()
+	void OnRep_Resistance_MagicalDamage(const FGameplayAttributeData& OldResistance_MagicalDamage) const;
+	UFUNCTION()
+	void OnRep_Resistance_MagicalDamage_Fire(const FGameplayAttributeData& OldResistance_MagicalDamage_Fire) const;
+	UFUNCTION()
+	void OnRep_Resistance_MagicalDamage_Cold(const FGameplayAttributeData& OldResistance_MagicalDamage_Cold) const;
+	UFUNCTION()
+	void OnRep_Resistance_MagicalDamage_Electric(const FGameplayAttributeData& OldResistance_MagicalDamage_Electric) const;
+	UFUNCTION()
+	void OnRep_Resistance_MagicalDamage_Poison(const FGameplayAttributeData& OldResistance_MagicalDamage_Poison) const;
+	UFUNCTION()
+	void OnRep_Resistance_MagicalDamage_Acid(const FGameplayAttributeData& OldResistance_MagicalDamage_Acid) const;
+	UFUNCTION()
+	void OnRep_Resistance_MagicalDamage_Shadow(const FGameplayAttributeData& OldResistance_MagicalDamage_Shadow) const;
+	UFUNCTION()
+	void OnRep_Resistance_MagicalDamage_Radiant(const FGameplayAttributeData& OldResistance_MagicalDamage_Radiant) const;
+	UFUNCTION()
+	void OnRep_Resistance_MagicalDamage_Force(const FGameplayAttributeData& OldResistance_MagicalDamage_Force) const;
+	UFUNCTION()
+	void OnRep_Resistance_MagicalDamage_Psychic(const FGameplayAttributeData& OldResistance_MagicalDamage_Psychic) const;
+
+
+	/* Item Specific Attributes */
+	
+	UFUNCTION()
+	void OnRep_PhysicalDefencePenetrationPercentage(const FGameplayAttributeData& OldPhysicalDefencePenetrationPercentage) const;
+	UFUNCTION()
+	void OnRep_MagicalDefencePenetrationPercentage(const FGameplayAttributeData& OldMagicalDefencePenetrationPercentage) const;
+
+
+	/* Mechanics Attributes */
+	UFUNCTION()
+	void OnRep_Heat(const FGameplayAttributeData& OldHeat) const;
+	UFUNCTION()
+	void OnRep_Charge(const FGameplayAttributeData& OldCharge) const;
+	
+	
 	
 private:
 	void SetEffectProperties(const FGameplayEffectModCallbackData& Data, FEffectProperties& Properties) const;
-	void ShowFloatingText(const FEffectProperties& Properties, float Damage) const;
+	void ShowFloatingText(const FEffectProperties& Properties, float Damage, bool bIsCriticalHit, bool bIsVulnerableHit, bool bIsResistantHit) const;
 };

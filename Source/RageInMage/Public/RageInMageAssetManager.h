@@ -15,9 +15,8 @@ class RAGEINMAGE_API URageInMageAssetManager : public UAssetManager
 	GENERATED_BODY()
 
 public:
-
 	static URageInMageAssetManager& Get();
 
-	protected:
+protected:
 	virtual void StartInitialLoading() override;
 };

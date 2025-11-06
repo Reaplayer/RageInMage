@@ -2,7 +2,8 @@
 
 
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
-#include  "Game/RageInMageGameModeBase.h"
+#include "RageInMageAbilitySystemTypes.h"
+#include "Game/RageInMageGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/WidgetController/MageWidgetController.h"
 #include "Player/MagePlayerState.h"
@@ -70,16 +71,84 @@ void URageInMageAbilitySystemLibrary::InitializeDefaultAttributes(const UObject*
 }
 
 void URageInMageAbilitySystemLibrary::GiveStartupAbilities(const UObject* WorldContextObject,
-	UAbilitySystemComponent* ASC)
+	UAbilitySystemComponent* ASC, ECharacterClass CharacterClass)
 {
-	ARageInMageGameModeBase* GameMode = Cast<ARageInMageGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
-	if (!GameMode) return;
-
-	UCharacterClassInfo* CharacterClassInfo = GameMode->CharacterClassInfo;
+	UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
+	if (!CharacterClassInfo) return;
 	for (TSubclassOf<UGameplayAbility> AbilityClass : CharacterClassInfo->CommonAbilities)
 	{
 		FGameplayAbilitySpec(AbilityClass, 1);
+		ASC->GiveAbility(AbilityClass);
+	}
+
+	const FCharacterClassDefaultInfo& CharacterClassDefaultInfo = CharacterClassInfo->GetCharacterClassDefaultInfo(CharacterClass);
+	for (TSubclassOf<UGameplayAbility> AbilityClass : CharacterClassDefaultInfo.StartupAbilities)
+	{
+		if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(ASC->GetAvatarActor()))
+		{
+			FGameplayAbilitySpec(AbilityClass, CombatInterface->GetPlayerLevel());
+			ASC->GiveAbility(AbilityClass);
+		}
 	}
 	
-	
+}
+
+UCharacterClassInfo* URageInMageAbilitySystemLibrary::GetCharacterClassInfo(const UObject* WorldContextObject)
+{
+	ARageInMageGameModeBase* GameMode = Cast<ARageInMageGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
+	if (!GameMode) return nullptr;
+	return GameMode->CharacterClassInfo;
+}
+
+bool URageInMageAbilitySystemLibrary::IsCriticalHit(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FRageInMageGameplayEffectContext* RInMEffectContext = static_cast<const FRageInMageGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return RInMEffectContext->IsCriticalHit();
+	}
+	return false;
+}
+
+bool URageInMageAbilitySystemLibrary::IsVulnerableHit(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FRageInMageGameplayEffectContext* RInMEffectContext = static_cast<const FRageInMageGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return RInMEffectContext->IsVulnerableHit();
+	}
+	return false;
+}
+
+bool URageInMageAbilitySystemLibrary::IsResistantHit(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FRageInMageGameplayEffectContext* RInMEffectContext = static_cast<const FRageInMageGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return RInMEffectContext->IsResistantHit();
+	}
+	return false;
+}
+
+void URageInMageAbilitySystemLibrary::SetIsCriticalHit(FGameplayEffectContextHandle& EffectContextHandle,
+                                                       bool bInIsCritHit)
+{
+	if (FRageInMageGameplayEffectContext* RInMEffectContext = static_cast<FRageInMageGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		RInMEffectContext->SetIsCriticalHit(bInIsCritHit);
+	}
+}
+
+void URageInMageAbilitySystemLibrary::SetIsVulnerableHit(FGameplayEffectContextHandle& EffectContextHandle,
+	bool bInIsVulnerableHit)
+{
+	if (FRageInMageGameplayEffectContext* RInMEffectContext = static_cast<FRageInMageGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		RInMEffectContext->SetIsVulnerableHit(bInIsVulnerableHit);
+	}
+}
+
+void URageInMageAbilitySystemLibrary::SetIsResistantHit(FGameplayEffectContextHandle& EffectContextHandle, bool bIsResistantHit)
+{
+	if (FRageInMageGameplayEffectContext* RInMEffectContext = static_cast<FRageInMageGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		RInMEffectContext->SetIsResistantHit(bIsResistantHit);
+	}
 }

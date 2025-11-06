@@ -8,12 +8,13 @@
 #include "Net/UnrealNetwork.h"
 #include "GameplayEffectExtension.h"
 #include "RageInMageGameplayTags.h"
+#include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
 #include "Interaction/CombatInterface.h"
-#include "Kismet/GameplayStatics.h"
 #include "Player/MagePlayerController.h"
 
 URageInMageAttributeSet::URageInMageAttributeSet()
 {
+	// Populate Map of Gameplay Tags to their Attributes
 	const FRageInMageGameplayTags& GameplayTags = FRageInMageGameplayTags::Get();
 	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Agility, GetAgilityAttribute);
 	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Dexterity, GetDexterityAttribute);
@@ -50,10 +51,12 @@ void URageInMageAttributeSet::PreAttributeChange(const FGameplayAttribute& Attri
 {
 	Super::PreAttributeChange(Attribute, NewValue);
 
+	// Make Sure Health cannot go below 0 or above MaxHealth
 	if (Attribute == GetHealthAttribute())
 	{
 		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxHealth());
 	}
+	// Make Sure Mana cannot go below 0 or above MaxMana
 	if (Attribute == GetManaAttribute())
 	{
 		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxMana());
@@ -64,13 +67,14 @@ void URageInMageAttributeSet::SetEffectProperties(const FGameplayEffectModCallba
 	FEffectProperties& Properties) const
 {
 	// Source = causer of the effect, Target = Target of the effect (Owner of this AS)
-	
+	// Get Context Handle
 	Properties.EffectContextHandle = Data.EffectSpec.GetContext();
-	
+	// Get Source Ability System Component
 	Properties.SourceASC = Properties.EffectContextHandle.GetOriginalInstigatorAbilitySystemComponent();
-
+	
 	if (IsValid(Properties.SourceASC) && Properties.SourceASC->AbilityActorInfo.IsValid() && Properties.SourceASC->AbilityActorInfo->AvatarActor.IsValid())
 	{
+		// Get Source Properties
 		Properties.SourceAvatarActor = Properties.SourceASC->AbilityActorInfo->AvatarActor.Get();
 		Properties.SourceController = Properties.SourceASC->AbilityActorInfo->PlayerController.Get();
 		if (Properties.SourceController == nullptr && Properties.SourceAvatarActor != nullptr)
@@ -87,10 +91,11 @@ void URageInMageAttributeSet::SetEffectProperties(const FGameplayEffectModCallba
 	}
 	if (Data.Target.AbilityActorInfo.IsValid() && Data.Target.AbilityActorInfo->AvatarActor.IsValid())
 	{
+		// Get Target Properties
 		Properties.TargetAvatarActor = Data.Target.AbilityActorInfo->AvatarActor.Get();
 		Properties.TargetController = Data.Target.AbilityActorInfo->PlayerController.Get();
 
-		//Checking whether this is an AI controller
+		//Check whether this is an AI controller
 		if (Properties.TargetController == nullptr && Properties.TargetAvatarActor != nullptr)
 		{
 			Properties.TargetCharacter = Cast<ACharacter>(Properties.TargetAvatarActor);
@@ -110,15 +115,17 @@ void URageInMageAttributeSet::PostGameplayEffectExecute(const FGameplayEffectMod
 
 	FEffectProperties Properties;
 	SetEffectProperties(Data, Properties);
-
+	// Health Change
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{
 		SetHealth(FMath::Clamp(GetHealth(), 0.f, GetMaxHealth()));
 	};
+	// Mana Change
 	if (Data.EvaluatedData.Attribute == GetManaAttribute())
 	{
 		SetMana(FMath::Clamp(GetMana(), 0.f, GetMaxMana()));
 	}
+	// Incoming Damage
 	if (Data.EvaluatedData.Attribute == GetIncomingDamageAttribute())
 	{
 		const float LocalDamage = GetIncomingDamage();
@@ -127,8 +134,7 @@ void URageInMageAttributeSet::PostGameplayEffectExecute(const FGameplayEffectMod
 		{
 			const float NewHealth = GetHealth() - LocalDamage;
 			SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
-			const bool bFatal = NewHealth <= 0.f;
-			if (bFatal)
+			if (NewHealth <= 0.f)
 			{
 				if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(Properties.TargetAvatarActor))
 				{
@@ -141,19 +147,53 @@ void URageInMageAttributeSet::PostGameplayEffectExecute(const FGameplayEffectMod
 				TagContainer.AddTag(FRageInMageGameplayTags::Get().Effects_HitReaction);
 				Properties.TargetASC->TryActivateAbilitiesByTag(TagContainer);
 			}
-
-			ShowFloatingText(Properties, LocalDamage);
+			const bool bCritHit = URageInMageAbilitySystemLibrary::IsCriticalHit(Properties.EffectContextHandle);
+			const bool bVulnerableHit = URageInMageAbilitySystemLibrary::IsVulnerableHit(Properties.EffectContextHandle);
+			const bool bResistantHit = URageInMageAbilitySystemLibrary::IsResistantHit(Properties.EffectContextHandle);
+			ShowFloatingText(Properties, LocalDamage, bCritHit, bVulnerableHit, bResistantHit);
+		}
+	}
+	// Set Heat Mechanic Change
+	if (Data.EvaluatedData.Attribute == GetHeatAttribute())
+	{
+		const float LocalHeat = FMath::Clamp(GetHeat() + Data.EvaluatedData.Magnitude, -120.f, 120.f);
+		SetHeat(0.f);
+		if (LocalHeat >= 100.f)
+		{
+			
+		}
+		else if (LocalHeat < 0.f)
+		{
+			if (LocalHeat <= -100.f)
+			{
+				
+			}
+			
+		}
+	}
+	// Set Charge Mechanic Change
+	if (Data.EvaluatedData.Attribute == GetChargeAttribute())
+	{
+		const float LocalCharge = FMath::Clamp(GetCharge() + Data.EvaluatedData.Magnitude, 0.f, 120.f);
+		SetCharge(0.f);
+		if (LocalCharge >= 30.f)
+		{
+			if (LocalCharge >= 100.f)
+			{
+				
+			}
+			
 		}
 	}
 }
 
-void URageInMageAttributeSet::ShowFloatingText(const FEffectProperties& Properties, float Damage) const
+void URageInMageAttributeSet::ShowFloatingText(const FEffectProperties& Properties, float Damage, bool bIsCriticalHit, bool bIsVulnerableHit, bool bIsResistantHit) const
 {
 	if (Properties.SourceCharacter != Properties.TargetCharacter)
 	{
-		if (AMagePlayerController* PC = Cast<AMagePlayerController>(UGameplayStatics::GetPlayerController(Properties.SourceController, 0)))
+		if (AMagePlayerController* PC = Cast<AMagePlayerController>(Properties.SourceController))
 		{
-			PC->ShowDamageNumber(Damage, Properties.TargetCharacter);
+			PC->ShowDamageNumber(Damage, Properties.TargetCharacter, bIsCriticalHit, bIsVulnerableHit, bIsResistantHit);
 		}
 	}
 }
@@ -263,4 +303,96 @@ void URageInMageAttributeSet::OnRep_Mana(const FGameplayAttributeData& OldMana) 
 void URageInMageAttributeSet::OnRep_MaxMana(const FGameplayAttributeData& OldMaxMana) const
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, MaxMana, OldMaxMana);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_PhysicalDamage(const FGameplayAttributeData& OldResistance_PhysicalDamage) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_PhysicalDamage, OldResistance_PhysicalDamage);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_PhysicalDamage_Slashing(const FGameplayAttributeData& OldResistance_PhysicalDamage_Slashing) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_PhysicalDamage_Slashing, OldResistance_PhysicalDamage_Slashing);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_PhysicalDamage_Piercing(const FGameplayAttributeData& OldResistance_PhysicalDamage_Piercing) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_PhysicalDamage_Piercing, OldResistance_PhysicalDamage_Piercing);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_PhysicalDamage_Bludgeoning(const FGameplayAttributeData& OldResistance_PhysicalDamage_Bludgeoning) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_PhysicalDamage_Bludgeoning, OldResistance_PhysicalDamage_Bludgeoning);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage(const FGameplayAttributeData& OldResistance_MagicalDamage) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage, OldResistance_MagicalDamage);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Fire(const FGameplayAttributeData& OldResistance_MagicalDamage_Fire) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Fire, OldResistance_MagicalDamage_Fire);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Cold(const FGameplayAttributeData& OldResistance_MagicalDamage_Cold) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Cold, OldResistance_MagicalDamage_Cold);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Electric(const FGameplayAttributeData& OldResistance_MagicalDamage_Electric) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Electric, OldResistance_MagicalDamage_Electric);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Poison(const FGameplayAttributeData& OldResistance_MagicalDamage_Poison) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Poison, OldResistance_MagicalDamage_Poison);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Acid(const FGameplayAttributeData& OldResistance_MagicalDamage_Acid) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Acid, OldResistance_MagicalDamage_Acid);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Shadow(const FGameplayAttributeData& OldResistance_MagicalDamage_Shadow) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Shadow, OldResistance_MagicalDamage_Shadow);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Radiant(const FGameplayAttributeData& OldResistance_MagicalDamage_Radiant) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Radiant, OldResistance_MagicalDamage_Radiant);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Force(const FGameplayAttributeData& OldResistance_MagicalDamage_Force) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Force, OldResistance_MagicalDamage_Force);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Psychic(const FGameplayAttributeData& OldResistance_MagicalDamage_Psychic) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Psychic, OldResistance_MagicalDamage_Psychic);
+}
+
+void URageInMageAttributeSet::OnRep_PhysicalDefencePenetrationPercentage(
+	const FGameplayAttributeData& OldPhysicalDefencePenetrationPercentage) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, PhysicalDefencePenetrationPercentage, OldPhysicalDefencePenetrationPercentage);
+}
+
+void URageInMageAttributeSet::OnRep_MagicalDefencePenetrationPercentage(
+	const FGameplayAttributeData& OldMagicalDefencePenetrationPercentage) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, MagicalDefencePenetrationPercentage, OldMagicalDefencePenetrationPercentage);
+}
+
+void URageInMageAttributeSet::OnRep_Heat(const FGameplayAttributeData& OldHeat) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Heat, OldHeat);
+}
+
+void URageInMageAttributeSet::OnRep_Charge(const FGameplayAttributeData& OldCharge) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Charge, OldCharge);
 }

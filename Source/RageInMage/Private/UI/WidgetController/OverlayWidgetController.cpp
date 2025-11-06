@@ -49,6 +49,7 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 		}
 	);
 
+	
 	Cast<URageInMageAbilitySystemComponent>(AbilitySystemComponent)->EffectAssetTags.AddLambda(
 	[this](const FGameplayTagContainer& AssetTags)
 	{
@@ -65,4 +66,4 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 			}
 		}
 	);
-	}
+}

@@ -4,6 +4,9 @@
 #include "Character/EnemyCharacter.h"
 
 #include "RageInMageGameplayTags.h"
+#include "AI/RageInMageAIController.h"
+#include "BehaviorTree/BehaviorTree.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
 #include  "AbilitySystem/RageInMageAbilitySystemLibrary.h"
 #include "AbilitySystem/RageInMageAttributeSet.h"
@@ -19,10 +22,31 @@ AEnemyCharacter::AEnemyCharacter()
 	AbilitySystemComponent = CreateDefaultSubobject<URageInMageAbilitySystemComponent>("AbilitySystemComponent");
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
+
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationYaw = false;
+	bUseControllerRotationRoll = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+
 	AttributeSet = CreateDefaultSubobject<URageInMageAttributeSet>("AttributeSet");
 
 	HealthBar = CreateDefaultSubobject<UWidgetComponent>("HealthBar");
 	HealthBar->SetupAttachment(GetRootComponent());
+}
+
+void AEnemyCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (!HasAuthority()) return;
+	AIController = Cast<ARageInMageAIController>(NewController);
+	AIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviourTree->BlackboardAsset);
+	AIController->RunBehaviorTree(BehaviourTree);
+	AIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);
+	if (CharacterClass != ECharacterClass::Warrior)
+	{
+		AIController->GetBlackboardComponent()->SetValueAsBool(FName("RangedAttacker"), true);
+	}
 }
 
 void AEnemyCharacter::HighlightActor()
@@ -37,6 +61,16 @@ void AEnemyCharacter::UnHighlightActor()
 {
 	GetMesh()->SetRenderCustomDepth(false);
 	Weapon->SetRenderCustomDepth(false);
+}
+
+void AEnemyCharacter::SetCombatTarget_Implementation(AActor* InCombatTarget)
+{
+	CombatTarget = InCombatTarget;
+}
+
+AActor* AEnemyCharacter::GetCombatTarget_Implementation() const
+{
+	return CombatTarget;
 }
 
 int32 AEnemyCharacter::GetPlayerLevel()
@@ -54,6 +88,7 @@ void AEnemyCharacter::HitReactionTagChanged(const FGameplayTag CallbackTag, int3
 {
 	bHitReacting = NewCount > 0;
 	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0.f : BaseWalkSpeed;
+	AIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);
 }
 
 void AEnemyCharacter::BeginPlay()
@@ -61,8 +96,12 @@ void AEnemyCharacter::BeginPlay()
 	Super::BeginPlay();
 	InitPlayerAbilityActorInfo();
 	URageInMageAttributeSet* RInMAS = Cast<URageInMageAttributeSet>(AttributeSet);
-	GetCharacterMovement()->MaxWalkSpeed = RInMAS->GetMovementSpeed();
-	URageInMageAbilitySystemLibrary::GiveStartupAbilities(this, AbilitySystemComponent);
+	BaseWalkSpeed = RInMAS->GetMovementSpeed();
+	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
+	if (HasAuthority())
+	{
+		URageInMageAbilitySystemLibrary::GiveStartupAbilities(this, AbilitySystemComponent, CharacterClass);
+	}
 
 	if (UMageUserWidget* EnemyUserWidget = Cast<UMageUserWidget>(HealthBar->GetUserWidgetObject()))
 	{
@@ -95,12 +134,21 @@ void AEnemyCharacter::BeginPlay()
 
 void AEnemyCharacter::InitPlayerAbilityActorInfo()
 {
+	checkf(AbilitySystemComponent, TEXT("ASC is null on %s. Ensure BP parent is AEnemyCharacter and ASC is inherited."), *GetName());
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 	Cast<URageInMageAbilitySystemComponent>(AbilitySystemComponent)->AbilityActorInfoSet();
-	InitializeDefaultAttributes();
+	if (HasAuthority())
+	{
+		InitializeDefaultAttributes();
+	}
 }
 
 void AEnemyCharacter::InitializeDefaultAttributes() const
 {
 	URageInMageAbilitySystemLibrary::InitializeDefaultAttributes(this, CharacterClass, Level, AbilitySystemComponent);
+}
+
+void AEnemyCharacter::CreateAbilitySystemComponentSet()
+{
+	
 }

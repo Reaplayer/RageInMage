@@ -18,4 +18,12 @@ public:
 	UExecCalc_Damage();
 
 	virtual void Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const override;
+
+	static void SetCriticalHit (const FGameplayEffectSpec& Spec, bool bIsCriticalHit);
+	static void SetVulnerableHit (const FGameplayEffectSpec& Spec, bool bIsVulnerableHit);
+	static void SetResistantHit (const FGameplayEffectSpec& Spec, bool bIsResistantHit);
+
+private:
+	
+	const TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition>& GetTagsToCaptureDefs() const;
 };

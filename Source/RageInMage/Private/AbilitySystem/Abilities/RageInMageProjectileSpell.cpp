@@ -26,7 +26,7 @@ void URageInMageProjectileSpell::SpawnProjectile(const FVector& ProjectileTarget
 	{
 		// Set where to spawn the Projectile from
 		const FVector SocketLocation = CombatInterface->GetCombatSocketLocation();
-		FRotator Rotation = (ProjectileTargetLocation - SocketLocation).Rotation(); Rotation.Pitch = 0.f;
+		FRotator Rotation = (ProjectileTargetLocation - SocketLocation).Rotation();
 		FTransform SpawnTransform;
 		SpawnTransform.SetLocation(SocketLocation);
 		SpawnTransform.SetRotation(Rotation.Quaternion());
@@ -43,13 +43,12 @@ void URageInMageProjectileSpell::SpawnProjectile(const FVector& ProjectileTarget
 		const UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetAvatarActorFromActorInfo());
 		FGameplayEffectContextHandle EffectContextHandle = SourceASC->MakeEffectContext();
 		EffectContextHandle.SetAbility(this);
+		EffectContextHandle.AddInstigator(GetOwningActorFromActorInfo(), GetAvatarActorFromActorInfo());
 		EffectContextHandle.AddSourceObject(Projectile);
 		TArray<TWeakObjectPtr<AActor>> Actors;
 		EffectContextHandle.AddActors(Actors);
 		FHitResult HitResult;
 		HitResult.Location = ProjectileTargetLocation;
-		HitResult.Normal = FVector(0, 0, 0);
-		HitResult.ImpactPoint = FVector(0, 0, 0);
 		EffectContextHandle.AddHitResult(HitResult);
 
 		// Make the Spec Handle

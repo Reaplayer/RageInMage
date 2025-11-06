@@ -2,8 +2,6 @@
 
 
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
-
-#include "MeshPaintVisualize.h"
 #include "AbilitySystem/Abilities/RageInMageGameplayAbility.h"
 
 void URageInMageAbilitySystemComponent::AbilityActorInfoSet()
@@ -16,6 +14,9 @@ void URageInMageAbilitySystemComponent::AddCharacterAbilities(
 {
 	for (const TSubclassOf<UGameplayAbility> AbilityClass : StartupAbilities)
 	{
+		// Check the Ability Class is Valid
+		if (!AbilityClass) continue;
+		// Create the Ability Spec
 		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, 1);
 		if (const URageInMageGameplayAbility* MageAbility = Cast<URageInMageGameplayAbility>(AbilitySpec.Ability))
 		{

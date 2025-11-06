@@ -29,7 +29,7 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 	UFUNCTION(Client, Reliable)
-	void ShowDamageNumber(float DamageAmount, ACharacter* TargetCharacter);
+	void ShowDamageNumber(float DamageAmount, ACharacter* TargetCharacter, bool bIsCriticalHit, bool bIsVulnerableHit, bool bIsResistantHit);
 
 protected:
 	virtual void BeginPlay() override;

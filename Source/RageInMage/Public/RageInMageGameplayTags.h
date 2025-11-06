@@ -16,6 +16,7 @@ public:
 static const FRageInMageGameplayTags& Get() {return GameplayTags;}
 	static void InitializeNativeGameplayTags();
 
+	
 	/* Primary Attributes */
 	FGameplayTag Attributes_Primary_Strength;
 	FGameplayTag Attributes_Primary_Dexterity;
@@ -25,6 +26,7 @@ static const FRageInMageGameplayTags& Get() {return GameplayTags;}
 	FGameplayTag Attributes_Primary_Endurance;
 	FGameplayTag Attributes_Primary_Vigor;
 
+	
 	/* Secondary Attributes */
 	FGameplayTag Attributes_Secondary_PhysicalAttack;
 	FGameplayTag Attributes_Secondary_MagicalAttack;
@@ -39,13 +41,24 @@ static const FRageInMageGameplayTags& Get() {return GameplayTags;}
 	FGameplayTag Attributes_Secondary_MaxHealth;
 	FGameplayTag Attributes_Secondary_MaxMana;
 
+	
 	/* Vital Attributes */
 	FGameplayTag Attributes_Vital_Health;
 	FGameplayTag Attributes_Vital_Mana;
+	
 
 	/* Item Attributes */
 	FGameplayTag Attributes_Item_PhysicalDefencePenetrationPercentage;
 	FGameplayTag Attributes_Item_MagicalDefencePenetrationPercentage;
+
+
+	/* Mechanics Attributes */
+	FGameplayTag Attributes_Mechanics_Heat;
+	FGameplayTag Attributes_Mechanics_Charge;
+
+
+	/* Ability Tags */
+	FGameplayTag Ability_Attack;
 
 
 	/* Input Tags */
@@ -56,6 +69,7 @@ static const FRageInMageGameplayTags& Get() {return GameplayTags;}
 	FGameplayTag InputTag_3;
 	FGameplayTag InputTag_4;
 
+	
 	/* Damage Type Tags */
 	FGameplayTag DamageType_PhysicalDamage;
 	FGameplayTag DamageType_PhysicalDamage_Slashing;
@@ -72,33 +86,55 @@ static const FRageInMageGameplayTags& Get() {return GameplayTags;}
 	FGameplayTag DamageType_MagicalDamage_Force;
 	FGameplayTag DamageType_MagicalDamage_Psychic;
 
-	TArray<FGameplayTag> DamageTypes;
+	
+	/* Resistances */
+	FGameplayTag Resistance_PhysicalDamage;
+	FGameplayTag Resistance_PhysicalDamage_Slashing;
+	FGameplayTag Resistance_PhysicalDamage_Piercing;
+	FGameplayTag Resistance_PhysicalDamage_Bludgeoning;
+	FGameplayTag Resistance_MagicalDamage;
+	FGameplayTag Resistance_MagicalDamage_Fire;
+	FGameplayTag Resistance_MagicalDamage_Cold;
+	FGameplayTag Resistance_MagicalDamage_Electric;
+	FGameplayTag Resistance_MagicalDamage_Poison;
+	FGameplayTag Resistance_MagicalDamage_Acid;
+	FGameplayTag Resistance_MagicalDamage_Shadow;
+	FGameplayTag Resistance_MagicalDamage_Radiant;
+	FGameplayTag Resistance_MagicalDamage_Force;
+	FGameplayTag Resistance_MagicalDamage_Psychic;
+
+	TMap<FGameplayTag, FGameplayTag> DamageTypesToResistances;
+
 	
 	/* Effect Tags */
 	FGameplayTag Effects_HitReaction;
 
+	
 	/* Crowd Control Effect Tags */
-	FGameplayTag Effects_CrowdControl_Healing;
-	FGameplayTag Effects_CrowdControl_Burning;
-	FGameplayTag Effects_CrowdControl_Slowed;
-	FGameplayTag Effects_CrowdControl_Frozen;
-	FGameplayTag Effects_CrowdControl_Paralysed;
-	FGameplayTag Effects_CrowdControl_Stunned;
-	FGameplayTag Effects_CrowdControl_Rooted;
-	FGameplayTag Effects_CrowdControl_Pushed;
-	FGameplayTag Effects_CrowdControl_Invisible;
-	FGameplayTag Effects_CrowdControl_Airborne;
-	FGameplayTag Effects_CrowdControl_Untouchable;
-	FGameplayTag Effects_CrowdControl_Immune;
-	FGameplayTag Effects_CrowdControl_Petrified;
-	FGameplayTag Effects_CrowdControl_Reflecting;
-	FGameplayTag Effects_CrowdControl_Grappled;
-	FGameplayTag Effects_CrowdControl_Silenced;
-	FGameplayTag Effects_CrowdControl_SoulBound;
-	FGameplayTag Effects_CrowdControl_Slammed;
-	FGameplayTag Effects_CrowdControl_Constricted;
-	FGameplayTag Effects_CrowdControl_Confused;
-	FGameplayTag Effects_CrowdControl_Poisoned;
+	FGameplayTag Effects_Debuff_Healing;
+	FGameplayTag Effects_Debuff_Burning;
+	FGameplayTag Effects_Debuff_Slowed;
+	FGameplayTag Effects_Debuff_Frozen;
+	FGameplayTag Effects_Debuff_Paralysed;
+	FGameplayTag Effects_Debuff_Stunned;
+	FGameplayTag Effects_Debuff_Rooted;
+	FGameplayTag Effects_Debuff_Pushed;
+	FGameplayTag Effects_Debuff_Invisible;
+	FGameplayTag Effects_Debuff_Airborne;
+	FGameplayTag Effects_Debuff_Untouchable;
+	FGameplayTag Effects_Debuff_Immune;
+	FGameplayTag Effects_Debuff_Petrified;
+	FGameplayTag Effects_Debuff_Reflecting;
+	FGameplayTag Effects_Debuff_Grappled;
+	FGameplayTag Effects_Debuff_Silenced;
+	FGameplayTag Effects_Debuff_SoulBound;
+	FGameplayTag Effects_Debuff_Slammed;
+	FGameplayTag Effects_Debuff_Constricted;
+	FGameplayTag Effects_Debuff_Confused;
+	FGameplayTag Effects_Debuff_Poisoned;
+	FGameplayTag Effects_Debuff_Shocked;
+	FGameplayTag Effects_Debuff_Charged;
+	FGameplayTag Effects_Debuff_OverCharged;
 	
 
 protected:

@@ -9,19 +9,27 @@ struct FRageInMageGameplayEffectContext : public FGameplayEffectContext
 	GENERATED_BODY()
 	
 public:
+	// Constructor
+	FRageInMageGameplayEffectContext()
+		: FGameplayEffectContext()
+	{
+	}
+	
 	bool IsCriticalHit() const { return bIsCriticalHit; }
 	bool IsVulnerableHit() const { return bIsVulnerableHit; }
+	bool IsResistantHit() const { return bIsResistantHit; }
 
 	void SetIsCriticalHit(bool bIsInCriticalHit) { bIsCriticalHit = bIsInCriticalHit; }
 	void SetIsVulnerableHit(bool bIsInVulnerableHit) { bIsVulnerableHit = bIsInVulnerableHit; }
+	void SetIsResistantHit(bool bIsInResistantHit) { bIsResistantHit = bIsInResistantHit; }
 
 	/* Returns the actual struct used for Serialization, subclasses must override this! */
-	virtual UScriptStruct* GetScriptStruct() const
+	virtual UScriptStruct* GetScriptStruct() const override
 	{
 		return StaticStruct();
 	}
 
-	virtual FRageInMageGameplayEffectContext* Duplicate() const
+	virtual FRageInMageGameplayEffectContext* Duplicate() const override
 	{
 		FRageInMageGameplayEffectContext* NewContext = new FRageInMageGameplayEffectContext();
 		*NewContext = *this;
@@ -41,10 +49,13 @@ protected:
 	bool bIsCriticalHit = false;
 	UPROPERTY()
 	bool bIsVulnerableHit = false;
+	UPROPERTY()
+	bool bIsResistantHit = false;
 };
 
+// Required template specialization for proper memory management
 template<>
-struct TStructOpsTypeTraits<FRageInMageGameplayEffectContext> : TStructOpsTypeTraitsBase2<FRageInMageGameplayEffectContext>
+struct TStructOpsTypeTraits<FRageInMageGameplayEffectContext> : public TStructOpsTypeTraitsBase2<FRageInMageGameplayEffectContext>
 {
 	enum
 	{
