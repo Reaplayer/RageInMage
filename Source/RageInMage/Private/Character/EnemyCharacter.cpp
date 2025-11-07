@@ -147,8 +147,3 @@ void AEnemyCharacter::InitializeDefaultAttributes() const
 {
 	URageInMageAbilitySystemLibrary::InitializeDefaultAttributes(this, CharacterClass, Level, AbilitySystemComponent);
 }
-
-void AEnemyCharacter::CreateAbilitySystemComponentSet()
-{
-	
-}

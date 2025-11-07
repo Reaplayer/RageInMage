@@ -56,7 +56,7 @@ void AMageCharacterBase::BeginPlay()
 	Super::BeginPlay();
 }
 
-FVector AMageCharacterBase::GetCombatSocketLocation()
+FVector AMageCharacterBase::GetCombatSocketLocation_Implementation()
 {
 	check (Weapon);
 	return Weapon->GetSocketLocation(WeaponTipSocketName);
