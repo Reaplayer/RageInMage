@@ -300,4 +300,16 @@ void FRageInMageGameplayTags::InitializeNativeGameplayTags()
 
 	GameplayTags.Effects_Debuff_OverCharged = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Effects.Debuff.OverCharged"), FString("Tag for when OverCharged, able for Electric Spells to chain from you."));;
+
+
+	/* Montage Tags */
+	
+	GameplayTags.Montage_Attack_Weapon = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Montage.Attack.Weapon"), FString("Tag for when attacking with Weapon."));
+	
+	GameplayTags.Montage_Attack_LeftHand = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Montage.Attack.LeftHand"), FString("Tag for when attacking with Left Hand."));
+	
+	GameplayTags.Montage_Attack_RightHand = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Montage.Attack.RightHand"), FString("Tag for when attacking with Right Hand."));
 }

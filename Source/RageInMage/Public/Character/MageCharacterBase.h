@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
 #include "GameFramework/Character.h"
+#include "AbilitySystem/RageInMageAttributeSet.h"
 #include "Interaction/CombatInterface.h"
 #include "MageCharacterBase.generated.h"
 
@@ -24,12 +25,22 @@ public:
 	AMageCharacterBase();
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UAttributeSet* GetAttributeSet() const { return AttributeSet; };
+	URageInMageAttributeSet* GetRageInMageAttributeSet() const { return CastChecked<URageInMageAttributeSet>(AttributeSet.Get()); }
 
+	/* Combat Interface */
 	virtual UAnimMontage* GetHitReactionMontage_Implementation() override;
 	virtual void Die() override;
+	virtual FVector GetCombatSocketLocation_Implementation(const FGameplayTag& AttackMontageTag) override;
+	virtual bool IsDead_Implementation() const override;
+	virtual AActor* GetAvatar_Implementation() override;
+	virtual TArray<FTaggedMontages> GetAttackMontages_Implementation() override;
+	/* End Combat Interface */
 
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MulticastHandleDeath();
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	TArray<FTaggedMontages> AttackMontages;
 
 protected:
 	virtual void BeginPlay() override;
@@ -39,8 +50,14 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	FName WeaponTipSocketName;
-	
-	virtual FVector GetCombatSocketLocation_Implementation() override;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	FName LeftHandSocketName;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	FName RightHandSocketName;
+
+	bool bDead = false;
 
 	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;

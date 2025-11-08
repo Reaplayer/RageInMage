@@ -135,6 +135,12 @@ static const FRageInMageGameplayTags& Get() {return GameplayTags;}
 	FGameplayTag Effects_Debuff_Shocked;
 	FGameplayTag Effects_Debuff_Charged;
 	FGameplayTag Effects_Debuff_OverCharged;
+
+
+	/* Montage Tags */
+	FGameplayTag Montage_Attack_Weapon;
+	FGameplayTag Montage_Attack_LeftHand;
+	FGameplayTag Montage_Attack_RightHand;
 	
 
 protected:

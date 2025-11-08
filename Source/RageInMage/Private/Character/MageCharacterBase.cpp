@@ -3,6 +3,7 @@
 
 #include "Character/MageCharacterBase.h"
 
+#include "RageInMageGameplayTags.h"
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
 #include "Components/CapsuleComponent.h"
 
@@ -56,10 +57,37 @@ void AMageCharacterBase::BeginPlay()
 	Super::BeginPlay();
 }
 
-FVector AMageCharacterBase::GetCombatSocketLocation_Implementation()
+FVector AMageCharacterBase::GetCombatSocketLocation_Implementation(const FGameplayTag& AttackMontageTag)
 {
-	check (Weapon);
-	return Weapon->GetSocketLocation(WeaponTipSocketName);
+	const FRageInMageGameplayTags& GameplayTags = FRageInMageGameplayTags::Get();
+	if (AttackMontageTag.MatchesTagExact(GameplayTags.Montage_Attack_Weapon))
+	{
+		return Weapon->GetSocketLocation(WeaponTipSocketName);
+	}
+	if (AttackMontageTag.MatchesTagExact(GameplayTags.Montage_Attack_RightHand))
+	{
+		return Weapon->GetSocketLocation(RightHandSocketName);
+	}
+	if (AttackMontageTag.MatchesTagExact(GameplayTags.Montage_Attack_LeftHand))
+	{
+		return Weapon->GetSocketLocation(LeftHandSocketName);
+	}
+	return FVector::ZeroVector;
+}
+
+bool AMageCharacterBase::IsDead_Implementation() const
+{
+	return bDead;
+}
+
+AActor* AMageCharacterBase::GetAvatar_Implementation()
+{
+	return this;
+}
+
+TArray<FTaggedMontages> AMageCharacterBase::GetAttackMontages_Implementation()
+{
+	return AttackMontages;
 }
 
 void AMageCharacterBase::InitPlayerAbilityActorInfo()

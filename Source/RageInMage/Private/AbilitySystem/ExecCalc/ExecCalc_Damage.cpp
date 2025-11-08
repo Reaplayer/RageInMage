@@ -255,7 +255,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 
 					// Capture Target's Resistance to DamageType
 					const FGameplayEffectAttributeCaptureDefinition* CaptureDef = nullptr;
-					for (const auto& CapturePair : DamageStatics().ResistanceTagsToCaptureDefs)
+					for (const auto& CapturePair : DamageStatics().GetResistanceTagsToCaptureDefs())
 					{
 						if (CapturePair.Key.MatchesTagExact(Pair.Value))
 						{

@@ -5,6 +5,7 @@
 #include "RageInMageAbilitySystemTypes.h"
 #include "Game/RageInMageGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/OverlapResult.h"
 #include "UI/WidgetController/MageWidgetController.h"
 #include "Player/MagePlayerState.h"
 #include "RageInMage/RageInMageGameMode.h"
@@ -150,5 +151,31 @@ void URageInMageAbilitySystemLibrary::SetIsResistantHit(FGameplayEffectContextHa
 	if (FRageInMageGameplayEffectContext* RInMEffectContext = static_cast<FRageInMageGameplayEffectContext*>(EffectContextHandle.Get()))
 	{
 		RInMEffectContext->SetIsResistantHit(bIsResistantHit);
+	}
+}
+
+void URageInMageAbilitySystemLibrary::GetLivePlayersWithinRadius(const UObject* WorldContextObject, float Radius,
+	TArray<AActor*>& OutOverlappingActors, TArray<AActor*>& ActorsToIgnore, const FVector& SphereOrigin)
+{
+	FCollisionQueryParams SphereParams;
+	SphereParams.AddIgnoredActors(ActorsToIgnore);
+
+	if (const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
+	{
+		TArray<FOverlapResult> OverlappingActors;
+		World->OverlapMultiByObjectType(
+			OverlappingActors,
+			SphereOrigin,
+			FQuat::Identity,
+			FCollisionObjectQueryParams::InitType::AllDynamicObjects,
+			FCollisionShape::MakeSphere(Radius),
+			SphereParams);
+		for (FOverlapResult& Overlap : OverlappingActors)
+		{
+			if (Overlap.GetActor()->Implements<UCombatInterface>() && !ICombatInterface::Execute_IsDead(Overlap.GetActor()))
+			{
+				OutOverlappingActors.AddUnique(ICombatInterface::Execute_GetAvatar(Overlap.GetActor()));
+			}
+		}
 	}
 }

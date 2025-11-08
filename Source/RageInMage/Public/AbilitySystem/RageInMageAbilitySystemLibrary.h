@@ -53,4 +53,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "RageInMAgeAbilitySystemLibrary|GameplayEffects")
 	static void SetIsResistantHit(FGameplayEffectContextHandle& EffectContextHandle, bool bIsResistantHit);
+
+	UFUNCTION(blueprintCallable, Category = "RageInMageAbilitySystemLibrary|GameplayMechanics")
+	static void GetLivePlayersWithinRadius(const UObject* WorldContextObject, float Radius, TArray<AActor*>& OutOverlappingActors, TArray<AActor*>& ActorsToIgnore, const FVector& SphereOrigin);
 };

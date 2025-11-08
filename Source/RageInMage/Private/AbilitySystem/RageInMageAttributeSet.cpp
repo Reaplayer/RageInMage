@@ -187,11 +187,17 @@ void URageInMageAttributeSet::PostGameplayEffectExecute(const FGameplayEffectMod
 	}
 }
 
+
 void URageInMageAttributeSet::ShowFloatingText(const FEffectProperties& Properties, float Damage, bool bIsCriticalHit, bool bIsVulnerableHit, bool bIsResistantHit) const
 {
 	if (Properties.SourceCharacter != Properties.TargetCharacter)
 	{
 		if (AMagePlayerController* PC = Cast<AMagePlayerController>(Properties.SourceController))
+		{
+			PC->ShowDamageNumber(Damage, Properties.TargetCharacter, bIsCriticalHit, bIsVulnerableHit, bIsResistantHit);
+			return;
+		}
+		if (AMagePlayerController* PC = Cast<AMagePlayerController>(Properties.TargetController))
 		{
 			PC->ShowDamageNumber(Damage, Properties.TargetCharacter, bIsCriticalHit, bIsVulnerableHit, bIsResistantHit);
 		}
