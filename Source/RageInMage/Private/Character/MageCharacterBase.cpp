@@ -66,11 +66,11 @@ FVector AMageCharacterBase::GetCombatSocketLocation_Implementation(const FGamepl
 	}
 	if (AttackMontageTag.MatchesTagExact(GameplayTags.Montage_Attack_RightHand))
 	{
-		return Weapon->GetSocketLocation(RightHandSocketName);
+		return GetMesh()->GetSocketLocation(RightHandSocketName);
 	}
 	if (AttackMontageTag.MatchesTagExact(GameplayTags.Montage_Attack_LeftHand))
 	{
-		return Weapon->GetSocketLocation(LeftHandSocketName);
+		return GetMesh()->GetSocketLocation(LeftHandSocketName);
 	}
 	return FVector::ZeroVector;
 }

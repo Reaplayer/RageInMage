@@ -87,7 +87,7 @@ void AEnemyCharacter::Die()
 void AEnemyCharacter::HitReactionTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
 {
 	bHitReacting = NewCount > 0;
-	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0.f : GetRageInMageAttributeSet()->GetMovementSpeed();
+	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0.f : BaseWalkSpeed + GetRageInMageAttributeSet()->GetMovementSpeed();
 	AIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);
 }
 
@@ -95,7 +95,7 @@ void AEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	InitPlayerAbilityActorInfo();
-	GetCharacterMovement()->MaxWalkSpeed = GetRageInMageAttributeSet()->GetMovementSpeed();
+	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed + GetRageInMageAttributeSet()->GetMovementSpeed();
 	if (HasAuthority())
 	{
 		URageInMageAbilitySystemLibrary::GiveStartupAbilities(this, AbilitySystemComponent, CharacterClass);
