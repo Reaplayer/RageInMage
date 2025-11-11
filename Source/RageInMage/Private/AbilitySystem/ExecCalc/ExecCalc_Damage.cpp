@@ -182,8 +182,8 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	const UAbilitySystemComponent* SourceASC = ExecutionParams.GetSourceAbilitySystemComponent();
 	const UAbilitySystemComponent* TargetASC = ExecutionParams.GetTargetAbilitySystemComponent();
 	/* Get Avatars */
-	const AActor* SourceAvatar = SourceASC ? SourceASC->GetAvatarActor() : nullptr;
-	const AActor* TargetAvatar = TargetASC ? TargetASC->GetAvatarActor() : nullptr;
+	AActor* SourceAvatar = SourceASC ? SourceASC->GetAvatarActor() : nullptr;
+	AActor* TargetAvatar = TargetASC ? TargetASC->GetAvatarActor() : nullptr;
 	/* Get Spec */
 	const FGameplayEffectSpec& Spec = ExecutionParams.GetOwningSpec();
 	/* Get Tags */
@@ -193,246 +193,249 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	EvaluationParams.SourceTags = SourceTags;
 	EvaluationParams.TargetTags = TargetTags;
 	
-
-	// Search Through Source Tags for DamageType Tags
-	for (FGameplayTag Tag : *SourceTags)
+	if (!URageInMageAbilitySystemLibrary::IsFriendly(SourceAvatar, TargetAvatar))
 	{
-		// Search through DamageType Gameplay Tags
-		for(const TPair<FGameplayTag, FGameplayTag>& Pair : FRageInMageGameplayTags::Get().DamageTypesToResistances)
-		{
-			// Match Source DamageType Tag With DamageToResistance Tag
-			if (Pair.Key.MatchesTagExact(Tag))
-			{
-				//Check if Damage Type is Physical Damage
-				if (Pair.Key.MatchesTag(FGameplayTag::RequestGameplayTag(FName("DamageType.PhysicalDamage"))))
-				{
-					// Get Damage Set by Caller Magnitude
-					float DamageTypeValue = Spec.GetSetByCallerMagnitude(Pair.Key);
-
-		 	
-					// Get Attacker's Physical Attack
-					float SourcePhysicalAttack = 0.f;
-					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().PhysicalAttackDef, EvaluationParams, SourcePhysicalAttack);
-					SourcePhysicalAttack = FMath::Max<float>(SourcePhysicalAttack, 0.f);
-	
-			
-					// Increase Damage by Physical Attack
-					DamageTypeValue *= 1 + SourcePhysicalAttack / 100.f;
-
-		 	
-					// Get Attacker's Critical Chance
-					float SourceCriticalChance = 0.f;
-					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CriticalChanceDef, EvaluationParams, SourceCriticalChance);
-					SourceCriticalChance = FMath::Max<float>(SourceCriticalChance, 0.f);
-			
-					if (FMath::RandRange(1, 100) <= SourceCriticalChance)
-					{
-						// Get Attacker's Critical Damage
-						float SourceCriticalDamage = 0.f;
-						ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CriticalDamageDef, EvaluationParams, SourceCriticalDamage);
-						// Increase Damage based on Critical Damage
-						DamageTypeValue *= 1 + SourceCriticalDamage / 100.f;
-						SetCriticalHit(Spec, true);
-					}
-
-					// Check to see if Target is Resistant or Vulnerable to Physical Damage
-					float PhysicalResistance = 0.f;
-					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().Resistance_PhysicalDamageDef, EvaluationParams, PhysicalResistance);
-					if (PhysicalResistance != 0.f)
-					{
-						DamageTypeValue *= 1 - PhysicalResistance / 100.f;
-						// Set the Vulnerable or Resistant Hit variables for Show Damage Numbers
-						if (PhysicalResistance < 0.f)
-						{
-							SetVulnerableHit(Spec, true);
-						}
-						else
-						{
-							SetResistantHit(Spec, true);
-						}
-					}
-
-
-					// Capture Target's Resistance to DamageType
-					const FGameplayEffectAttributeCaptureDefinition* CaptureDef = nullptr;
-					for (const auto& CapturePair : DamageStatics().GetResistanceTagsToCaptureDefs())
-					{
-						if (CapturePair.Key.MatchesTagExact(Pair.Value))
-						{
-							CaptureDef = &CapturePair.Value;
-							break;
-						}
-					}
-					float DamageTypeResistanceValue = 0.f;
-					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(*CaptureDef, EvaluationParams, DamageTypeResistanceValue);
-					// Check to see if Target is Resistant to DamageType
-					if (DamageTypeResistanceValue != 0.f)
-					{
-						DamageTypeResistanceValue = FMath::Clamp(DamageTypeResistanceValue, -100.f, 100.f);
-						DamageTypeValue *= 1 - DamageTypeResistanceValue / 100.f;
-						// Set the Vulnerable or Resistant Hit variables for Show Damage Numbers
-						if (DamageTypeResistanceValue < 0.f)
-						{
-							SetVulnerableHit(Spec, true);
-						}
-						else if (DamageTypeResistanceValue > 0.f)
-						{
-							SetResistantHit(Spec, true);
-						}
-					}
-			
-
-					// Get Target's Defence
-					float TargetDefence = 0.f;
-					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().PhysicalDefenceDef, EvaluationParams, TargetDefence);
-					TargetDefence = FMath::Max<float>(TargetDefence, 0.f);
-					// Get Attacker's Defence Penetration Percentage
-					float SourceDefencePenetrationPercentage = 0.f;
-					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().PhysicalDefencePenetrationPercentageDef, EvaluationParams, SourceDefencePenetrationPercentage);
-					SourceDefencePenetrationPercentage = FMath::Max<float>(SourceDefencePenetrationPercentage, 0.f);
-					TargetDefence *= (1 - SourceDefencePenetrationPercentage);
-					// Get Attacker's Defence Penetration
-					float SourceDefencePenetration = 0.f;
-					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().PhysicalDefencePenetrationDef, EvaluationParams, SourceDefencePenetration);
-					SourceDefencePenetration = FMath::Max<float>(SourceDefencePenetration, 0.f);
-					// Reduce Damage based on Target's Effective Defence
-					float EffectiveDefence = TargetDefence - SourceDefencePenetration;
-					DamageTypeValue *= (1 - (EffectiveDefence / (EffectiveDefence + 100.f)));
-
-			
-					//Do Damage
-					FGameplayModifierEvaluatedData DamageData (URageInMageAttributeSet::GetIncomingDamageAttribute(), EGameplayModOp::Override, DamageTypeValue);
-					OutExecutionOutput.AddOutputModifier(DamageData);	
-				}
-
-				// Check if Damage Type is Magical Damage
-				if (Pair.Key.MatchesTag(FGameplayTag::RequestGameplayTag(FName("DamageType.MagicalDamage"))))
-				{
-					// Get Damage Set by Caller Magnitude
-					float DamageTypeValue = Spec.GetSetByCallerMagnitude(Pair.Key);
-					// Make Local Mechanics Variables
-					float HeatDamage = 0.f;
-					float ChargeDamage = 0.f;
-					
-					if (Pair.Key.MatchesTagExact(FRageInMageGameplayTags::Get().DamageType_MagicalDamage_Fire) ||
-						Pair.Key.MatchesTagExact(FRageInMageGameplayTags::Get().DamageType_MagicalDamage_Cold))	
-					{
-						HeatDamage = Spec.GetSetByCallerMagnitude(FRageInMageGameplayTags::Get().Attributes_Mechanics_Heat);
-					}
-					if (Pair.Key.MatchesTagExact(FRageInMageGameplayTags::Get().DamageType_MagicalDamage_Electric))
-					{
-						ChargeDamage = Spec.GetSetByCallerMagnitude(FRageInMageGameplayTags::Get().Attributes_Mechanics_Charge);
-					}
-
-			
-					// Get Attacker's Magical Attack
-					float SourceMagicalAttack = 0.f;
-					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().MagicalAttackDef, EvaluationParams, SourceMagicalAttack);
-					SourceMagicalAttack = FMath::Max<float>(SourceMagicalAttack, 0.f);
-					// Increase Damage by Magical Attack
-					DamageTypeValue *= 1 + SourceMagicalAttack / 100.f;
-
-			
-					// Get Attacker's Critical Chance
-					float SourceCriticalChance = 0.f;
-					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CriticalChanceDef, EvaluationParams, SourceCriticalChance);
-					SourceCriticalChance = FMath::Max<float>(SourceCriticalChance, 0.f);
-					// Check whether the Hit is Critical
-					if (FMath::RandRange(1, 100) <= SourceCriticalChance)
-					{
-						// Get Attacker's Critical Damage
-						float SourceCriticalDamage = 0.f;
-						ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CriticalDamageDef, EvaluationParams, SourceCriticalDamage);
-						// Increase Damage based on Critical Damage
-						DamageTypeValue *= 1 + SourceCriticalDamage / 100.f;
-						// Set the Critical Hit variable for Show Damage Numbers
-						SetCriticalHit(Spec, true);
-						HeatDamage *= 1.5f;
-						ChargeDamage *= 1.5f;
-					}
-
-
-					// Capture Target's Resistance to Magical Damage
-					float MagicalResistance = 0.f;
-					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().Resistance_MagicalDamageDef, EvaluationParams, MagicalResistance);
-					// Check to see if Target is Resistant or Vulnerable to Magical Damage
-					if (MagicalResistance != 0.f)
-					{
-						DamageTypeValue *= 1 - MagicalResistance / 100.f;
-						if (DamageTypeValue < 0.f)
-						{
-							SetVulnerableHit(Spec, true);
-						}
-						else if (DamageTypeValue > 0.f)
-						{
-							SetResistantHit(Spec, true);
-						}
-					}
-
-
-					// Find Target's Resistance to DamageType
-					const FGameplayEffectAttributeCaptureDefinition* CaptureDef = nullptr;
-					for (const auto CapturePair : DamageStatics().GetResistanceTagsToCaptureDefs())
-					{
-						if (Pair.Value.MatchesTagExact(CapturePair.Key))
-						{
-							CaptureDef = &CapturePair.Value;
-							break;
-						}
-					}
-					// Capture Resistance Value
-					float DamageTypeResistanceValue = 0.f;
-					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(*CaptureDef, EvaluationParams, DamageTypeResistanceValue);
-					// Check to see if Target is Resistant or Vulnerable to DamageType
-					if (DamageTypeResistanceValue != 0.f)
-					{
-						DamageTypeResistanceValue = FMath::Clamp(DamageTypeResistanceValue, -100.f, 100.f);
-						DamageTypeResistanceValue = DamageTypeResistanceValue / 100.f;
-						DamageTypeValue *= 1 - DamageTypeResistanceValue;
-						HeatDamage *= 1 - DamageTypeResistanceValue;
-						ChargeDamage *= 1 - DamageTypeResistanceValue;
-
-						// Set the Vulnerable or Resistant Hit variables for Show Damage Numbers
-						if (DamageTypeResistanceValue < 0.f)
-						{
-							SetVulnerableHit(Spec, true);
-						}
-						else if (DamageTypeResistanceValue > 0.f)
-						{
-							SetResistantHit(Spec, true);
-						}
-					}
-
-			
-					// Get Target's Defence
-					float TargetDefence = 0.f;
-					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().MagicalDefenceDef, EvaluationParams, TargetDefence);
-					TargetDefence = FMath::Max<float>(TargetDefence, 0.f);
-					// Get Attacker's Defence Penetration Percentage
-					float SourceDefencePenetrationPercentage = 0.f;
-					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().MagicalDefencePenetrationPercentageDef, EvaluationParams, SourceDefencePenetrationPercentage);
-					SourceDefencePenetrationPercentage = FMath::Clamp<float>(SourceDefencePenetrationPercentage, 0.f, 100.f);
-					TargetDefence *= (1 - SourceDefencePenetrationPercentage / 100.f);
-					// Get Attacker's Defence Penetration
-					float SourceDefencePenetration = 0.f;
-					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().MagicalDefencePenetrationDef, EvaluationParams, SourceDefencePenetration);
-					SourceDefencePenetration = FMath::Max<float>(SourceDefencePenetration, 0.f);
-					// Reduce Damage based on Target's Effective Defence
-					float EffectiveDefence = TargetDefence - SourceDefencePenetration;
-					DamageTypeValue *= (1- (EffectiveDefence / (EffectiveDefence + 100.f)));
-
-
-					// Do Damage && Apply Heat && Charge
-					FGameplayModifierEvaluatedData DamageData (URageInMageAttributeSet::GetIncomingDamageAttribute(), EGameplayModOp::Additive, DamageTypeValue);
-					OutExecutionOutput.AddOutputModifier(DamageData);
-					FGameplayModifierEvaluatedData HeatData (URageInMageAttributeSet::GetHeatAttribute(), EGameplayModOp::Additive, HeatDamage);
-					OutExecutionOutput.AddOutputModifier(HeatData);
-					FGameplayModifierEvaluatedData ChargeData (URageInMageAttributeSet::GetChargeAttribute(), EGameplayModOp::Additive, ChargeDamage);
-					OutExecutionOutput.AddOutputModifier(ChargeData);
-				}
-			}
-		}
+		// Search Through Source Tags for DamageType Tags
+        	for (FGameplayTag Tag : *SourceTags)
+        	{
+        		// Search through DamageType Gameplay Tags
+        		for(const TPair<FGameplayTag, FGameplayTag>& Pair : FRageInMageGameplayTags::Get().DamageTypesToResistances)
+        		{
+        			// Match Source DamageType Tag With DamageToResistance Tag
+        			if (Pair.Key.MatchesTagExact(Tag))
+        			{
+        				//Check if Damage Type is Physical Damage
+        				if (Pair.Key.MatchesTag(FGameplayTag::RequestGameplayTag(FName("DamageType.PhysicalDamage"))))
+        				{
+        					// Get Damage Set by Caller Magnitude
+        					float DamageTypeValue = Spec.GetSetByCallerMagnitude(Pair.Key);
+        
+        		 	
+        					// Get Attacker's Physical Attack
+        					float SourcePhysicalAttack = 0.f;
+        					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().PhysicalAttackDef, EvaluationParams, SourcePhysicalAttack);
+        					SourcePhysicalAttack = FMath::Max<float>(SourcePhysicalAttack, 0.f);
+        	
+        			
+        					// Increase Damage by Physical Attack
+        					DamageTypeValue *= 1 + SourcePhysicalAttack / 100.f;
+        
+        		 	
+        					// Get Attacker's Critical Chance
+        					float SourceCriticalChance = 0.f;
+        					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CriticalChanceDef, EvaluationParams, SourceCriticalChance);
+        					SourceCriticalChance = FMath::Max<float>(SourceCriticalChance, 0.f);
+        			
+        					if (FMath::RandRange(1, 100) <= SourceCriticalChance)
+        					{
+        						// Get Attacker's Critical Damage
+        						float SourceCriticalDamage = 0.f;
+        						ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CriticalDamageDef, EvaluationParams, SourceCriticalDamage);
+        						// Increase Damage based on Critical Damage
+        						DamageTypeValue *= 1 + SourceCriticalDamage / 100.f;
+        						SetCriticalHit(Spec, true);
+        					}
+        
+        					// Check to see if Target is Resistant or Vulnerable to Physical Damage
+        					float PhysicalResistance = 0.f;
+        					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().Resistance_PhysicalDamageDef, EvaluationParams, PhysicalResistance);
+        					if (PhysicalResistance != 0.f)
+        					{
+        						DamageTypeValue *= 1 - PhysicalResistance / 100.f;
+        						// Set the Vulnerable or Resistant Hit variables for Show Damage Numbers
+        						if (PhysicalResistance < 0.f)
+        						{
+        							SetVulnerableHit(Spec, true);
+        						}
+        						else
+        						{
+        							SetResistantHit(Spec, true);
+        						}
+        					}
+        
+        
+        					// Capture Target's Resistance to DamageType
+        					const FGameplayEffectAttributeCaptureDefinition* CaptureDef = nullptr;
+        					for (const auto& CapturePair : DamageStatics().GetResistanceTagsToCaptureDefs())
+        					{
+        						if (CapturePair.Key.MatchesTagExact(Pair.Value))
+        						{
+        							CaptureDef = &CapturePair.Value;
+        							break;
+        						}
+        					}
+        					float DamageTypeResistanceValue = 0.f;
+        					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(*CaptureDef, EvaluationParams, DamageTypeResistanceValue);
+        					// Check to see if Target is Resistant to DamageType
+        					if (DamageTypeResistanceValue != 0.f)
+        					{
+        						DamageTypeResistanceValue = FMath::Clamp(DamageTypeResistanceValue, -100.f, 100.f);
+        						DamageTypeValue *= 1 - DamageTypeResistanceValue / 100.f;
+        						// Set the Vulnerable or Resistant Hit variables for Show Damage Numbers
+        						if (DamageTypeResistanceValue < 0.f)
+        						{
+        							SetVulnerableHit(Spec, true);
+        						}
+        						else if (DamageTypeResistanceValue > 0.f)
+        						{
+        							SetResistantHit(Spec, true);
+        						}
+        					}
+        			
+        
+        					// Get Target's Defence
+        					float TargetDefence = 0.f;
+        					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().PhysicalDefenceDef, EvaluationParams, TargetDefence);
+        					TargetDefence = FMath::Max<float>(TargetDefence, 0.f);
+        					// Get Attacker's Defence Penetration Percentage
+        					float SourceDefencePenetrationPercentage = 0.f;
+        					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().PhysicalDefencePenetrationPercentageDef, EvaluationParams, SourceDefencePenetrationPercentage);
+        					SourceDefencePenetrationPercentage = FMath::Max<float>(SourceDefencePenetrationPercentage, 0.f);
+        					TargetDefence *= (1 - SourceDefencePenetrationPercentage);
+        					// Get Attacker's Defence Penetration
+        					float SourceDefencePenetration = 0.f;
+        					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().PhysicalDefencePenetrationDef, EvaluationParams, SourceDefencePenetration);
+        					SourceDefencePenetration = FMath::Max<float>(SourceDefencePenetration, 0.f);
+        					// Reduce Damage based on Target's Effective Defence
+        					float EffectiveDefence = TargetDefence - SourceDefencePenetration;
+        					DamageTypeValue *= (1 - (EffectiveDefence / (EffectiveDefence + 100.f)));
+        
+        			
+        					//Do Damage
+        					FGameplayModifierEvaluatedData DamageData (URageInMageAttributeSet::GetIncomingDamageAttribute(), EGameplayModOp::Override, DamageTypeValue);
+        					OutExecutionOutput.AddOutputModifier(DamageData);	
+        				}
+        
+        				// Check if Damage Type is Magical Damage
+        				if (Pair.Key.MatchesTag(FGameplayTag::RequestGameplayTag(FName("DamageType.MagicalDamage"))))
+        				{
+        					// Get Damage Set by Caller Magnitude
+        					float DamageTypeValue = Spec.GetSetByCallerMagnitude(Pair.Key);
+        					// Make Local Mechanics Variables
+        					float HeatDamage = 0.f;
+        					float ChargeDamage = 0.f;
+        					
+        					if (Pair.Key.MatchesTagExact(FRageInMageGameplayTags::Get().DamageType_MagicalDamage_Fire) ||
+        						Pair.Key.MatchesTagExact(FRageInMageGameplayTags::Get().DamageType_MagicalDamage_Cold))	
+        					{
+        						HeatDamage = Spec.GetSetByCallerMagnitude(FRageInMageGameplayTags::Get().Attributes_Mechanics_Heat);
+        					}
+        					if (Pair.Key.MatchesTagExact(FRageInMageGameplayTags::Get().DamageType_MagicalDamage_Electric))
+        					{
+        						ChargeDamage = Spec.GetSetByCallerMagnitude(FRageInMageGameplayTags::Get().Attributes_Mechanics_Charge);
+        					}
+        
+        			
+        					// Get Attacker's Magical Attack
+        					float SourceMagicalAttack = 0.f;
+        					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().MagicalAttackDef, EvaluationParams, SourceMagicalAttack);
+        					SourceMagicalAttack = FMath::Max<float>(SourceMagicalAttack, 0.f);
+        					// Increase Damage by Magical Attack
+        					DamageTypeValue *= 1 + SourceMagicalAttack / 100.f;
+        
+        			
+        					// Get Attacker's Critical Chance
+        					float SourceCriticalChance = 0.f;
+        					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CriticalChanceDef, EvaluationParams, SourceCriticalChance);
+        					SourceCriticalChance = FMath::Max<float>(SourceCriticalChance, 0.f);
+        					// Check whether the Hit is Critical
+        					if (FMath::RandRange(1, 100) <= SourceCriticalChance)
+        					{
+        						// Get Attacker's Critical Damage
+        						float SourceCriticalDamage = 0.f;
+        						ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CriticalDamageDef, EvaluationParams, SourceCriticalDamage);
+        						// Increase Damage based on Critical Damage
+        						DamageTypeValue *= 1 + SourceCriticalDamage / 100.f;
+        						// Set the Critical Hit variable for Show Damage Numbers
+        						SetCriticalHit(Spec, true);
+        						HeatDamage *= 1.5f;
+        						ChargeDamage *= 1.5f;
+        					}
+        
+        
+        					// Capture Target's Resistance to Magical Damage
+        					float MagicalResistance = 0.f;
+        					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().Resistance_MagicalDamageDef, EvaluationParams, MagicalResistance);
+        					// Check to see if Target is Resistant or Vulnerable to Magical Damage
+        					if (MagicalResistance != 0.f)
+        					{
+        						DamageTypeValue *= 1 - MagicalResistance / 100.f;
+        						if (DamageTypeValue < 0.f)
+        						{
+        							SetVulnerableHit(Spec, true);
+        						}
+        						else if (DamageTypeValue > 0.f)
+        						{
+        							SetResistantHit(Spec, true);
+        						}
+        					}
+        
+        
+        					// Find Target's Resistance to DamageType
+        					const FGameplayEffectAttributeCaptureDefinition* CaptureDef = nullptr;
+        					for (const auto CapturePair : DamageStatics().GetResistanceTagsToCaptureDefs())
+        					{
+        						if (Pair.Value.MatchesTagExact(CapturePair.Key))
+        						{
+        							CaptureDef = &CapturePair.Value;
+        							break;
+        						}
+        					}
+        					// Capture Resistance Value
+        					float DamageTypeResistanceValue = 0.f;
+        					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(*CaptureDef, EvaluationParams, DamageTypeResistanceValue);
+        					// Check to see if Target is Resistant or Vulnerable to DamageType
+        					if (DamageTypeResistanceValue != 0.f)
+        					{
+        						DamageTypeResistanceValue = FMath::Clamp(DamageTypeResistanceValue, -100.f, 100.f);
+        						DamageTypeResistanceValue = DamageTypeResistanceValue / 100.f;
+        						DamageTypeValue *= 1 - DamageTypeResistanceValue;
+        						HeatDamage *= 1 - DamageTypeResistanceValue;
+        						ChargeDamage *= 1 - DamageTypeResistanceValue;
+        
+        						// Set the Vulnerable or Resistant Hit variables for Show Damage Numbers
+        						if (DamageTypeResistanceValue < 0.f)
+        						{
+        							SetVulnerableHit(Spec, true);
+        						}
+        						else if (DamageTypeResistanceValue > 0.f)
+        						{
+        							SetResistantHit(Spec, true);
+        						}
+        					}
+        
+        			
+        					// Get Target's Defence
+        					float TargetDefence = 0.f;
+        					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().MagicalDefenceDef, EvaluationParams, TargetDefence);
+        					TargetDefence = FMath::Max<float>(TargetDefence, 0.f);
+        					// Get Attacker's Defence Penetration Percentage
+        					float SourceDefencePenetrationPercentage = 0.f;
+        					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().MagicalDefencePenetrationPercentageDef, EvaluationParams, SourceDefencePenetrationPercentage);
+        					SourceDefencePenetrationPercentage = FMath::Clamp<float>(SourceDefencePenetrationPercentage, 0.f, 100.f);
+        					TargetDefence *= (1 - SourceDefencePenetrationPercentage / 100.f);
+        					// Get Attacker's Defence Penetration
+        					float SourceDefencePenetration = 0.f;
+        					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().MagicalDefencePenetrationDef, EvaluationParams, SourceDefencePenetration);
+        					SourceDefencePenetration = FMath::Max<float>(SourceDefencePenetration, 0.f);
+        					// Reduce Damage based on Target's Effective Defence
+        					float EffectiveDefence = TargetDefence - SourceDefencePenetration;
+        					DamageTypeValue *= (1- (EffectiveDefence / (EffectiveDefence + 100.f)));
+        
+        
+        					// Do Damage && Apply Heat && Charge
+        					FGameplayModifierEvaluatedData DamageData (URageInMageAttributeSet::GetIncomingDamageAttribute(), EGameplayModOp::Additive, DamageTypeValue);
+        					OutExecutionOutput.AddOutputModifier(DamageData);
+        					FGameplayModifierEvaluatedData HeatData (URageInMageAttributeSet::GetHeatAttribute(), EGameplayModOp::Additive, HeatDamage);
+        					OutExecutionOutput.AddOutputModifier(HeatData);
+        					FGameplayModifierEvaluatedData ChargeData (URageInMageAttributeSet::GetChargeAttribute(), EGameplayModOp::Additive, ChargeDamage);
+        					OutExecutionOutput.AddOutputModifier(ChargeData);
+        				}
+        			}
+        		}
+        	}
 	}
+	
 }
 
 

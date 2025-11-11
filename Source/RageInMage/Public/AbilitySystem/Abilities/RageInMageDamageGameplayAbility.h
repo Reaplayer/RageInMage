@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/RageInMageGameplayAbility.h"
+#include "Interaction/CombatInterface.h"
 #include "RageInMageDamageGameplayAbility.generated.h"
 
 /**
@@ -24,4 +25,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
 	TMap<FGameplayTag, FScalableFloat> DamageTypeTags;
+
+	UFUNCTION(BlueprintPure)
+	FTaggedMontages GetRandomTaggedMontageFromArray(const TArray<FTaggedMontages>& TaggedMontageArray) const;
 };

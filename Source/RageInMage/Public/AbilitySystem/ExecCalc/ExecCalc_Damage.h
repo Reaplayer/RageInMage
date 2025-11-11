@@ -24,6 +24,4 @@ public:
 	static void SetResistantHit (const FGameplayEffectSpec& Spec, bool bIsResistantHit);
 
 private:
-	
-	const TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition>& GetTagsToCaptureDefs() const;
 };

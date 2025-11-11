@@ -141,7 +141,20 @@ static const FRageInMageGameplayTags& Get() {return GameplayTags;}
 	FGameplayTag Montage_Attack_Weapon;
 	FGameplayTag Montage_Attack_LeftHand;
 	FGameplayTag Montage_Attack_RightHand;
-	
+
+
+	/* Team Tags */
+	FGameplayTag Team_Red;
+	FGameplayTag Team_Blue;
+	FGameplayTag Team_Green;
+	FGameplayTag Team_Yellow;
+	FGameplayTag Team_Purple;
+	FGameplayTag Team_Orange;
+	FGameplayTag Team_Pink;
+	FGameplayTag Team_Brown;
+	FGameplayTag Team_Black;
+	FGameplayTag Team_White;
+	FGameplayTag Team_Cyan;;
 
 protected:
 

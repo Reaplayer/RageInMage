@@ -75,4 +75,7 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<ARageInMageAIController> AIController;
+
+private:
+	bool bIsDead = false;
 };

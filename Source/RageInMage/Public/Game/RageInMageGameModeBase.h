@@ -18,4 +18,10 @@ class RAGEINMAGE_API ARageInMageGameModeBase : public AGameModeBase
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Character Class Defaults")
 	TObjectPtr<UCharacterClassInfo> CharacterClassInfo;
+
+	bool bIsTeamGame = false;
+
+protected:
+
+private:
 };

@@ -46,6 +46,12 @@ public:
 	TSubclassOf<UGameplayEffect> SecondaryAttributes;
 	UPROPERTY(EditDefaultsOnly, Category = "Common Class Defaults")
 	TSubclassOf<UGameplayEffect> VitalAttributes;
+	UPROPERTY(EditDefaultsOnly, Category = "Common Class Defaults")
+	TSubclassOf<UGameplayEffect> ItemSpecificAttributes;
+	UPROPERTY(EditDefaultsOnly, Category = "Common Class Defaults")
+	TSubclassOf<UGameplayEffect> MechanicsAttributes;
+	UPROPERTY(EditDefaultsOnly, Category = "Common Class Defaults")
+	TSubclassOf<UGameplayEffect> ResistanceAttributes;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Common Class Defaults")
 		TArray<TSubclassOf<UGameplayAbility>> CommonAbilities; 

@@ -19,3 +19,13 @@ void URageInMageDamageGameplayAbility::CauseDamage(AActor* TargetActor)
 			*DamageEffectSpecHandle.Data.Get(), UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor));
 	}
 }
+
+FTaggedMontages URageInMageDamageGameplayAbility::GetRandomTaggedMontageFromArray(
+	const TArray<FTaggedMontages>& TaggedMontageArray) const
+{
+	if (TaggedMontageArray.Num() > 0)
+	{
+		return TaggedMontageArray[FMath::RandRange(0, TaggedMontageArray.Num() - 1)];
+	}
+	return FTaggedMontages();
+}

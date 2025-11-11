@@ -312,4 +312,39 @@ void FRageInMageGameplayTags::InitializeNativeGameplayTags()
 	
 	GameplayTags.Montage_Attack_RightHand = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Montage.Attack.RightHand"), FString("Tag for when attacking with Right Hand."));
+
+
+	/* Team Tags */
+	GameplayTags.Team_Red = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Team.Red"), FString("Red Team"));
+	
+	GameplayTags.Team_Blue = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Team.Blue"), FString("Blue Team"));
+	
+	GameplayTags.Team_Green = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Team.Green"), FString("Green Team"));
+	
+	GameplayTags.Team_Yellow = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Team.Yellow"), FString("Yellow Team"));
+	
+	GameplayTags.Team_Purple = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Team.Purple"), FString("Purple Team"));
+	
+	GameplayTags.Team_Orange = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Team.Orange"), FString("Orange Team"));
+	
+	GameplayTags.Team_Pink = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Team.Pink"), FString("Pink Team"));
+	
+	GameplayTags.Team_Brown = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Team.Brown"), FString("Brown Team"));
+	
+	GameplayTags.Team_Black = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Team.Black"), FString("Black Team"));
+	
+	GameplayTags.Team_White = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Team.White"), FString("White Team"));
+	
+	GameplayTags.Team_Cyan = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Team.Cyan"), FString("Cyan Team"));
 }

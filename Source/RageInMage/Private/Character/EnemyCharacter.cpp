@@ -43,6 +43,7 @@ void AEnemyCharacter::PossessedBy(AController* NewController)
 	AIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviourTree->BlackboardAsset);
 	AIController->RunBehaviorTree(BehaviourTree);
 	AIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);
+	AIController->GetBlackboardComponent()->SetValueAsBool(FName("IsDead"), bIsDead);
 	if (CharacterClass != ECharacterClass::Warrior)
 	{
 		AIController->GetBlackboardComponent()->SetValueAsBool(FName("RangedAttacker"), true);
@@ -82,13 +83,21 @@ void AEnemyCharacter::Die()
 {
 	SetLifeSpan(LifeSpan);
 	Super::Die();
+	bIsDead = true;
+	if (HasAuthority())
+	{
+		AIController->GetBlackboardComponent()->SetValueAsBool(FName("IsDead"), bIsDead);
+	}
 }
 
 void AEnemyCharacter::HitReactionTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
 {
 	bHitReacting = NewCount > 0;
 	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0.f : BaseWalkSpeed + GetRageInMageAttributeSet()->GetMovementSpeed();
-	AIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);
+	if (HasAuthority())
+	{
+		AIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);
+	}
 }
 
 void AEnemyCharacter::BeginPlay()

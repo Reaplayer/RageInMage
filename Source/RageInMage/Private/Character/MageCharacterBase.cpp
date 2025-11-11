@@ -20,6 +20,8 @@ AMageCharacterBase::AMageCharacterBase()
 	Weapon = CreateDefaultSubobject<USkeletalMeshComponent>("Weapon");
 	Weapon->SetupAttachment(GetMesh(), FName("WeaponHandSocket"));
 	Weapon->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	Weapon->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	Weapon->PrimaryComponentTick.bCanEverTick = true;
 }
 
 UAbilitySystemComponent* AMageCharacterBase::GetAbilitySystemComponent() const

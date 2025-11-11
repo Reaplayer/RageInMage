@@ -2,9 +2,12 @@
 
 
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
 #include "RageInMageAbilitySystemTypes.h"
 #include "Game/RageInMageGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
+#include "RageInMageGameplayTags.h"
 #include "Engine/OverlapResult.h"
 #include "UI/WidgetController/MageWidgetController.h"
 #include "Player/MagePlayerState.h"
@@ -155,7 +158,7 @@ void URageInMageAbilitySystemLibrary::SetIsResistantHit(FGameplayEffectContextHa
 }
 
 void URageInMageAbilitySystemLibrary::GetLivePlayersWithinRadius(const UObject* WorldContextObject, float Radius,
-	TArray<AActor*>& OutOverlappingActors, TArray<AActor*>& ActorsToIgnore, const FVector& SphereOrigin)
+	TArray<AActor*>& OutOverlappingActors, const TArray<AActor*>& ActorsToIgnore, const FVector& SphereOrigin)
 {
 	FCollisionQueryParams SphereParams;
 	SphereParams.AddIgnoredActors(ActorsToIgnore);
@@ -178,4 +181,60 @@ void URageInMageAbilitySystemLibrary::GetLivePlayersWithinRadius(const UObject* 
 			}
 		}
 	}
+}
+
+bool URageInMageAbilitySystemLibrary::IsFriendly(AActor* FirstActor, AActor* SecondActor)
+{
+	const bool bBothActorsArePlayers = FirstActor->ActorHasTag(FName("Player")) && SecondActor->ActorHasTag(FName("Player"));
+	const bool bBothActorsAreEnemies = FirstActor->ActorHasTag(FName("Enemy")) && SecondActor->ActorHasTag(FName("Enemy"));
+	// Check if both actors share the same team tag (only if team game mode is enabled)
+	bool bSameTeam = false;
+	if (const ARageInMageGameModeBase* GameMode = Cast<ARageInMageGameModeBase>(UGameplayStatics::GetGameMode(FirstActor)))
+	{
+		if (GameMode->bIsTeamGame)
+		{
+			UAbilitySystemComponent* FirstASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(FirstActor);
+			UAbilitySystemComponent* SecondASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(SecondActor);
+			
+			if (FirstASC && SecondASC)
+			{
+				// Get team tags from both actors
+				FGameplayTagContainer FirstTeamTags;
+				FGameplayTagContainer SecondTeamTags;
+				
+				FirstASC->GetOwnedGameplayTags(FirstTeamTags);
+				SecondASC->GetOwnedGameplayTags(SecondTeamTags);
+				
+				// Filter to only Team tags
+				const FGameplayTag TeamParentTag = FGameplayTag::RequestGameplayTag(FName("Team"));
+				FirstTeamTags = FirstTeamTags.Filter(FGameplayTagContainer(TeamParentTag));
+				SecondTeamTags = SecondTeamTags.Filter(FGameplayTagContainer(TeamParentTag));
+				
+				// Check if they share any team tag
+				if (FirstTeamTags.Num() > 0 && SecondTeamTags.Num() > 0)
+				{
+					bSameTeam = FirstTeamTags.HasAny(SecondTeamTags);
+				}
+			}
+		}
+	}
+	
+	const bool bFriendly = bBothActorsArePlayers || bBothActorsAreEnemies || bSameTeam;
+	return bFriendly;
+}
+
+bool URageInMageAbilitySystemLibrary::IsBothEnemy(AActor* FirstActor, AActor* SecondActor)
+{
+	const bool bBothActorsAreEnemies = FirstActor->ActorHasTag(FName("Enemy")) && SecondActor->ActorHasTag(FName("Enemy"));
+	return bBothActorsAreEnemies;
+}
+
+FGameplayTagContainer URageInMageAbilitySystemLibrary::GetOwnedGameplayTags(AActor* Actor)
+{
+	FGameplayTagContainer OwnedGameplayTags;
+	if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor))
+	{
+		ASC->GetOwnedGameplayTags(OwnedGameplayTags);
+	}
+	return OwnedGameplayTags;
 }
