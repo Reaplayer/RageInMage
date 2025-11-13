@@ -5,7 +5,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "RageInMageGameplayTags.h"
+#include "RageInMageGameplayTag.h"
 #include "Actor/RageInMageSphereProjectile.h"
 #include "Interaction/CombatInterface.h"
 
@@ -27,7 +27,7 @@ void URageInMageProjectileSpell::SpawnProjectile(const FVector& ProjectileTarget
 		// Set where to spawn the Projectile from
 		const FVector SocketLocation = ICombatInterface::Execute_GetCombatSocketLocation(
 			GetAvatarActorFromActorInfo(),
-			FRageInMageGameplayTags::Get().Montage_Attack_Weapon);
+			FRageInMageGameplayTag::Get().CombatSocket_Weapon);
 		FRotator Rotation = (ProjectileTargetLocation - SocketLocation).Rotation();
 		FTransform SpawnTransform;
 		SpawnTransform.SetLocation(SocketLocation);

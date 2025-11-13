@@ -54,7 +54,7 @@ void ARageInMageSphereProjectile::OnSphereOverlap(UPrimitiveComponent* Overlappe
                                                   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (!DamageEffectSpecHandle.IsValid() || OtherActor == GetInstigator()) return;
-	if (URageInMageAbilitySystemLibrary::IsBothEnemy(this, OtherActor)) return;
+	if (URageInMageAbilitySystemLibrary::IsBothEnemy(GetInstigator(), OtherActor)) return;
 	if (!bHit)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation(), FRotator::ZeroRotator);

@@ -2,7 +2,7 @@
 
 
 #include "RageInMageAssetManager.h"
-#include "RageInMageGameplayTags.h"
+#include "RageInMageGameplayTag.h"
 #include "AbilitySystemGlobals.h"
 
 URageInMageAssetManager& URageInMageAssetManager::Get()
@@ -17,7 +17,7 @@ void URageInMageAssetManager::StartInitialLoading()
 {
 	Super::StartInitialLoading();
 
-	FRageInMageGameplayTags::InitializeNativeGameplayTags();
+	FRageInMageGameplayTag::InitializeNativeGameplayTags();
 
 	// This is required to use Target Data!
 	UAbilitySystemGlobals::Get().InitGlobalData();

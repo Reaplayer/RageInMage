@@ -3,7 +3,7 @@
 
 #include "Character/MageCharacterBase.h"
 
-#include "RageInMageGameplayTags.h"
+#include "RageInMageGameplayTag.h"
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
 #include "Components/CapsuleComponent.h"
 
@@ -61,16 +61,16 @@ void AMageCharacterBase::BeginPlay()
 
 FVector AMageCharacterBase::GetCombatSocketLocation_Implementation(const FGameplayTag& AttackMontageTag)
 {
-	const FRageInMageGameplayTags& GameplayTags = FRageInMageGameplayTags::Get();
-	if (AttackMontageTag.MatchesTagExact(GameplayTags.Montage_Attack_Weapon))
+	const FRageInMageGameplayTag& GameplayTags = FRageInMageGameplayTag::Get();
+	if (AttackMontageTag.MatchesTagExact(GameplayTags.CombatSocket_Weapon))
 	{
 		return Weapon->GetSocketLocation(WeaponTipSocketName);
 	}
-	if (AttackMontageTag.MatchesTagExact(GameplayTags.Montage_Attack_RightHand))
+	if (AttackMontageTag.MatchesTagExact(GameplayTags.CombatSocket_RightHand))
 	{
 		return GetMesh()->GetSocketLocation(RightHandSocketName);
 	}
-	if (AttackMontageTag.MatchesTagExact(GameplayTags.Montage_Attack_LeftHand))
+	if (AttackMontageTag.MatchesTagExact(GameplayTags.CombatSocket_LeftHand))
 	{
 		return GetMesh()->GetSocketLocation(LeftHandSocketName);
 	}
@@ -87,9 +87,14 @@ AActor* AMageCharacterBase::GetAvatar_Implementation()
 	return this;
 }
 
-TArray<FTaggedMontages> AMageCharacterBase::GetAttackMontages_Implementation()
+TArray<FTaggedMontage> AMageCharacterBase::GetAttackMontages_Implementation()
 {
 	return AttackMontages;
+}
+
+UNiagaraSystem* AMageCharacterBase::GetBloodEffect_Implementation()
+{
+	return BloodEffect;
 }
 
 void AMageCharacterBase::InitPlayerAbilityActorInfo()

@@ -3,7 +3,7 @@
 
 #include "Character/EnemyCharacter.h"
 
-#include "RageInMageGameplayTags.h"
+#include "RageInMageGameplayTag.h"
 #include "AI/RageInMageAIController.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
@@ -129,7 +129,7 @@ void AEnemyCharacter::BeginPlay()
 				OnMaxHealthChanged.Broadcast(Data.NewValue);
 			}
 			);
-		AbilitySystemComponent->RegisterGameplayTagEvent(FRageInMageGameplayTags::Get().Effects_HitReaction, EGameplayTagEventType::NewOrRemoved).AddUObject(
+		AbilitySystemComponent->RegisterGameplayTagEvent(FRageInMageGameplayTag::Get().Effects_HitReaction, EGameplayTagEventType::NewOrRemoved).AddUObject(
 			this,
 			&AEnemyCharacter::HitReactionTagChanged
 			);

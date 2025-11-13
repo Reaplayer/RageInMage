@@ -7,15 +7,23 @@
 #include "UObject/Interface.h"
 #include "CombatInterface.generated.h"
 
+class UNiagaraSystem;
+class UAnimMontage;
+class USoundBase;
+
 USTRUCT(BlueprintType)
-struct FTaggedMontages
+struct FTaggedMontage
 {
 	GENERATED_BODY()
-
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UAnimMontage* Montage = nullptr;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FGameplayTag MontageTag;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	UAnimMontage* Montage = nullptr;
+	FGameplayTag SocketTag;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	USoundBase* Sound = nullptr;
 };
 
 // This class does not need to be modified.
@@ -24,8 +32,6 @@ class UCombatInterface : public UInterface
 {
 	GENERATED_BODY()
 };
-
-class UAnimMontage;
 
 /**
  * 
@@ -56,5 +62,8 @@ public:
 	AActor* GetAvatar();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	TArray<FTaggedMontages> GetAttackMontages();
+	TArray<FTaggedMontage> GetAttackMontages();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	UNiagaraSystem* GetBloodEffect();
 };

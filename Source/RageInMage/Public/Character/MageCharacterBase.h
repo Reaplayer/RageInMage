@@ -33,14 +33,18 @@ public:
 	virtual FVector GetCombatSocketLocation_Implementation(const FGameplayTag& AttackMontageTag) override;
 	virtual bool IsDead_Implementation() const override;
 	virtual AActor* GetAvatar_Implementation() override;
-	virtual TArray<FTaggedMontages> GetAttackMontages_Implementation() override;
+	virtual TArray<FTaggedMontage> GetAttackMontages_Implementation() override;
+	virtual UNiagaraSystem* GetBloodEffect_Implementation() override;
 	/* End Combat Interface */
 
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MulticastHandleDeath();
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
-	TArray<FTaggedMontages> AttackMontages;
+	TArray<FTaggedMontage> AttackMontages;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	UNiagaraSystem* BloodEffect;
 
 protected:
 	virtual void BeginPlay() override;

@@ -4,7 +4,7 @@
 #include "Player/MagePlayerController.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "EnhancedInputSubsystems.h"
-#include "RageInMageGameplayTags.h"
+#include "RageInMageGameplayTag.h"
 #include "NavigationPath.h"
 #include "NavigationSystem.h"
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
@@ -73,7 +73,7 @@ void AMagePlayerController::CursorTrace()
 
 void AMagePlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 {
-	if (InputTag.MatchesTagExact(FRageInMageGameplayTags::Get().InputTag_LMB))
+	if (InputTag.MatchesTagExact(FRageInMageGameplayTag::Get().InputTag_LMB))
 	{
 		bTargeting = ThisActor ? true : false;
 		bAutoRunning = false;
@@ -82,7 +82,7 @@ void AMagePlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 
 void AMagePlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 {
-	if (!InputTag.MatchesTagExact(FRageInMageGameplayTags::Get().InputTag_LMB))
+	if (!InputTag.MatchesTagExact(FRageInMageGameplayTag::Get().InputTag_LMB))
 	{
 		if (GetASC()) GetASC()->AbilityInputTagReleased(InputTag);
 		return;
@@ -116,7 +116,7 @@ void AMagePlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 
 void AMagePlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 {
-	if (!InputTag.MatchesTagExact(FRageInMageGameplayTags::Get().InputTag_LMB))
+	if (!InputTag.MatchesTagExact(FRageInMageGameplayTag::Get().InputTag_LMB))
 	{
 		if (GetASC()) GetASC()->AbilityInputTagHeld(InputTag);
 		return;

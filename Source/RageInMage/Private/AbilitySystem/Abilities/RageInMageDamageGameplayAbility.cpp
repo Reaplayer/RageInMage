@@ -20,12 +20,12 @@ void URageInMageDamageGameplayAbility::CauseDamage(AActor* TargetActor)
 	}
 }
 
-FTaggedMontages URageInMageDamageGameplayAbility::GetRandomTaggedMontageFromArray(
-	const TArray<FTaggedMontages>& TaggedMontageArray) const
+FTaggedMontage URageInMageDamageGameplayAbility::GetRandomTaggedMontageFromArray(
+	const TArray<FTaggedMontage>& TaggedMontageArray) const
 {
 	if (TaggedMontageArray.Num() > 0)
 	{
 		return TaggedMontageArray[FMath::RandRange(0, TaggedMontageArray.Num() - 1)];
 	}
-	return FTaggedMontages();
+	return FTaggedMontage();
 }

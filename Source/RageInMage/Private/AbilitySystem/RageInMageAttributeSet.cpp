@@ -7,7 +7,7 @@
 #include "GameFramework/Character.h"
 #include "Net/UnrealNetwork.h"
 #include "GameplayEffectExtension.h"
-#include "RageInMageGameplayTags.h"
+#include "RageInMageGameplayTag.h"
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
 #include "Interaction/CombatInterface.h"
 #include "Player/MagePlayerController.h"
@@ -15,7 +15,7 @@
 URageInMageAttributeSet::URageInMageAttributeSet()
 {
 	// Populate Map of Gameplay Tags to their Attributes
-	const FRageInMageGameplayTags& GameplayTags = FRageInMageGameplayTags::Get();
+	const FRageInMageGameplayTag& GameplayTags = FRageInMageGameplayTag::Get();
 	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Agility, GetAgilityAttribute);
 	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Dexterity, GetDexterityAttribute);
 	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Strength, GetStrengthAttribute);
@@ -144,7 +144,7 @@ void URageInMageAttributeSet::PostGameplayEffectExecute(const FGameplayEffectMod
 			else
 			{
 				FGameplayTagContainer TagContainer;
-				TagContainer.AddTag(FRageInMageGameplayTags::Get().Effects_HitReaction);
+				TagContainer.AddTag(FRageInMageGameplayTag::Get().Effects_HitReaction);
 				Properties.TargetASC->TryActivateAbilitiesByTag(TagContainer);
 			}
 			const bool bCritHit = URageInMageAbilitySystemLibrary::IsCriticalHit(Properties.EffectContextHandle);

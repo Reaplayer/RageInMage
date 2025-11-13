@@ -4,7 +4,7 @@
 #include "AbilitySystem/ExecCalc/ExecCalc_Damage.h"
 #include "AbilitySystemComponent.h"
 #include "RageInMageAbilitySystemTypes.h"
-#include "RageInMageGameplayTags.h"
+#include "RageInMageGameplayTag.h"
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
 #include "AbilitySystem/RageInMageAttributeSet.h"
 
@@ -90,7 +90,7 @@ struct RageInMageDamageStatics
 		// Clear the existing map
 		ResistanceTagsToCaptureDefs.Empty();
 		// Get Gameplay Tags
-		const FRageInMageGameplayTags& GameplayTags = FRageInMageGameplayTags::Get();
+		const FRageInMageGameplayTag& GameplayTags = FRageInMageGameplayTag::Get();
 		// Populate ResistanceTagsToCaptureDefs
 		ResistanceTagsToCaptureDefs.Add(GameplayTags.Resistance_PhysicalDamage, Resistance_PhysicalDamageDef);
 		ResistanceTagsToCaptureDefs.Add(GameplayTags.Resistance_PhysicalDamage_Slashing, Resistance_PhysicalDamage_SlashingDef);
@@ -199,7 +199,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
         	for (FGameplayTag Tag : *SourceTags)
         	{
         		// Search through DamageType Gameplay Tags
-        		for(const TPair<FGameplayTag, FGameplayTag>& Pair : FRageInMageGameplayTags::Get().DamageTypesToResistances)
+        		for(const TPair<FGameplayTag, FGameplayTag>& Pair : FRageInMageGameplayTag::Get().DamageTypesToResistances)
         		{
         			// Match Source DamageType Tag With DamageToResistance Tag
         			if (Pair.Key.MatchesTagExact(Tag))
@@ -315,14 +315,14 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
         					float HeatDamage = 0.f;
         					float ChargeDamage = 0.f;
         					
-        					if (Pair.Key.MatchesTagExact(FRageInMageGameplayTags::Get().DamageType_MagicalDamage_Fire) ||
-        						Pair.Key.MatchesTagExact(FRageInMageGameplayTags::Get().DamageType_MagicalDamage_Cold))	
+        					if (Pair.Key.MatchesTagExact(FRageInMageGameplayTag::Get().DamageType_MagicalDamage_Fire) ||
+        						Pair.Key.MatchesTagExact(FRageInMageGameplayTag::Get().DamageType_MagicalDamage_Cold))	
         					{
-        						HeatDamage = Spec.GetSetByCallerMagnitude(FRageInMageGameplayTags::Get().Attributes_Mechanics_Heat);
+        						HeatDamage = Spec.GetSetByCallerMagnitude(FRageInMageGameplayTag::Get().Attributes_Mechanics_Heat);
         					}
-        					if (Pair.Key.MatchesTagExact(FRageInMageGameplayTags::Get().DamageType_MagicalDamage_Electric))
+        					if (Pair.Key.MatchesTagExact(FRageInMageGameplayTag::Get().DamageType_MagicalDamage_Electric))
         					{
-        						ChargeDamage = Spec.GetSetByCallerMagnitude(FRageInMageGameplayTags::Get().Attributes_Mechanics_Charge);
+        						ChargeDamage = Spec.GetSetByCallerMagnitude(FRageInMageGameplayTag::Get().Attributes_Mechanics_Charge);
         					}
         
         			

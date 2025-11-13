@@ -6,14 +6,14 @@
 #include "GameplayTagContainer.h"
 
 /**
- * RageInMageGameplayTags
+ * RageInMageGameplayTag
  *
  * Singleton containing native gameplay tags
  */
-struct FRageInMageGameplayTags
+struct FRageInMageGameplayTag
 {
 public:
-static const FRageInMageGameplayTags& Get() {return GameplayTags;}
+static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	static void InitializeNativeGameplayTags();
 
 	
@@ -137,10 +137,17 @@ static const FRageInMageGameplayTags& Get() {return GameplayTags;}
 	FGameplayTag Effects_Debuff_OverCharged;
 
 
-	/* Montage Tags */
-	FGameplayTag Montage_Attack_Weapon;
-	FGameplayTag Montage_Attack_LeftHand;
-	FGameplayTag Montage_Attack_RightHand;
+	/* Combat Socket Tags */
+	FGameplayTag CombatSocket_Weapon;
+	FGameplayTag CombatSocket_LeftHand;
+	FGameplayTag CombatSocket_RightHand;
+	
+	
+	/* Montage Attack Tags */
+	FGameplayTag Montage_Attack_1;
+	FGameplayTag Montage_Attack_2;
+	FGameplayTag Montage_Attack_3;
+	FGameplayTag Montage_Attack_4;
 
 
 	/* Team Tags */
@@ -154,10 +161,10 @@ static const FRageInMageGameplayTags& Get() {return GameplayTags;}
 	FGameplayTag Team_Brown;
 	FGameplayTag Team_Black;
 	FGameplayTag Team_White;
-	FGameplayTag Team_Cyan;;
+	FGameplayTag Team_Cyan;
 
 protected:
 
 private:
-	static FRageInMageGameplayTags GameplayTags;
+	static FRageInMageGameplayTag GameplayTag;
 };
