@@ -6,6 +6,7 @@
 #include "RageInMageGameplayTag.h"
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 AMageCharacterBase::AMageCharacterBase()
 {
@@ -42,6 +43,8 @@ void AMageCharacterBase::Die()
 
 void AMageCharacterBase::MulticastHandleDeath_Implementation()
 {
+	UGameplayStatics::PlaySoundAtLocation(this, DeathSound, GetActorLocation(), GetActorRotation());
+	
 	Weapon->SetSimulatePhysics(true);
 	Weapon->SetEnableGravity(true);
 	Weapon->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
@@ -59,20 +62,24 @@ void AMageCharacterBase::BeginPlay()
 	Super::BeginPlay();
 }
 
-FVector AMageCharacterBase::GetCombatSocketLocation_Implementation(const FGameplayTag& AttackMontageTag)
+FVector AMageCharacterBase::GetCombatSocketLocation_Implementation(const FGameplayTag& SocketTag)
 {
 	const FRageInMageGameplayTag& GameplayTags = FRageInMageGameplayTag::Get();
-	if (AttackMontageTag.MatchesTagExact(GameplayTags.CombatSocket_Weapon))
+	if (SocketTag.MatchesTagExact(GameplayTags.CombatSocket_Weapon))
 	{
 		return Weapon->GetSocketLocation(WeaponTipSocketName);
 	}
-	if (AttackMontageTag.MatchesTagExact(GameplayTags.CombatSocket_RightHand))
+	if (SocketTag.MatchesTagExact(GameplayTags.CombatSocket_RightHand))
 	{
 		return GetMesh()->GetSocketLocation(RightHandSocketName);
 	}
-	if (AttackMontageTag.MatchesTagExact(GameplayTags.CombatSocket_LeftHand))
+	if (SocketTag.MatchesTagExact(GameplayTags.CombatSocket_LeftHand))
 	{
 		return GetMesh()->GetSocketLocation(LeftHandSocketName);
+	}
+	if (SocketTag.MatchesTagExact(GameplayTags.CombatSocket_Tail))
+	{
+		return GetMesh()->GetSocketLocation(TailSocketName);
 	}
 	return FVector::ZeroVector;
 }
@@ -90,6 +97,18 @@ AActor* AMageCharacterBase::GetAvatar_Implementation()
 TArray<FTaggedMontage> AMageCharacterBase::GetAttackMontages_Implementation()
 {
 	return AttackMontages;
+}
+
+FTaggedMontage AMageCharacterBase::GetTaggedMontageByTag_Implementation(const FGameplayTag& MontageTag)
+{
+	for (const FTaggedMontage& TaggedMontage : AttackMontages)
+	{
+		if (TaggedMontage.MontageTag.MatchesTagExact(MontageTag))
+		{
+			return TaggedMontage;
+		}
+	}
+	return FTaggedMontage();
 }
 
 UNiagaraSystem* AMageCharacterBase::GetBloodEffect_Implementation()

@@ -43,7 +43,7 @@ struct RageInMageDamageStatics
 
 
 	// Map to store Resistance tag-to-capture definition mappings
-	mutable TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition> ResistanceTagsToCaptureDefs;
+	mutable TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition> ResistanceTagToCaptureDef;
 	
 	
 	
@@ -80,45 +80,45 @@ struct RageInMageDamageStatics
 
 
 		// Populate the map initially
-		PopulateResistanceTagsToCaptureDefs();
+		PopulateResistanceTagToCaptureDef();
 	}
 
 
 	// Helper function to populate the TagsToCaptureDefs map
-	void PopulateResistanceTagsToCaptureDefs() const
+	void PopulateResistanceTagToCaptureDef() const
 	{
 		// Clear the existing map
-		ResistanceTagsToCaptureDefs.Empty();
+		ResistanceTagToCaptureDef.Empty();
 		// Get Gameplay Tags
-		const FRageInMageGameplayTag& GameplayTags = FRageInMageGameplayTag::Get();
+		const FRageInMageGameplayTag& GameplayTag = FRageInMageGameplayTag::Get();
 		// Populate ResistanceTagsToCaptureDefs
-		ResistanceTagsToCaptureDefs.Add(GameplayTags.Resistance_PhysicalDamage, Resistance_PhysicalDamageDef);
-		ResistanceTagsToCaptureDefs.Add(GameplayTags.Resistance_PhysicalDamage_Slashing, Resistance_PhysicalDamage_SlashingDef);
-		ResistanceTagsToCaptureDefs.Add(GameplayTags.Resistance_PhysicalDamage_Piercing, Resistance_PhysicalDamage_PiercingDef);
-		ResistanceTagsToCaptureDefs.Add(GameplayTags.Resistance_PhysicalDamage_Bludgeoning, Resistance_PhysicalDamage_BludgeoningDef);
-		ResistanceTagsToCaptureDefs.Add(GameplayTags.Resistance_MagicalDamage, Resistance_MagicalDamageDef);
-		ResistanceTagsToCaptureDefs.Add(GameplayTags.Resistance_MagicalDamage_Fire, Resistance_MagicalDamage_FireDef);
-		ResistanceTagsToCaptureDefs.Add(GameplayTags.Resistance_MagicalDamage_Cold, Resistance_MagicalDamage_ColdDef);
-		ResistanceTagsToCaptureDefs.Add(GameplayTags.Resistance_MagicalDamage_Electric, Resistance_MagicalDamage_ElectricDef);
-		ResistanceTagsToCaptureDefs.Add(GameplayTags.Resistance_MagicalDamage_Poison, Resistance_MagicalDamage_PoisonDef);
-		ResistanceTagsToCaptureDefs.Add(GameplayTags.Resistance_MagicalDamage_Acid, Resistance_MagicalDamage_AcidDef);
-		ResistanceTagsToCaptureDefs.Add(GameplayTags.Resistance_MagicalDamage_Shadow, Resistance_MagicalDamage_ShadowDef);
-		ResistanceTagsToCaptureDefs.Add(GameplayTags.Resistance_MagicalDamage_Radiant, Resistance_MagicalDamage_RadiantDef);
-		ResistanceTagsToCaptureDefs.Add(GameplayTags.Resistance_MagicalDamage_Psychic, Resistance_MagicalDamage_PsychicDef);
-		ResistanceTagsToCaptureDefs.Add(GameplayTags.Resistance_MagicalDamage_Force, Resistance_MagicalDamage_ForceDef);
+		ResistanceTagToCaptureDef.Add(GameplayTag.Resistance_PhysicalDamage, Resistance_PhysicalDamageDef);
+		ResistanceTagToCaptureDef.Add(GameplayTag.Resistance_PhysicalDamage_Slashing, Resistance_PhysicalDamage_SlashingDef);
+		ResistanceTagToCaptureDef.Add(GameplayTag.Resistance_PhysicalDamage_Piercing, Resistance_PhysicalDamage_PiercingDef);
+		ResistanceTagToCaptureDef.Add(GameplayTag.Resistance_PhysicalDamage_Bludgeoning, Resistance_PhysicalDamage_BludgeoningDef);
+		ResistanceTagToCaptureDef.Add(GameplayTag.Resistance_MagicalDamage, Resistance_MagicalDamageDef);
+		ResistanceTagToCaptureDef.Add(GameplayTag.Resistance_MagicalDamage_Fire, Resistance_MagicalDamage_FireDef);
+		ResistanceTagToCaptureDef.Add(GameplayTag.Resistance_MagicalDamage_Cold, Resistance_MagicalDamage_ColdDef);
+		ResistanceTagToCaptureDef.Add(GameplayTag.Resistance_MagicalDamage_Electric, Resistance_MagicalDamage_ElectricDef);
+		ResistanceTagToCaptureDef.Add(GameplayTag.Resistance_MagicalDamage_Poison, Resistance_MagicalDamage_PoisonDef);
+		ResistanceTagToCaptureDef.Add(GameplayTag.Resistance_MagicalDamage_Acid, Resistance_MagicalDamage_AcidDef);
+		ResistanceTagToCaptureDef.Add(GameplayTag.Resistance_MagicalDamage_Shadow, Resistance_MagicalDamage_ShadowDef);
+		ResistanceTagToCaptureDef.Add(GameplayTag.Resistance_MagicalDamage_Radiant, Resistance_MagicalDamage_RadiantDef);
+		ResistanceTagToCaptureDef.Add(GameplayTag.Resistance_MagicalDamage_Psychic, Resistance_MagicalDamage_PsychicDef);
+		ResistanceTagToCaptureDef.Add(GameplayTag.Resistance_MagicalDamage_Force, Resistance_MagicalDamage_ForceDef);
 	}
 
 	
 	// Helper function to get the map with validation
-	const TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition>& GetResistanceTagsToCaptureDefs() const
+	const TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition>& GetResistanceTagToCaptureDef() const
 	{
 		// Check if any key in the map is invalid
 		bool bRepopulate = false;
-		for (const TPair<FGameplayTag, FGameplayEffectAttributeCaptureDefinition>& Pair : ResistanceTagsToCaptureDefs)
+		for (const TPair<FGameplayTag, FGameplayEffectAttributeCaptureDefinition>& Pair : ResistanceTagToCaptureDef)
 		{
 			if (Pair.Key.IsValid())
 			{
-				return ResistanceTagsToCaptureDefs;
+				return ResistanceTagToCaptureDef;
 			}
 			bRepopulate = true;
 			break;
@@ -127,10 +127,10 @@ struct RageInMageDamageStatics
 		// Repopulate if needed
 		if (bRepopulate)
 		{
-			PopulateResistanceTagsToCaptureDefs();
+			PopulateResistanceTagToCaptureDef();
 		}
 
-		return ResistanceTagsToCaptureDefs;
+		return ResistanceTagToCaptureDef;
 	}
 };
 
@@ -256,7 +256,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
         
         					// Capture Target's Resistance to DamageType
         					const FGameplayEffectAttributeCaptureDefinition* CaptureDef = nullptr;
-        					for (const auto& CapturePair : DamageStatics().GetResistanceTagsToCaptureDefs())
+        					for (const auto& CapturePair : DamageStatics().GetResistanceTagToCaptureDef())
         					{
         						if (CapturePair.Key.MatchesTagExact(Pair.Value))
         						{
@@ -373,7 +373,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
         
         					// Find Target's Resistance to DamageType
         					const FGameplayEffectAttributeCaptureDefinition* CaptureDef = nullptr;
-        					for (const auto CapturePair : DamageStatics().GetResistanceTagsToCaptureDefs())
+        					for (const auto CapturePair : DamageStatics().GetResistanceTagToCaptureDef())
         					{
         						if (Pair.Value.MatchesTagExact(CapturePair.Key))
         						{

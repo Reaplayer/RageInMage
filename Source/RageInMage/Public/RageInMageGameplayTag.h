@@ -141,6 +141,7 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag CombatSocket_Weapon;
 	FGameplayTag CombatSocket_LeftHand;
 	FGameplayTag CombatSocket_RightHand;
+	FGameplayTag CombatSocket_Tail;
 	
 	
 	/* Montage Attack Tags */
@@ -148,6 +149,12 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Montage_Attack_2;
 	FGameplayTag Montage_Attack_3;
 	FGameplayTag Montage_Attack_4;
+	FGameplayTag Montage_Attack_5;
+	FGameplayTag Montage_Attack_6;
+	FGameplayTag Montage_Attack_7;
+	FGameplayTag Montage_Attack_8;
+	FGameplayTag Montage_Attack_9;
+	FGameplayTag Montage_Attack_10;
 
 
 	/* Team Tags */

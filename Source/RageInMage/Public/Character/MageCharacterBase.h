@@ -30,10 +30,11 @@ public:
 	/* Combat Interface */
 	virtual UAnimMontage* GetHitReactionMontage_Implementation() override;
 	virtual void Die() override;
-	virtual FVector GetCombatSocketLocation_Implementation(const FGameplayTag& AttackMontageTag) override;
+	virtual FVector GetCombatSocketLocation_Implementation(const FGameplayTag& SocketTag) override;
 	virtual bool IsDead_Implementation() const override;
 	virtual AActor* GetAvatar_Implementation() override;
 	virtual TArray<FTaggedMontage> GetAttackMontages_Implementation() override;
+	virtual FTaggedMontage GetTaggedMontageByTag_Implementation(const FGameplayTag& MontageTag) override;
 	virtual UNiagaraSystem* GetBloodEffect_Implementation() override;
 	/* End Combat Interface */
 
@@ -42,24 +43,24 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	TArray<FTaggedMontage> AttackMontages;
-
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	UNiagaraSystem* BloodEffect;
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	USoundBase* DeathSound;
 
 protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
 	TObjectPtr<USkeletalMeshComponent> Weapon;
-
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	FName WeaponTipSocketName;
-
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	FName LeftHandSocketName;
-
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	FName RightHandSocketName;
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	FName TailSocketName;
 
 	bool bDead = false;
 

@@ -313,6 +313,9 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.CombatSocket_RightHand = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("CombatSocket.RightHand"), FString("Tag for when attacking with Right Hand."));
 	
+	GameplayTag.CombatSocket_Tail = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("CombatSocket.Tail"), FString("Tag for when attacking with Tail."));
+	
 	
 	/* Montage Attack Tags */
 	
@@ -327,8 +330,25 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	
 	GameplayTag.Montage_Attack_4 = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Montage.Attack.4"), FString("Tag for Montage Attacks."));
-
-
+	
+	GameplayTag.Montage_Attack_5 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Montage.Attack.5"), FString("Tag for Montage Attacks."));
+	
+	GameplayTag.Montage_Attack_6 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Montage.Attack.6"), FString("Tag for Montage Attacks."));
+	
+	GameplayTag.Montage_Attack_7 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Montage.Attack.7"), FString("Tag for Montage Attacks."));
+	
+	GameplayTag.Montage_Attack_8 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Montage.Attack.8"), FString("Tag for Montage Attacks."));
+	
+	GameplayTag.Montage_Attack_9 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Montage.Attack.9"), FString("Tag for Montage Attacks."));
+	
+	GameplayTag.Montage_Attack_10 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Montage.Attack.10"), FString("Tag for Montage Attacks."));
+	
 	/* Team Tags */
 	GameplayTag.Team_Red = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Team.Red"), FString("Red Team"));
