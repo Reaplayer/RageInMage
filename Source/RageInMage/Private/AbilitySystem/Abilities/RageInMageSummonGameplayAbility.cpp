@@ -10,7 +10,6 @@ TArray<FVector> URageInMageSummonGameplayAbility::GetSummonLocations()
 	const float DeltaSpread = SpawnSpreadAngle / SummonCount;
 	
 	const FVector LeftOfSpread = Forward.RotateAngleAxis(SpawnSpreadAngle / 2, FVector::UpVector);
-	const FVector RightOfSpread = Forward.RotateAngleAxis(-SpawnSpreadAngle / 2, FVector::UpVector);
 	
 	TArray<FVector> SummonLocations;
 	for (int32 i = 0; i < SummonCount; i++)

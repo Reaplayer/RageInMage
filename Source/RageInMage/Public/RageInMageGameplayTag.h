@@ -61,6 +61,7 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Ability_Attack;
 	FGameplayTag Ability_Attack_Melee;
 	FGameplayTag Ability_Attack_Ranged;
+	FGameplayTag Ability_Summon;
 
 
 	/* Input Tags */

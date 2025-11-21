@@ -19,10 +19,7 @@ public:
 	TArray<FVector> GetSummonLocations();
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Summon")
-	int32 SummonCount = 1;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Summon")
-	TSubclassOf<AActor> SummonClasses;
+	int32 SummonCount = 5;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Summon")
 	float MinSpawnDistance = 75.f;

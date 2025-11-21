@@ -96,10 +96,15 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	/* Ability Tags */
 	GameplayTag.Ability_Attack = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Ability.Attack"), FString("Tag for when Attacking."));
+	
 	GameplayTag.Ability_Attack_Melee = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Ability.Attack.Melee"), FString("Tag for when Melee Attacking."));
+	
 	GameplayTag.Ability_Attack_Ranged = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Ability.Attack.Ranged"), FString("Tag for when Ranged Attacking."));
+	
+	GameplayTag.Ability_Summon = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Summon"), FString("Tag for when Summoning."));
 	
 	
 	/* Input Tags */

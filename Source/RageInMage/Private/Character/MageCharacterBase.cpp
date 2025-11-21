@@ -103,7 +103,7 @@ FTaggedMontage AMageCharacterBase::GetTaggedMontageByTag_Implementation(const FG
 {
 	for (const FTaggedMontage& TaggedMontage : AttackMontages)
 	{
-		if (TaggedMontage.MontageTag.MatchesTagExact(MontageTag))
+		if (TaggedMontage.MontageEventTag.MatchesTagExact(MontageTag))
 		{
 			return TaggedMontage;
 		}
@@ -126,10 +126,29 @@ FTaggedMontage AMageCharacterBase::GetRandomAttackMontage_Implementation(bool bI
 		const bool bIsMontageRanged = Montage.ProjectileClass != nullptr;
 		const bool bIsMontageSummon = Montage.SummonClass != nullptr;
 
-		// If it matches the requested type, add it to our candidate list
-		if (bIsMontageRanged == bIsRanged || bIsMontageSummon == bIsSummon)
+		// If we want a Summon, only accept Summons
+		if (bIsSummon)
 		{
-			EligibleMontages.Add(Montage);
+			if (bIsMontageSummon)
+			{
+				EligibleMontages.Add(Montage);
+			}
+		}
+		// If we want Ranged, only accept Ranged (that are not summons)
+		else if (bIsRanged)
+		{
+			if (bIsMontageRanged)
+			{
+				EligibleMontages.Add(Montage);
+			}
+		}
+		// If we want Melee (neither ranged nor summon), accept only pure melee
+		else 
+		{
+			if (!bIsMontageRanged && !bIsMontageSummon)
+			{
+				EligibleMontages.Add(Montage);
+			}
 		}
 	}
 
@@ -142,6 +161,11 @@ FTaggedMontage AMageCharacterBase::GetRandomAttackMontage_Implementation(bool bI
 
 	// Return an empty struct if no matching montages were found
 	return FTaggedMontage();
+}
+
+int32 AMageCharacterBase::GetSummonCount_Implementation()
+{
+	return SummonCount;
 }
 
 void AMageCharacterBase::InitPlayerAbilityActorInfo()

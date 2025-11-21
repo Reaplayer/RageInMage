@@ -8,6 +8,9 @@
 #include "RageInMageGameplayTag.h"
 #include "Actor/RageInMageSphereProjectile.h"
 #include "Interaction/CombatInterface.h"
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/ProjectileMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 void URageInMageProjectileSpell::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
@@ -17,7 +20,7 @@ void URageInMageProjectileSpell::ActivateAbility(const FGameplayAbilitySpecHandl
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 }
 
-void URageInMageProjectileSpell::SpawnProjectile(const FVector& ProjectileTargetLocation, const FGameplayTag& SocketTag, TSubclassOf<AActor> ProjectileClass)
+void URageInMageProjectileSpell::SpawnProjectile(const FVector& ProjectileTargetLocation, const FGameplayTag& SocketTag, TSubclassOf<AActor> ProjectileClass, bool bCalculatePitch)
 {
 	const bool bIsServer = GetAvatarActorFromActorInfo()->HasAuthority();
 	if (!bIsServer) return;
@@ -35,6 +38,52 @@ void URageInMageProjectileSpell::SpawnProjectile(const FVector& ProjectileTarget
 			GetAvatarActorFromActorInfo(),
 			SocketTag);
 		FRotator Rotation = (ProjectileTargetLocation - SocketLocation).Rotation();
+		if (bCalculatePitch)
+		{
+			// Calculate the launch pitch based on projectile speed and gravity
+			if (ARageInMageSphereProjectile* ProjectileCDO = Cast<ARageInMageSphereProjectile>(ProjectileClass->GetDefaultObject()))
+			{
+				if (UProjectileMovementComponent* ProjectileMovement = ProjectileCDO->ProjectileMovement)
+				{
+					const float LaunchSpeed = ProjectileMovement->InitialSpeed;
+					FVector LaunchVelocity;
+				
+					// 1. Calculate Effective Gravity (World Gravity * Component Scale)
+					// We need absolute value for the range calculation formula
+					const float WorldGravityZ = GetWorld()->GetGravityZ();
+					const float EffectiveGravityZ = FMath::Abs(WorldGravityZ * ProjectileMovement->ProjectileGravityScale);
+					// No Gravity means we can shoot straight
+					float CalculatedArc = 1.0f;
+					
+					if (EffectiveGravityZ > KINDA_SMALL_NUMBER)
+					{
+						const float MaxRange = (LaunchSpeed * LaunchSpeed) / EffectiveGravityZ;
+						const float DistanceToTarget = FVector::Dist(SocketLocation, ProjectileTargetLocation);
+						
+						// 2. Map Range: 
+						// Distance 0% of Max -> Arc 1.0 (Direct/Flat)
+						// Distance 100% of Max -> Arc 0.5 (High/Optimal)
+						CalculatedArc = UKismetMathLibrary::MapRangeClamped(DistanceToTarget, 0.0f, MaxRange, 1.0f, 0.5f);
+					}
+					
+					
+					// 3. Calculate the velocity required to hit the target
+					const bool bHaveSolution = UGameplayStatics::SuggestProjectileVelocity_CustomArc(
+						this,
+						LaunchVelocity,
+						SocketLocation,
+						ProjectileTargetLocation,
+						0,
+						CalculatedArc
+					);
+
+					if (bHaveSolution)
+					{
+						Rotation = LaunchVelocity.Rotation();
+					}
+				}
+			}
+		}
 		FTransform SpawnTransform;
 		SpawnTransform.SetLocation(SocketLocation);
 		SpawnTransform.SetRotation(Rotation.Quaternion());

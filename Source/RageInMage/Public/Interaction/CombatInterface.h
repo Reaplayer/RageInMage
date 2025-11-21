@@ -20,7 +20,7 @@ struct FTaggedMontage
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	UAnimMontage* Montage = nullptr;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	FGameplayTag MontageTag;
+	FGameplayTag MontageEventTag;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FGameplayTag SocketTag;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
@@ -75,7 +75,10 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	FTaggedMontage GetTaggedMontageByTag(const FGameplayTag& MontageTag);
 	
-	/** Helper to select a random montage based on attack type */
+	/** Helper to select a random montage based on the attack type */
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	FTaggedMontage GetRandomAttackMontage(bool bIsRanged, bool bIsSummon);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	int32 GetSummonCount();
 };

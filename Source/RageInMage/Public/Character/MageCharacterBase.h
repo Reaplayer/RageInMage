@@ -37,6 +37,7 @@ public:
 	virtual FTaggedMontage GetTaggedMontageByTag_Implementation(const FGameplayTag& MontageTag) override;
 	virtual UNiagaraSystem* GetBloodEffect_Implementation() override;
 	virtual FTaggedMontage GetRandomAttackMontage_Implementation(bool bIsRanged, bool bIsSummon) override;
+	virtual int32 GetSummonCount_Implementation() override;
 	/* End Combat Interface */
 
 	UFUNCTION(NetMulticast, Reliable)
@@ -48,6 +49,9 @@ public:
 	UNiagaraSystem* BloodEffect;
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	USoundBase* DeathSound;
+	
+	/* Summons */
+	int32 SummonCount = 5;
 
 protected:
 	virtual void BeginPlay() override;
