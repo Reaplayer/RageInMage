@@ -59,6 +59,8 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 
 	/* Ability Tags */
 	FGameplayTag Ability_Attack;
+	FGameplayTag Ability_Attack_Melee;
+	FGameplayTag Ability_Attack_Ranged;
 
 
 	/* Input Tags */
@@ -103,7 +105,7 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Resistance_MagicalDamage_Force;
 	FGameplayTag Resistance_MagicalDamage_Psychic;
 
-	TMap<FGameplayTag, FGameplayTag> DamageTypesToResistances;
+	TMap<FGameplayTag, FGameplayTag> DamageTypeToResistance;
 
 	
 	/* Effect Tags */

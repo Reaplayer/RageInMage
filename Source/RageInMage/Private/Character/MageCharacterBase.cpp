@@ -116,6 +116,34 @@ UNiagaraSystem* AMageCharacterBase::GetBloodEffect_Implementation()
 	return BloodEffect;
 }
 
+FTaggedMontage AMageCharacterBase::GetRandomAttackMontage_Implementation(bool bIsRanged, bool bIsSummon)
+{
+	TArray<FTaggedMontage> EligibleMontages;
+
+	for (const FTaggedMontage& Montage : AttackMontages)
+	{
+		// Determine if this specific montage is Ranged, Melee or Summon based on ProjectileClass or SummonClass
+		const bool bIsMontageRanged = Montage.ProjectileClass != nullptr;
+		const bool bIsMontageSummon = Montage.SummonClass != nullptr;
+
+		// If it matches the requested type, add it to our candidate list
+		if (bIsMontageRanged == bIsRanged || bIsMontageSummon == bIsSummon)
+		{
+			EligibleMontages.Add(Montage);
+		}
+	}
+
+	// If we found at least one valid montage, pick a random one
+	if (!EligibleMontages.IsEmpty())
+	{
+		const int32 Selection = FMath::RandRange(0, EligibleMontages.Num() - 1);
+		return EligibleMontages[Selection];
+	}
+
+	// Return an empty struct if no matching montages were found
+	return FTaggedMontage();
+}
+
 void AMageCharacterBase::InitPlayerAbilityActorInfo()
 {
 }

@@ -21,9 +21,6 @@ protected:
 	const FGameplayAbilityActivationInfo ActivationInfo,
 	const FGameplayEventData* TriggerEventData) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TSubclassOf<ARageInMageSphereProjectile> ProjectileClass;
-
 	UFUNCTION(BlueprintCallable, Category = "Projectile")
-	void SpawnProjectile(const FVector& ProjectileTargetLocation);
+	void SpawnProjectile(const FVector& ProjectileTargetLocation, const FGameplayTag& SocketTag, TSubclassOf<AActor> ProjectileClass);
 };

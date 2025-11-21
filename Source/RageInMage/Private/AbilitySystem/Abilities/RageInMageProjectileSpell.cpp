@@ -17,17 +17,23 @@ void URageInMageProjectileSpell::ActivateAbility(const FGameplayAbilitySpecHandl
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 }
 
-void URageInMageProjectileSpell::SpawnProjectile(const FVector& ProjectileTargetLocation)
+void URageInMageProjectileSpell::SpawnProjectile(const FVector& ProjectileTargetLocation, const FGameplayTag& SocketTag, TSubclassOf<AActor> ProjectileClass)
 {
 	const bool bIsServer = GetAvatarActorFromActorInfo()->HasAuthority();
 	if (!bIsServer) return;
+
+	if (ProjectileClass == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ProjectileClass is null. Unable to spawn projectile."));
+		return;
+	}
 
 	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetAvatarActorFromActorInfo()))
 	{
 		// Set where to spawn the Projectile from
 		const FVector SocketLocation = ICombatInterface::Execute_GetCombatSocketLocation(
 			GetAvatarActorFromActorInfo(),
-			FRageInMageGameplayTag::Get().CombatSocket_Weapon);
+			SocketTag);
 		FRotator Rotation = (ProjectileTargetLocation - SocketLocation).Rotation();
 		FTransform SpawnTransform;
 		SpawnTransform.SetLocation(SocketLocation);

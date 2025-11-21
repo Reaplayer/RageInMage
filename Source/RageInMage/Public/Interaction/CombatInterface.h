@@ -7,6 +7,7 @@
 #include "UObject/Interface.h"
 #include "CombatInterface.generated.h"
 
+class ARageInMageSphereProjectile;
 class UNiagaraSystem;
 class UAnimMontage;
 class USoundBase;
@@ -24,6 +25,10 @@ struct FTaggedMontage
 	FGameplayTag SocketTag;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	USoundBase* HitSound = nullptr;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<AActor> ProjectileClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<AActor> SummonClass;
 };
 
 // This class does not need to be modified.
@@ -69,4 +74,8 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	FTaggedMontage GetTaggedMontageByTag(const FGameplayTag& MontageTag);
+	
+	/** Helper to select a random montage based on attack type */
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	FTaggedMontage GetRandomAttackMontage(bool bIsRanged, bool bIsSummon);
 };

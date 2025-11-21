@@ -44,9 +44,13 @@ void AEnemyCharacter::PossessedBy(AController* NewController)
 	AIController->RunBehaviorTree(BehaviourTree);
 	AIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);
 	AIController->GetBlackboardComponent()->SetValueAsBool(FName("IsDead"), bIsDead);
-	if (CharacterClass != ECharacterClass::Warrior)
+	if (bRangedAttacker)
 	{
 		AIController->GetBlackboardComponent()->SetValueAsBool(FName("RangedAttacker"), true);
+	}
+	if (bMeleeAndRangedAttacker)
+	{
+		AIController->GetBlackboardComponent()->SetValueAsBool(FName("MeleeAndRangedAttacker"), true);
 	}
 }
 

@@ -96,6 +96,10 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	/* Ability Tags */
 	GameplayTag.Ability_Attack = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Ability.Attack"), FString("Tag for when Attacking."));
+	GameplayTag.Ability_Attack_Melee = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Attack.Melee"), FString("Tag for when Melee Attacking."));
+	GameplayTag.Ability_Attack_Ranged = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Attack.Ranged"), FString("Tag for when Ranged Attacking."));
 	
 	
 	/* Input Tags */
@@ -206,21 +210,21 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	(FName("Resistance.MagicalDamage.Psychic"), FString("Amount of Psychic Damage Done."));
 
 
-	/* Map of Damage Types to Resistances */
-	GameplayTag.DamageTypesToResistances.Add(GameplayTag.DamageType_PhysicalDamage, GameplayTag.Resistance_PhysicalDamage);
-	GameplayTag.DamageTypesToResistances.Add(GameplayTag.DamageType_PhysicalDamage_Slashing, GameplayTag.Resistance_PhysicalDamage_Slashing);
-	GameplayTag.DamageTypesToResistances.Add(GameplayTag.DamageType_PhysicalDamage_Piercing, GameplayTag.Resistance_PhysicalDamage_Piercing);
-	GameplayTag.DamageTypesToResistances.Add(GameplayTag.DamageType_PhysicalDamage_Bludgeoning, GameplayTag.Resistance_PhysicalDamage_Bludgeoning);
-	GameplayTag.DamageTypesToResistances.Add(GameplayTag.DamageType_MagicalDamage, GameplayTag.Resistance_MagicalDamage);
-	GameplayTag.DamageTypesToResistances.Add(GameplayTag.DamageType_MagicalDamage_Fire, GameplayTag.Resistance_MagicalDamage_Fire);
-	GameplayTag.DamageTypesToResistances.Add(GameplayTag.DamageType_MagicalDamage_Cold, GameplayTag.Resistance_MagicalDamage_Cold);
-	GameplayTag.DamageTypesToResistances.Add(GameplayTag.DamageType_MagicalDamage_Electric, GameplayTag.Resistance_MagicalDamage_Electric);
-	GameplayTag.DamageTypesToResistances.Add(GameplayTag.DamageType_MagicalDamage_Poison, GameplayTag.Resistance_MagicalDamage_Poison);
-	GameplayTag.DamageTypesToResistances.Add(GameplayTag.DamageType_MagicalDamage_Acid, GameplayTag.Resistance_MagicalDamage_Acid);
-	GameplayTag.DamageTypesToResistances.Add(GameplayTag.DamageType_MagicalDamage_Shadow, GameplayTag.Resistance_MagicalDamage_Shadow);
-	GameplayTag.DamageTypesToResistances.Add(GameplayTag.DamageType_MagicalDamage_Radiant, GameplayTag.Resistance_MagicalDamage_Radiant);
-	GameplayTag.DamageTypesToResistances.Add(GameplayTag.DamageType_MagicalDamage_Force, GameplayTag.Resistance_MagicalDamage_Force);
-	GameplayTag.DamageTypesToResistances.Add(GameplayTag.DamageType_MagicalDamage_Psychic , GameplayTag.Resistance_MagicalDamage_Psychic);
+	/* Map of Damage Type Tags to Resistance Tags */
+	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_PhysicalDamage, GameplayTag.Resistance_PhysicalDamage);
+	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_PhysicalDamage_Slashing, GameplayTag.Resistance_PhysicalDamage_Slashing);
+	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_PhysicalDamage_Piercing, GameplayTag.Resistance_PhysicalDamage_Piercing);
+	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_PhysicalDamage_Bludgeoning, GameplayTag.Resistance_PhysicalDamage_Bludgeoning);
+	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_MagicalDamage, GameplayTag.Resistance_MagicalDamage);
+	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_MagicalDamage_Fire, GameplayTag.Resistance_MagicalDamage_Fire);
+	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_MagicalDamage_Cold, GameplayTag.Resistance_MagicalDamage_Cold);
+	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_MagicalDamage_Electric, GameplayTag.Resistance_MagicalDamage_Electric);
+	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_MagicalDamage_Poison, GameplayTag.Resistance_MagicalDamage_Poison);
+	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_MagicalDamage_Acid, GameplayTag.Resistance_MagicalDamage_Acid);
+	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_MagicalDamage_Shadow, GameplayTag.Resistance_MagicalDamage_Shadow);
+	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_MagicalDamage_Radiant, GameplayTag.Resistance_MagicalDamage_Radiant);
+	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_MagicalDamage_Force, GameplayTag.Resistance_MagicalDamage_Force);
+	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_MagicalDamage_Psychic , GameplayTag.Resistance_MagicalDamage_Psychic);
 	
 	
 	/* Effect Tags */
@@ -303,7 +307,6 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 
 
 	/* Combat Socket Tags */
-	
 	GameplayTag.CombatSocket_Weapon = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("CombatSocket.Weapon"), FString("Tag for when attacking with Weapon."));
 	
@@ -318,7 +321,6 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	
 	
 	/* Montage Attack Tags */
-	
 	GameplayTag.Montage_Attack_1 = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Montage.Attack.1"), FString("Tag for Montage Attacks."));
 	
@@ -349,37 +351,38 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.Montage_Attack_10 = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Montage.Attack.10"), FString("Tag for Montage Attacks."));
 	
+	
 	/* Team Tags */
 	GameplayTag.Team_Red = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Team.Red"), FString("Red Team"));
+	(FName("Team.Red"), FString("Tag for Red Team"));
 	
 	GameplayTag.Team_Blue = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Team.Blue"), FString("Blue Team"));
+	(FName("Team.Blue"), FString("Tag for Blue Team"));
 	
 	GameplayTag.Team_Green = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Team.Green"), FString("Green Team"));
+	(FName("Team.Green"), FString("Tag for Green Team"));
 	
 	GameplayTag.Team_Yellow = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Team.Yellow"), FString("Yellow Team"));
+	(FName("Team.Yellow"), FString("Tag for Yellow Team"));
 	
 	GameplayTag.Team_Purple = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Team.Purple"), FString("Purple Team"));
+	(FName("Team.Purple"), FString("Tag for Purple Team"));
 	
 	GameplayTag.Team_Orange = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Team.Orange"), FString("Orange Team"));
+	(FName("Team.Orange"), FString("Tag for Orange Team"));
 	
 	GameplayTag.Team_Pink = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Team.Pink"), FString("Pink Team"));
+	(FName("Team.Pink"), FString("Tag for Pink Team"));
 	
 	GameplayTag.Team_Brown = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Team.Brown"), FString("Brown Team"));
+	(FName("Team.Brown"), FString("Tag for Brown Team"));
 	
 	GameplayTag.Team_Black = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Team.Black"), FString("Black Team"));
+	(FName("Team.Black"), FString("Tag for Black Team"));
 	
 	GameplayTag.Team_White = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Team.White"), FString("White Team"));
+	(FName("Team.White"), FString("Tag for White Team"));
 	
 	GameplayTag.Team_Cyan = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Team.Cyan"), FString("Cyan Team"));
+	(FName("Team.Cyan"), FString("Tag for Cyan Team"));
 }

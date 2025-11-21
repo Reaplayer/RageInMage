@@ -199,7 +199,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
         	for (FGameplayTag Tag : *SourceTags)
         	{
         		// Search through DamageType Gameplay Tags
-        		for(const TPair<FGameplayTag, FGameplayTag>& Pair : FRageInMageGameplayTag::Get().DamageTypesToResistances)
+        		for(const TPair<FGameplayTag, FGameplayTag>& Pair : FRageInMageGameplayTag::Get().DamageTypeToResistance)
         		{
         			// Match Source DamageType Tag With DamageToResistance Tag
         			if (Pair.Key.MatchesTagExact(Tag))

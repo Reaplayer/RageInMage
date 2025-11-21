@@ -78,4 +78,12 @@ protected:
 
 private:
 	bool bIsDead = false;
+	
+	/** Do Not Set MeleeAndRangedAttacker true if this is true! */
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	bool bRangedAttacker = false;
+	
+	/** Do Not Set RangedAttacker true if this is true! */
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	bool bMeleeAndRangedAttacker = false;
 };
