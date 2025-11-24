@@ -22,6 +22,10 @@ class RAGEINMAGE_API AMageCharacterBase : public ACharacter, public IAbilitySyst
 	GENERATED_BODY()
 
 public:
+	// The actual delegate instance. "BlueprintAssignable" allows you to bind to it in BP.
+	UPROPERTY(BlueprintAssignable, Category = "Combat")
+	FOnDeathSignature OnDeathDelegate;
+	
 	AMageCharacterBase();
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UAttributeSet* GetAttributeSet() const { return AttributeSet; };
@@ -38,6 +42,9 @@ public:
 	virtual UNiagaraSystem* GetBloodEffect_Implementation() override;
 	virtual FTaggedMontage GetRandomAttackMontage_Implementation(bool bIsRanged, bool bIsSummon) override;
 	virtual int32 GetSummonCount_Implementation() override;
+	virtual void SetSummonCount_Implementation(int32 NewSummonCount) override;
+	virtual int32 GetMaxSummonCount_Implementation() override;
+	virtual void SetMaxSummonCount_Implementation(int32 NewMaxSummonCount) override;
 	/* End Combat Interface */
 
 	UFUNCTION(NetMulticast, Reliable)
@@ -51,7 +58,11 @@ public:
 	USoundBase* DeathSound;
 	
 	/* Summons */
-	int32 SummonCount = 5;
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	int32 SummonCount = 0;
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	int32 MaxSummonCount = 5;
+	/* End Summons */
 
 protected:
 	virtual void BeginPlay() override;

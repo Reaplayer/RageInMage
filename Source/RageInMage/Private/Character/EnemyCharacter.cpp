@@ -5,7 +5,6 @@
 
 #include "RageInMageGameplayTag.h"
 #include "AI/RageInMageAIController.h"
-#include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
 #include  "AbilitySystem/RageInMageAbilitySystemLibrary.h"
@@ -40,10 +39,15 @@ void AEnemyCharacter::PossessedBy(AController* NewController)
 
 	if (!HasAuthority()) return;
 	AIController = Cast<ARageInMageAIController>(NewController);
-	AIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviourTree->BlackboardAsset);
+	
+	// Initialize the Blackboard via RunBehaviourTree First
 	AIController->RunBehaviorTree(BehaviourTree);
+	
+	// Initialize Blackboard Values
 	AIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);
 	AIController->GetBlackboardComponent()->SetValueAsBool(FName("IsDead"), bIsDead);
+	AIController->GetBlackboardComponent()->SetValueAsInt(FName("SummonCount"), SummonCount);
+	AIController->GetBlackboardComponent()->SetValueAsInt(FName("MaxSummonCount"), MaxSummonCount);
 	if (bRangedAttacker)
 	{
 		AIController->GetBlackboardComponent()->SetValueAsBool(FName("RangedAttacker"), true);

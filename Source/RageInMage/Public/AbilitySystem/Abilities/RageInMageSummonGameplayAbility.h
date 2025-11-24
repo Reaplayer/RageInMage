@@ -16,16 +16,16 @@ class RAGEINMAGE_API URageInMageSummonGameplayAbility : public URageInMageGamepl
 	
 public:
 	UFUNCTION(blueprintCallable)
-	TArray<FVector> GetSummonLocations();
+	TArray<FVector> GetSummonLocations(int32 InSummonAmount);
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Summon")
-	int32 SummonCount = 5;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Summon")
+	int32 SummonAmount = 5;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Summon")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Summon")
 	float MinSpawnDistance = 75.f;
-	UPROPERTY(EditDefaultsOnly, Category = "Summon")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Summon")
 	float MaxSpawnDistance = 250.f;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Summon")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Summon")
 	float SpawnSpreadAngle = 90.f;
 };

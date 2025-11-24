@@ -14,7 +14,9 @@ enum class ECharacterClass : uint8
 {
 	Elementalist,
 	Ranger,
-	Warrior
+	Warrior,
+	Summoner,
+	Tank
 };
 
 USTRUCT(BlueprintType)
@@ -48,8 +50,6 @@ public:
 	TSubclassOf<UGameplayEffect> VitalAttributes;
 	UPROPERTY(EditDefaultsOnly, Category = "Common Class Defaults")
 	TSubclassOf<UGameplayEffect> ItemSpecificAttributes;
-	UPROPERTY(EditDefaultsOnly, Category = "Common Class Defaults")
-	TSubclassOf<UGameplayEffect> MechanicsAttributes;
 	UPROPERTY(EditDefaultsOnly, Category = "Common Class Defaults")
 	TSubclassOf<UGameplayEffect> ResistanceAttributes;
 

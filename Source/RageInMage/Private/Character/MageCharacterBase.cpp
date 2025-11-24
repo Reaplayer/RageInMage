@@ -37,8 +37,15 @@ UAnimMontage* AMageCharacterBase::GetHitReactionMontage_Implementation()
 
 void AMageCharacterBase::Die()
 {
+	// 1. Perform your death logic
 	Weapon->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
 	MulticastHandleDeath();
+	bDead = true;
+	// 2. Broadcast the delegate to notify listeners
+	if (OnDeathDelegate.IsBound())
+	{
+		OnDeathDelegate.Broadcast(this);
+	}
 }
 
 void AMageCharacterBase::MulticastHandleDeath_Implementation()
@@ -166,6 +173,21 @@ FTaggedMontage AMageCharacterBase::GetRandomAttackMontage_Implementation(bool bI
 int32 AMageCharacterBase::GetSummonCount_Implementation()
 {
 	return SummonCount;
+}
+
+void AMageCharacterBase::SetSummonCount_Implementation(int32 NewSummonCount)
+{
+	SummonCount = NewSummonCount;
+}
+
+int32 AMageCharacterBase::GetMaxSummonCount_Implementation()
+{
+	return MaxSummonCount;
+}
+
+void AMageCharacterBase::SetMaxSummonCount_Implementation(int32 NewMaxSummonCount)
+{
+	MaxSummonCount = NewMaxSummonCount;
 }
 
 void AMageCharacterBase::InitPlayerAbilityActorInfo()

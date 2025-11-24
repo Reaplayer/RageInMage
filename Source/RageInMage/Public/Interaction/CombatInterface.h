@@ -12,6 +12,9 @@ class UNiagaraSystem;
 class UAnimMontage;
 class USoundBase;
 
+// Declaration of the delegate type
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDeathSignature, AActor*, DeadActor);
+
 USTRUCT(BlueprintType)
 struct FTaggedMontage
 {
@@ -29,6 +32,8 @@ struct FTaggedMontage
 	TSubclassOf<AActor> ProjectileClass;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TSubclassOf<AActor> SummonClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UNiagaraSystem* SummonEffect;
 };
 
 // This class does not need to be modified.
@@ -81,4 +86,16 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	int32 GetSummonCount();
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void SetSummonCount(int32 NewSummonCount);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	int32 GetMaxSummonCount();
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void SetMaxSummonCount(int32 NewMaxSummonCount);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void RegisterSpawnedMinion(AActor* Minion);
 };

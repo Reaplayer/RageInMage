@@ -3,16 +3,16 @@
 
 #include "AbilitySystem/Abilities/RageInMageSummonGameplayAbility.h"
 
-TArray<FVector> URageInMageSummonGameplayAbility::GetSummonLocations()
+TArray<FVector> URageInMageSummonGameplayAbility::GetSummonLocations(int32 InSummonAmount)
 {
 	const FVector Forward = GetAvatarActorFromActorInfo()->GetActorForwardVector();
 	const FVector Location = GetAvatarActorFromActorInfo()->GetActorLocation();
-	const float DeltaSpread = SpawnSpreadAngle / SummonCount;
+	const float DeltaSpread = SpawnSpreadAngle / InSummonAmount;
 	
 	const FVector LeftOfSpread = Forward.RotateAngleAxis(SpawnSpreadAngle / 2, FVector::UpVector);
 	
 	TArray<FVector> SummonLocations;
-	for (int32 i = 0; i < SummonCount; i++)
+	for (int32 i = 0; i < InSummonAmount; i++)
 	{
 		const FVector Direction = LeftOfSpread.RotateAngleAxis(DeltaSpread * i, FVector::UpVector);
 		FVector ChosenSpawnLocation = Location + Direction * FMath::RandRange(MinSpawnDistance, MaxSpawnDistance);
