@@ -3,8 +3,10 @@
 
 #include "AbilitySystem/Data/AttributeInfo.h"
 
+#include "RageInMage/RageInMageLogChannels.h"
+
 FRageInMageAttributeInfo UAttributeInfo::FindAttributeInfoForTag(const FGameplayTag& AttributeTag,
-	bool bLogNotFound) const
+                                                                 bool bLogNotFound) const
 {
 	for (const FRageInMageAttributeInfo& Info : AttributeInformation)
 	{
@@ -16,7 +18,7 @@ FRageInMageAttributeInfo UAttributeInfo::FindAttributeInfoForTag(const FGameplay
 
 	if (bLogNotFound)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Unable to find info for AttributeTag [%s] on AttributeInfo [%s]."),
+		UE_LOG(LogRageInMage, Error, TEXT("Unable to find info for AttributeTag [%s] on AttributeInfo [%s]."),
 			*AttributeTag.ToString(), *GetNameSafe(this))
 	}
 	return FRageInMageAttributeInfo();

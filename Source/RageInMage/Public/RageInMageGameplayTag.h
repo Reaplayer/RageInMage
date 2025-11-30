@@ -62,7 +62,23 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Ability_Attack_Melee;
 	FGameplayTag Ability_Attack_Ranged;
 	FGameplayTag Ability_Summon;
-
+	
+	/* Fire Mage Ability Tags */
+	FGameplayTag Ability_Fire_SearingFlame;
+	FGameplayTag Ability_Fire_ChanneledFire;
+	FGameplayTag Ability_Fire_IgnitionLeap;
+	FGameplayTag Ability_Fire_RisingFlameWave;
+	FGameplayTag Ability_Fire_BlazingFlame;
+	FGameplayTag Ability_Fire_FallOfTheScorchingSun;
+	
+	
+	/* Water Mage Ability Tags */
+	FGameplayTag Ability_Water_SimpleIce;
+	FGameplayTag Ability_Water_SwirlingYoyo;
+	FGameplayTag Ability_Water_RidingTide;
+	FGameplayTag Ability_Water_SoothingBubble;
+	FGameplayTag Ability_Water_DropRippleBlast;
+	FGameplayTag Ability_Water_TearsDoFall;
 
 	/* Input Tags */
 	FGameplayTag InputTag_LMB;
