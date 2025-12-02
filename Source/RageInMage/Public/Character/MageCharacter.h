@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "Character/MageCharacterBase.h"
 #include "MageCharacter.generated.h"
 
@@ -23,7 +24,7 @@ public:
 	/* End Combat Interface */
 
 protected:
-
+	
 
 private:
 	virtual void InitPlayerAbilityActorInfo() override;

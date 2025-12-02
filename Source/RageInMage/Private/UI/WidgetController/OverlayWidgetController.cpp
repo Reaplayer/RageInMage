@@ -4,8 +4,10 @@
 #include "UI/WidgetController/OverlayWidgetController.h"
 
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
+#include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
 #include "AbilitySystem/RageInMageAttributeSet.h"
-#include "GameFramework/GameSession.h"
+#include "AbilitySystem/Data/CharacterClassInfo.h"
+#include "Interaction/CombatInterface.h"
 
 void UOverlayWidgetController::BroadcastInitalValues()
 {
@@ -14,6 +16,18 @@ void UOverlayWidgetController::BroadcastInitalValues()
 	OnMaxHealthChanged.Broadcast(MageAttributeSet->GetMaxHealth());
 	OnManaChanged.Broadcast(MageAttributeSet->GetMana());
 	OnMaxManaChanged.Broadcast(MageAttributeSet->GetMaxMana());
+	
+	// Broadcast Class Visuals
+	if (UCharacterClassInfo* CharacterClassInfo = URageInMageAbilitySystemLibrary::GetCharacterClassInfo(MageAttributeSet->GetOwningActor()))
+	{
+		if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(MageAttributeSet->GetOwningActor()))
+		{
+			const ECharacterClass CharacterClass = CombatInterface->Execute_GetCharacterClass(MageAttributeSet->GetOwningActor());
+			const FCharacterClassDefaultInfo DefaultInfo = CharacterClassInfo->GetCharacterClassDefaultInfo(CharacterClass);
+
+			OnSetXPStyle.Broadcast(DefaultInfo.ProgressBarColor, DefaultInfo.BackGroundMaterialInstance);
+		}
+	}
 	
 }
 

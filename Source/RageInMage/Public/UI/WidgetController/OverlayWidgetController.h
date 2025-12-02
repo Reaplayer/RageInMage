@@ -23,11 +23,21 @@ struct FUIWidgetRow : public FTableRowBase
 	UTexture2D* MessageImage = nullptr;
 };
 
+// Delegate for Attributes
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, float, NewValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageWidgetRowSignature, FUIWidgetRow, Row);
 
+// Delegate for Leveling up
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnXPPercentChangedSignature, float, NewPercent, bool, bLevelUp); // Example usage you might already have or need
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLevelChangedSignature, int32, NewLevel, bool, bLevelUp);
+
+// Delegate for Visuals
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSetXPStyleSignature, FSlateColor, ProgressBarColor, UMaterialInterface*, BackgroundMaterial);
+
 /**
- * 
+ * UOverlayWidgetController is responsible for managing updates and events related to overlay widgets in the game UI.
+ * It inherits from UMageWidgetController and extends its functionality by providing specific callbacks
+ * and data bindings for the overlay UI elements.
  */
 UCLASS(BlueprintType, Blueprintable)
 class RAGEINMAGE_API UOverlayWidgetController : public UMageWidgetController
@@ -52,6 +62,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Messages")
 	FMessageWidgetRowSignature MessageWidgetRowDelegate;
+	
+	UPROPERTY(BlueprintAssignable, Category = "GAS|XP")
+	FOnSetXPStyleSignature OnSetXPStyle;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WidgetData")

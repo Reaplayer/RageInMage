@@ -107,6 +107,212 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	(FName("Ability.Summon"), FString("Tag for when Summoning."));
 	
 	
+	/* Fire Mage Ability Tags */
+	GameplayTag.Ability_Fire_SearingFlame = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Fire.SearingFlame"), FString("Tag for when casting Searing Flame."));
+	
+	GameplayTag.Ability_Fire_ChanneledFire = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Fire.ChanneledFire"), FString("Tag for when casting Channeled Fire."));
+	
+	GameplayTag.Ability_Fire_IgnitionLeap = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Fire.IgnitionLeap"), FString("Tag for when casting Ignition Leap."));
+	
+	GameplayTag.Ability_Fire_RisingFlameWave = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Fire.RisingFlameWave"), FString("Tag for when casting Rising Flame Wave."));	
+	
+	GameplayTag.Ability_Fire_BlazingFlame = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Fire.BlazingFlame"), FString("Tag for when casting Blazing Flame."));
+	
+	GameplayTag.Ability_Fire_FallOfTheScorchingSun = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Fire.FallOfTheScorchingSun"), FString("Tag for when casting Fall of the Scorching Sun."));
+	
+	
+	/* Water Mage Ability Tags */
+	GameplayTag.Ability_Water_SimpleIce = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Water.SimpleIce"), FString("Tag for when casting Simple Ice."));
+	
+	GameplayTag.Ability_Water_SwirlingYoyo = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Water.SwirlingYoyo"), FString("Tag for when casting Swirling Yoyo."));
+	
+	GameplayTag.Ability_Water_Excelled = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Water.Excelled"), FString("Tag for when casting Excelled."));
+	
+	GameplayTag.Ability_Water_RidingTide = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Water.RidingTide"), FString("Tag for when casting Riding Tide."));
+	
+	GameplayTag.Ability_Water_SoothingBubble = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Water.SoothingBubble"), FString("Tag for when casting Soothing Bubble."));
+	
+	GameplayTag.Ability_Water_DropRippleBlast = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Water.DropRippleBlast"), FString("Tag for when casting Drop Ripple Blast."));
+
+	GameplayTag.Ability_Water_TearsDoFall = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Water.TearsDoFall"), FString("Tag for when casting Tears Do Fall."));
+	
+	
+	/* Air Mage Ability Tags */
+	GameplayTag.Ability_Air_SwiftGust = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Air.SwiftGust"), FString("Tag for when casting Swift Gust."));
+	
+	GameplayTag.Ability_Air_CatapultLaunch = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Air.CatapultLaunch"), FString("Tag for when casting Catapult Launch."));
+	
+	GameplayTag.Ability_Air_CleanWindDash = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Air.CleanWindDash"), FString("Tag for when casting Clean Wind Dash."));
+	
+	GameplayTag.Ability_Air_MountainVortex = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Air.MountainVortex"), FString("Tag for when casting Mountain Vortex."));
+	
+	GameplayTag.Ability_Air_BlueSkyWhirlwind = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Air.BlueSkyWhirlwind"), FString("Tag for when casting Blue Sky Whirlwind."));
+	
+	GameplayTag.Ability_Air_DanceOfTheWindDragon = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Air.DanceOfTheWindDragon"), FString("Tag for when casting Dance of the Wind Dragon."));
+	
+	
+	/* Earth Mage Ability Tags */
+	GameplayTag.Ability_Earth_SlingRock = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Earth.SlingRock"), FString("Tag for when casting Sling Rock."));
+
+	GameplayTag.Ability_Earth_JewelFistShatter = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Earth.JewelFistShatter"), FString("Tag for when casting Jewel Fist Shatter."));
+
+	GameplayTag.Ability_Earth_ChargingBull = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Earth.ChargingBull"), FString("Tag for when casting Charging Bull."));
+
+	GameplayTag.Ability_Earth_RockSolid = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Earth.RockSolid"), FString("Tag for when casting Rock Solid."));
+
+	GameplayTag.Ability_Earth_GemJail = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Earth.GemJail"), FString("Tag for when casting Gem Jail."));
+
+	GameplayTag.Ability_Earth_TheBoulder = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Earth.TheBoulder"), FString("Tag for when casting The Boulder."));
+
+	GameplayTag.Ability_Earth_LandSlide = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Earth.LandSlide"), FString("Tag for when casting Land Slide."));
+
+
+	/* Lightning Mage Ability Tags */
+	GameplayTag.Ability_Lightning_LightningFlash = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Lightning.LightningFlash"), FString("Tag for when casting Lightning Flash."));
+
+	GameplayTag.Ability_Lightning_SparkingSphere = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Lightning.SparkingSphere"), FString("Tag for when casting Sparking Sphere."));
+
+	GameplayTag.Ability_Lightning_ZipNZap = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Lightning.ZipNZap"), FString("Tag for when casting Zip N Zap."));
+
+	GameplayTag.Ability_Lightning_StaticMegaSurge = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Lightning.StaticMegaSurge"), FString("Tag for when casting Static Mega Surge."));
+
+	GameplayTag.Ability_Lightning_FlashAndAwe = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Lightning.FlashAndAwe"), FString("Tag for when casting Flash And Awe."));
+
+	GameplayTag.Ability_Lightning_CeaselessWrath = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Lightning.CeaselessWrath"), FString("Tag for when casting Ceaseless Wrath."));
+
+
+	/* Nature Mage Ability Tags */
+	GameplayTag.Ability_Nature_ThornSpread = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Nature.ThornSpread"), FString("Tag for when casting Thorn Spread."));
+
+	GameplayTag.Ability_Nature_VenusFlyTrap = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Nature.VenusFlyTrap"), FString("Tag for when casting Venus Fly Trap."));
+
+	GameplayTag.Ability_Nature_CreepingVines = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Nature.CreepingVines"), FString("Tag for when casting Creeping Vines."));
+
+	GameplayTag.Ability_Nature_EncasingSurprise = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Nature.EncasingSurprise"), FString("Tag for when casting Encasing Surprise."));
+
+	GameplayTag.Ability_Nature_LassoOfThorns = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Nature.LassoOfThorns"), FString("Tag for when casting Lasso Of Thorns."));
+
+	GameplayTag.Ability_Nature_NaturesSpikyGrasp = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Nature.NaturesSpikyGrasp"), FString("Tag for when casting Natures Spiky Grasp."));
+
+
+	/* Sound Mage Ability Tags */
+	GameplayTag.Ability_Sound_Pleasc = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Sound.Pleasc"), FString("Tag for when casting Pleasc."));
+
+	GameplayTag.Ability_Sound_GunAnail = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Sound.GunAnail"), FString("Tag for when casting Gun Anail."));
+
+	GameplayTag.Ability_Sound_DeanAite = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Sound.DeanAite"), FString("Tag for when casting Dean Aite."));
+
+	GameplayTag.Ability_Sound_AmMall = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Sound.AmMall"), FString("Tag for when casting Am Mall."));
+
+	GameplayTag.Ability_Sound_GunGhluasad = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Sound.GunGhluasad"), FString("Tag for when casting Gun Ghluasad."));
+
+	GameplayTag.Ability_Sound_TollahdFainne = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Sound.TollahdFainne"), FString("Tag for when casting Tollahd Fainne."));
+
+
+	/* Shadow Mage Ability Tags */
+	GameplayTag.Ability_Shadow_DustBomb = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Shadow.DustBomb"), FString("Tag for when casting Dust Bomb."));
+
+	GameplayTag.Ability_Shadow_JokersFacade = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Shadow.JokersFacade"), FString("Tag for when casting Jokers Facade."));
+
+	GameplayTag.Ability_Shadow_SmokeScreenShuffle = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Shadow.SmokeScreenShuffle"), FString("Tag for when casting Smoke Screen Shuffle."));
+
+	GameplayTag.Ability_Shadow_ShadowGuide = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Shadow.ShadowGuide"), FString("Tag for when casting Shadow Guide."));
+
+	GameplayTag.Ability_Shadow_VapourRush = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Shadow.VapourRush"), FString("Tag for when casting Vapour Rush."));
+
+	GameplayTag.Ability_Shadow_HiddenShadowTechnique = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Shadow.HiddenShadowTechnique"), FString("Tag for when casting Hidden Shadow Technique."));
+
+
+	/* Necromancer Mage Ability Tags */
+	GameplayTag.Ability_Necromancer_BubbleTrouble = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Necromancer.BubbleTrouble"), FString("Tag for when casting Bubble Trouble."));
+
+	GameplayTag.Ability_Necromancer_UndeathMark = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Necromancer.UndeathMark"), FString("Tag for when casting Undeath Mark."));
+
+	GameplayTag.Ability_Necromancer_OldSkeller = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Necromancer.OldSkeller"), FString("Tag for when casting Old Skeller."));
+
+	GameplayTag.Ability_Necromancer_LivingBlockade = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Necromancer.LivingBlockade"), FString("Tag for when casting Living Blockade."));
+
+	GameplayTag.Ability_Necromancer_WrithingGrasp = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Necromancer.WrithingGrasp"), FString("Tag for when casting Writhing Grasp."));
+
+	GameplayTag.Ability_Necromancer_RiseOfTheBlackCurse = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Necromancer.RiseOfTheBlackCurse"), FString("Tag for when casting Rise Of The Black Curse."));
+
+
+	/* Holy Mage Ability Tags */
+	GameplayTag.Ability_Holy_BeamingBlade = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Holy.BeamingBlade"), FString("Tag for when casting Beaming Blade."));
+
+	GameplayTag.Ability_Holy_SacredSmite = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Holy.SacredSmite"), FString("Tag for when casting Sacred Smite."));
+
+	GameplayTag.Ability_Holy_HolyBolt_Chain = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Holy.HolyBolt.Chain"), FString("Tag for when casting Holy Bolt Chain."));
+
+	GameplayTag.Ability_Holy_DivineSanctuary = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Holy.DivineSanctuary"), FString("Tag for when casting Divine Sanctuary."));
+
+	GameplayTag.Ability_Holy_HolyBolt_Storm = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Holy.HolyBolt.Storm"), FString("Tag for when casting Holy Bolt Storm."));
+
+	GameplayTag.Ability_Holy_HolyShield = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Holy.HolyShield"), FString("Tag for when casting Holy Shield."));
+	
+	
 	/* Input Tags */
 	GameplayTag.InputTag_LMB = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("InputTag.LMB"), FString("Input Tag for Left Mouse Button."));

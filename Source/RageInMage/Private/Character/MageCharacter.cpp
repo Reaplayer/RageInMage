@@ -5,6 +5,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
+#include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Player/MagePlayerController.h"
 #include "Player/MagePlayerState.h"

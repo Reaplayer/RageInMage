@@ -75,11 +75,86 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	/* Water Mage Ability Tags */
 	FGameplayTag Ability_Water_SimpleIce;
 	FGameplayTag Ability_Water_SwirlingYoyo;
+	FGameplayTag Ability_Water_Excelled;
 	FGameplayTag Ability_Water_RidingTide;
 	FGameplayTag Ability_Water_SoothingBubble;
 	FGameplayTag Ability_Water_DropRippleBlast;
 	FGameplayTag Ability_Water_TearsDoFall;
+	
+	
+	/* Air Mage Ability Tags */
+	FGameplayTag Ability_Air_SwiftGust;
+	FGameplayTag Ability_Air_CatapultLaunch;
+	FGameplayTag Ability_Air_CleanWindDash;
+	FGameplayTag Ability_Air_MountainVortex;
+	FGameplayTag Ability_Air_BlueSkyWhirlwind;
+	FGameplayTag Ability_Air_DanceOfTheWindDragon;
 
+
+	/* Earth Mage Ability Tags */
+	FGameplayTag Ability_Earth_SlingRock;
+	FGameplayTag Ability_Earth_JewelFistShatter;
+	FGameplayTag Ability_Earth_ChargingBull;
+	FGameplayTag Ability_Earth_RockSolid;
+	FGameplayTag Ability_Earth_GemJail;
+	FGameplayTag Ability_Earth_TheBoulder;
+	FGameplayTag Ability_Earth_LandSlide;
+
+	
+	/* Lightning Mage Ability Tags */
+	FGameplayTag Ability_Lightning_LightningFlash;
+	FGameplayTag Ability_Lightning_SparkingSphere;
+	FGameplayTag Ability_Lightning_ZipNZap;
+	FGameplayTag Ability_Lightning_StaticMegaSurge;
+	FGameplayTag Ability_Lightning_FlashAndAwe;
+	FGameplayTag Ability_Lightning_CeaselessWrath;
+	
+	
+	/* Nature Mage Ability Tags */
+	FGameplayTag Ability_Nature_ThornSpread;
+	FGameplayTag Ability_Nature_VenusFlyTrap;
+	FGameplayTag Ability_Nature_CreepingVines;
+	FGameplayTag Ability_Nature_EncasingSurprise;
+	FGameplayTag Ability_Nature_LassoOfThorns;
+	FGameplayTag Ability_Nature_NaturesSpikyGrasp;
+	
+	
+	/* Sound Mage Ability Tags */
+	FGameplayTag Ability_Sound_Pleasc;
+	FGameplayTag Ability_Sound_GunAnail;
+	FGameplayTag Ability_Sound_DeanAite;
+	FGameplayTag Ability_Sound_AmMall;
+	FGameplayTag Ability_Sound_GunGhluasad;
+	FGameplayTag Ability_Sound_TollahdFainne;
+	
+	
+	/* Shadow Mage Ability Tags */
+	FGameplayTag Ability_Shadow_DustBomb;
+	FGameplayTag Ability_Shadow_JokersFacade;
+	FGameplayTag Ability_Shadow_SmokeScreenShuffle;
+	FGameplayTag Ability_Shadow_ShadowGuide;
+	FGameplayTag Ability_Shadow_VapourRush;
+	FGameplayTag Ability_Shadow_HiddenShadowTechnique;
+	
+	
+	/* Necromancer Mage Ability Tags */
+	FGameplayTag Ability_Necromancer_BubbleTrouble;
+	FGameplayTag Ability_Necromancer_UndeathMark;
+	FGameplayTag Ability_Necromancer_OldSkeller;
+	FGameplayTag Ability_Necromancer_LivingBlockade;
+	FGameplayTag Ability_Necromancer_WrithingGrasp;
+	FGameplayTag Ability_Necromancer_RiseOfTheBlackCurse;
+	
+	
+	/* Holy Mage Ability Tags */
+	FGameplayTag Ability_Holy_BeamingBlade;
+	FGameplayTag Ability_Holy_SacredSmite;
+	FGameplayTag Ability_Holy_HolyBolt_Chain;
+	FGameplayTag Ability_Holy_DivineSanctuary;
+	FGameplayTag Ability_Holy_HolyBolt_Storm;
+	FGameplayTag Ability_Holy_HolyShield;
+	
+	
 	/* Input Tags */
 	FGameplayTag InputTag_LMB;
 	FGameplayTag InputTag_RMB;

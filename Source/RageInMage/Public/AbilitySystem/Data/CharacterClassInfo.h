@@ -16,7 +16,19 @@ enum class ECharacterClass : uint8
 	Ranger,
 	Warrior,
 	Summoner,
-	Tank
+	Tank,
+	Assassin,
+	Boss,
+	FireMage,
+	WaterMage,
+	AirMage,
+	EarthMage,
+	LightningMage,
+	NatureMage,
+	SoundMage,
+	ShadowMage,
+	Necromancer,
+	HolyMage
 };
 
 USTRUCT(BlueprintType)
@@ -29,6 +41,12 @@ struct FCharacterClassDefaultInfo
 
 	UPROPERTY(EditDefaultsOnly, Category = "Class Defaults")
 	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities; 
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Class Defaults")
+	FSlateColor ProgressBarColor = FSlateColor::UseForeground();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Class Defaults")
+	TObjectPtr<UMaterialInterface> BackGroundMaterialInstance = nullptr;
 };
 
 /**

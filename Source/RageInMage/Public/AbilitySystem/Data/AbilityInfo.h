@@ -8,24 +8,27 @@
 #include "AbilityInfo.generated.h"
 
 USTRUCT(BlueprintType)
-struct FRageInMageAbilityinfo
+struct FRageInMageAbilityInfo
 {
 	GENERATED_BODY()
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FGameplayTag AbilityTag = FGameplayTag();
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly)
 	FGameplayTag InputTag = FGameplayTag();
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TObjectPtr<const UTexture2D> AbilityIcon = nullptr;
+	UPROPERTY(EditDefaultsOnly, Category = "Class Defaults")
+	FSlateColor ProgressBarColor = FSlateColor::UseForeground();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Class Defaults")
+	TObjectPtr<UMaterialInterface> BackGroundMaterialInstance = nullptr;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TObjectPtr<UMaterialInterface> BackGroundMaterialInstance = nullptr;
+	FText AbilityDefinition = FText();
 };
 /**
- * @struct FRageInMageAbilityinfo
+ * @struct FRageInMageAbilityInfo
  * @brief Represents a data structure for holding information about an ability in the RageInMage game.
  *
  * This struct is used to encapsulate and organize data related to abilities, which can include
@@ -43,8 +46,8 @@ class RAGEINMAGE_API UAbilityInfo : public UDataAsset
 	
 	public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability Info")
-	TArray<FRageInMageAbilityinfo> AbilityInfos;
+	TArray<FRageInMageAbilityInfo> AbilityInfos;
 	
 	
-	FRageInMageAbilityinfo FindAbilityInfoForTag(const FGameplayTag& AbilityTag, bool bLogNotFound = false) const;
+	FRageInMageAbilityInfo FindAbilityInfoForTag(const FGameplayTag& AbilityTag, bool bLogNotFound = false) const;
 };

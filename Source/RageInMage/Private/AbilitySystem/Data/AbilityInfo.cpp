@@ -5,9 +5,9 @@
 
 #include "RageInMage/RageInMageLogChannels.h"
 
-FRageInMageAbilityinfo UAbilityInfo::FindAbilityInfoForTag(const FGameplayTag& AbilityTag, bool bLogNotFound) const
+FRageInMageAbilityInfo UAbilityInfo::FindAbilityInfoForTag(const FGameplayTag& AbilityTag, bool bLogNotFound) const
 {
-	for (const FRageInMageAbilityinfo Info : AbilityInfos)
+	for (const FRageInMageAbilityInfo Info : AbilityInfos)
 	{
 		if (Info.AbilityTag.MatchesTagExact(AbilityTag))
 		{
@@ -19,5 +19,5 @@ FRageInMageAbilityinfo UAbilityInfo::FindAbilityInfoForTag(const FGameplayTag& A
 		UE_LOG(LogRageInMage, Error, TEXT("Can't find AbilityInfo for AbilityTag [%s], on AbilityInfo [%s]"),
 			*AbilityTag.ToString(), *GetNameSafe(this));
 	}
-	return FRageInMageAbilityinfo();
+	return FRageInMageAbilityInfo();
 }
