@@ -6,9 +6,11 @@
 #include "UI/WidgetController/MageWidgetController.h"
 #include "OverlayWidgetController.generated.h"
 
+class URageInMageAbilitySystemComponent;
 class UAbilityInfo;
 class UMageUserWidget;
 
+struct FRageInMageAbilityInfo;
 USTRUCT(BlueprintType, Blueprintable)
 struct FUIWidgetRow : public FTableRowBase
 {
@@ -25,14 +27,17 @@ struct FUIWidgetRow : public FTableRowBase
 
 // Delegate for Attributes
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, float, NewValue);
+
+// Delegate for Widgets
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageWidgetRowSignature, FUIWidgetRow, Row);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoSignature, const FRageInMageAbilityInfo&, AbilityInfo);
 
 // Delegate for Leveling up
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnXPPercentChangedSignature, float, NewPercent, bool, bLevelUp); // Example usage you might already have or need
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLevelChangedSignature, int32, NewLevel, bool, bLevelUp);
 
 // Delegate for Visuals
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSetXPStyleSignature, FSlateColor, ProgressBarColor, UMaterialInterface*, BackgroundMaterial);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSetBGXPStyleSignature, FSlateColor, ProgressBarColor, UMaterialInstance*, BackgroundMaterial);
 
 /**
  * UOverlayWidgetController is responsible for managing updates and events related to overlay widgets in the game UI.
@@ -63,8 +68,11 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Messages")
 	FMessageWidgetRowSignature MessageWidgetRowDelegate;
 	
-	UPROPERTY(BlueprintAssignable, Category = "GAS|XP")
-	FOnSetXPStyleSignature OnSetXPStyle;
+	UPROPERTY(BlueprintAssignable, Category = "GAS|Messages")
+	FAbilityInfoSignature AbilityInfoDelegate;
+	
+	UPROPERTY(BlueprintAssignable, Category = "GAS|Messages")
+	FOnSetBGXPStyleSignature OnSetBGXPStyle;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WidgetData")
@@ -75,6 +83,8 @@ protected:
 
 	template<typename T>
 	T* GetDataTableRowByTag(UDataTable* DataTable, const FGameplayTag& Tag);
+	
+	void OnInitalizeStartUpAbilities(URageInMageAbilitySystemComponent* RageInMageAbilitySystemComponent);
 };
 
 template <typename T>

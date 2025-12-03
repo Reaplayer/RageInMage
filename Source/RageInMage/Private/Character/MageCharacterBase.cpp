@@ -101,6 +101,11 @@ AActor* AMageCharacterBase::GetAvatar_Implementation()
 	return this;
 }
 
+ECharacterClass AMageCharacterBase::GetCharacterClass_Implementation()
+{
+	return CharacterClass;
+}
+
 TArray<FTaggedMontage> AMageCharacterBase::GetAttackMontages_Implementation()
 {
 	return AttackMontages;

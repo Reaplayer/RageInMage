@@ -40,13 +40,13 @@ struct FCharacterClassDefaultInfo
 	TSubclassOf<UGameplayEffect> PrimaryAttributes;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Class Defaults")
-	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities; 
+	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Class Defaults")
 	FSlateColor ProgressBarColor = FSlateColor::UseForeground();
 
 	UPROPERTY(EditDefaultsOnly, Category = "Class Defaults")
-	TObjectPtr<UMaterialInterface> BackGroundMaterialInstance = nullptr;
+	TObjectPtr<UMaterialInstance> BackGroundMaterialInstance = nullptr;
 };
 
 /**

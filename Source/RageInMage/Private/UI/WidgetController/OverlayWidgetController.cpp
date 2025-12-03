@@ -6,6 +6,7 @@
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
 #include "AbilitySystem/RageInMageAttributeSet.h"
+#include "AbilitySystem/Data/AbilityInfo.h"
 #include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "Interaction/CombatInterface.h"
 
@@ -16,31 +17,20 @@ void UOverlayWidgetController::BroadcastInitalValues()
 	OnMaxHealthChanged.Broadcast(MageAttributeSet->GetMaxHealth());
 	OnManaChanged.Broadcast(MageAttributeSet->GetMana());
 	OnMaxManaChanged.Broadcast(MageAttributeSet->GetMaxMana());
-	
-	// Broadcast Class Visuals
-	if (UCharacterClassInfo* CharacterClassInfo = URageInMageAbilitySystemLibrary::GetCharacterClassInfo(MageAttributeSet->GetOwningActor()))
-	{
-		if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(MageAttributeSet->GetOwningActor()))
-		{
-			const ECharacterClass CharacterClass = CombatInterface->Execute_GetCharacterClass(MageAttributeSet->GetOwningActor());
-			const FCharacterClassDefaultInfo DefaultInfo = CharacterClassInfo->GetCharacterClassDefaultInfo(CharacterClass);
-
-			OnSetXPStyle.Broadcast(DefaultInfo.ProgressBarColor, DefaultInfo.BackGroundMaterialInstance);
-		}
-	}
-	
 }
 
 void UOverlayWidgetController::BindCallbacksToDependencies()
 {
 	const URageInMageAttributeSet* MageAttributeSet = CastChecked<URageInMageAttributeSet>(AttributeSet);
 
+	
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MageAttributeSet->GetHealthAttribute()).AddLambda(
 	[this](const FOnAttributeChangeData& Data)
 		{
 		OnHealthChanged.Broadcast(Data.NewValue);
 		}
 	);
+	
 	
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MageAttributeSet->GetMaxHealthAttribute()).AddLambda(
 	[this](const FOnAttributeChangeData& Data)
@@ -49,12 +39,14 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 		}
 	);
 	
+	
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MageAttributeSet->GetManaAttribute()).AddLambda(
 	[this](const FOnAttributeChangeData& Data)
 		{
 		OnManaChanged.Broadcast(Data.NewValue);
 		}
 	);
+	
 	
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MageAttributeSet->GetMaxManaAttribute()).AddLambda(
 	[this](const FOnAttributeChangeData& Data)
@@ -64,20 +56,61 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 	);
 
 	
-	Cast<URageInMageAbilitySystemComponent>(AbilitySystemComponent)->EffectAssetTags.AddLambda(
-	[this](const FGameplayTagContainer& AssetTags)
+	if (URageInMageAbilitySystemComponent* RageInMageAbilitySystemComponent = Cast<URageInMageAbilitySystemComponent>(AbilitySystemComponent))
 	{
-		for (const FGameplayTag& Tag : AssetTags)
+		if (RageInMageAbilitySystemComponent->bStartupAbilitiesGiven)
+		{
+			OnInitalizeStartUpAbilities(RageInMageAbilitySystemComponent);
+		}
+		else
+		{
+			RageInMageAbilitySystemComponent->AbilitiesGivenDelegate.AddUObject(this, &UOverlayWidgetController::OnInitalizeStartUpAbilities);
+		}
+		RageInMageAbilitySystemComponent->EffectAssetTags.AddLambda(
+			[this](const FGameplayTagContainer& AssetTags)
 			{
-				// For example, say that Tag = Message.Potion.Health
-				//"Message.Potion.Health".MatchesTag("Message") will return True, "Message".MatchesTag("Message.Potion.Health) will return False.
-				FGameplayTag MessageTag = FGameplayTag::RequestGameplayTag(FName("Message"));
-				if (Tag.MatchesTag(MessageTag))
+				for (const FGameplayTag& Tag : AssetTags)
+				{
+					// For example, say that Tag = Message.Potion.Health
+					//"Message.Potion.Health".MatchesTag("Message") will return True, "Message".MatchesTag("Message.Potion.Health) will return False.
+					FGameplayTag MessageTag = FGameplayTag::RequestGameplayTag(FName("Message"));
+					if (Tag.MatchesTag(MessageTag))
 					{
 						const FUIWidgetRow* Row = GetDataTableRowByTag<FUIWidgetRow>(MessageWidgetDataTable, Tag);
 						MessageWidgetRowDelegate.Broadcast(*Row);
 					}
+				}
+			}
+		);
+	}
+}
+
+void UOverlayWidgetController::OnInitalizeStartUpAbilities(
+	URageInMageAbilitySystemComponent* RageInMageAbilitySystemComponent)
+{
+	if (!RageInMageAbilitySystemComponent->bStartupAbilitiesGiven) return;
+	
+	FForEachAbilitySpec BroadCastDelegate;
+	BroadCastDelegate.BindLambda([this, RageInMageAbilitySystemComponent](const FGameplayAbilitySpec& AbilitySpec)
+	{
+		FRageInMageAbilityInfo Info = AbilityInfo->FindAbilityInfoForTag(RageInMageAbilitySystemComponent->GetAbilityTagFromSpec(AbilitySpec));
+		Info.InputTag = RageInMageAbilitySystemComponent->GetInputTagFromSpec(AbilitySpec);
+		AbilityInfoDelegate.Broadcast(Info);
+	});
+	RageInMageAbilitySystemComponent->ForEachAbilitySpec(BroadCastDelegate);
+	
+	// Broadcast Class Visuals
+	if (AActor* AvatarActor = AbilitySystemComponent->GetAvatarActor())
+	{
+		if (UCharacterClassInfo* CharacterClassInfo = URageInMageAbilitySystemLibrary::GetCharacterClassInfo(AvatarActor))
+		{
+			if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(AvatarActor))
+			{
+				const ECharacterClass CharacterClass = CombatInterface->Execute_GetCharacterClass(AvatarActor);
+				const FCharacterClassDefaultInfo DefaultInfo = CharacterClassInfo->GetCharacterClassDefaultInfo(CharacterClass);
+
+				OnSetBGXPStyle.Broadcast(DefaultInfo.ProgressBarColor, DefaultInfo.BackGroundMaterialInstance);
 			}
 		}
-	);
+	}
 }
