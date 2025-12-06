@@ -5,9 +5,11 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "RageInMageAbilitySystemTypes.h"
+#include "Character/MageCharacterBase.h"
 #include "Game/RageInMageGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/OverlapResult.h"
+#include "Game/RageInMageGameState.h"
 #include "UI/WidgetController/MageWidgetController.h"
 #include "Player/MagePlayerState.h"
 #include "RageInMage/RageInMageGameMode.h"
@@ -49,12 +51,13 @@ UAttributeMenuWidgetController* URageInMageAbilitySystemLibrary::GetAttributeMen
 void URageInMageAbilitySystemLibrary::InitializeDefaultAttributes(const UObject* WorldContextObject,
 	ECharacterClass CharacterClass, float Level, UAbilitySystemComponent* ASC)
 {
-	ARageInMageGameModeBase* GameMode = Cast<ARageInMageGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
-	if (!GameMode) return;
+	// Retrieve the GameState cast to our custom class
+	ARageInMageGameState* GameState = Cast<ARageInMageGameState>(UGameplayStatics::GetGameState(WorldContextObject));
+	if (!GameState || !GameState->CharacterClassInfo) return;
 
 	AActor* AvatarActor = ASC->GetAvatarActor();
 
-	UCharacterClassInfo* CharacterClassInfo = GameMode->CharacterClassInfo;
+	UCharacterClassInfo* CharacterClassInfo = GameState->CharacterClassInfo;
 	FCharacterClassDefaultInfo CharacterClassDefaultInfo = CharacterClassInfo->GetCharacterClassDefaultInfo(CharacterClass);
 
 	FGameplayEffectContextHandle PrimaryAttributesContextHandle = ASC->MakeEffectContext();
@@ -98,9 +101,16 @@ void URageInMageAbilitySystemLibrary::GiveStartupAbilities(const UObject* WorldC
 
 UCharacterClassInfo* URageInMageAbilitySystemLibrary::GetCharacterClassInfo(const UObject* WorldContextObject)
 {
-	ARageInMageGameModeBase* GameMode = Cast<ARageInMageGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
-	if (!GameMode) return nullptr;
-	return GameMode->CharacterClassInfo;
+	// Try to get the info from the GameState
+	if (ARageInMageGameState* GameState = Cast<ARageInMageGameState>(UGameplayStatics::GetGameState(WorldContextObject)))
+	{
+		if (GameState->CharacterClassInfo)
+		{
+			return GameState->CharacterClassInfo;
+		}
+	}
+
+	return nullptr;
 }
 
 bool URageInMageAbilitySystemLibrary::IsCriticalHit(const FGameplayEffectContextHandle& EffectContextHandle)

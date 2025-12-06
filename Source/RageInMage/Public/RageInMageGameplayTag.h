@@ -63,6 +63,15 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Ability_Attack_Ranged;
 	FGameplayTag Ability_Summon;
 	
+	
+	/* Ability Type Tags */
+	FGameplayTag AbilityType_Basic;
+	FGameplayTag AbilityType_Secondary;
+	FGameplayTag AbilityType_Movement;
+	FGameplayTag AbilityType_Defensive;
+	FGameplayTag AbilityType_CrowdControl;
+	FGameplayTag AbilityType_Ultimate;
+	
 	/* Fire Mage Ability Tags */
 	FGameplayTag Ability_Fire_SearingFlame;
 	FGameplayTag Ability_Fire_ChanneledFire;
@@ -155,6 +164,96 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Ability_Holy_HolyShield;
 	
 	
+	/* Fire Mage Cooldown Tags */
+	FGameplayTag Cooldown_Fire_SearingFlame;
+	FGameplayTag Cooldown_Fire_ChanneledFire;
+	FGameplayTag Cooldown_Fire_IgnitionLeap;
+	FGameplayTag Cooldown_Fire_RisingFlameWave;
+	FGameplayTag Cooldown_Fire_BlazingFlame;
+	FGameplayTag Cooldown_Fire_FallOfTheScorchingSun;
+	
+	
+	/* Water Mage Cooldown Tags */
+	FGameplayTag Cooldown_Water_SimpleIce;
+	FGameplayTag Cooldown_Water_SwirlingYoyo;
+	FGameplayTag Cooldown_Water_RidingTide;
+	FGameplayTag Cooldown_Water_SoothingBubble;
+	FGameplayTag Cooldown_Water_DropRippleBlast;
+	FGameplayTag Cooldown_Water_TearsDoFall;
+	
+	
+	/* Air Mage Cooldown Tags */
+	FGameplayTag Cooldown_Air_SwiftGust;
+	FGameplayTag Cooldown_Air_CatapultLaunch;
+	FGameplayTag Cooldown_Air_CleanWindDash;
+	FGameplayTag Cooldown_Air_MountainVortex;
+	FGameplayTag Cooldown_Air_BlueSkyWhirlwind;
+	FGameplayTag Cooldown_Air_DanceOfTheWindDragon;
+
+
+	/* Earth Mage Cooldown Tags */
+	FGameplayTag Cooldown_Earth_SlingRock;
+	FGameplayTag Cooldown_Earth_JewelFistShatter;
+	FGameplayTag Cooldown_Earth_ChargingBull;
+	FGameplayTag Cooldown_Earth_RockSolid;
+	FGameplayTag Cooldown_Earth_GemJail;
+	FGameplayTag Cooldown_Earth_TheBoulder;
+
+	
+	/* Lightning Mage Cooldown Tags */
+	FGameplayTag Cooldown_Lightning_LightningFlash;
+	FGameplayTag Cooldown_Lightning_SparkingSphere;
+	FGameplayTag Cooldown_Lightning_ZipNZap;
+	FGameplayTag Cooldown_Lightning_StaticMegaSurge;
+	FGameplayTag Cooldown_Lightning_FlashAndAwe;
+	FGameplayTag Cooldown_Lightning_CeaselessWrath;
+	
+	
+	/* Nature Mage Cooldown Tags */
+	FGameplayTag Cooldown_Nature_ThornSpread;
+	FGameplayTag Cooldown_Nature_VenusFlyTrap;
+	FGameplayTag Cooldown_Nature_CreepingVines;
+	FGameplayTag Cooldown_Nature_EncasingSurprise;
+	FGameplayTag Cooldown_Nature_LassoOfThorns;
+	FGameplayTag Cooldown_Nature_NaturesSpikyGrasp;
+	
+	
+	/* Sound Mage Cooldown Tags */
+	FGameplayTag Cooldown_Sound_Pleasc;
+	FGameplayTag Cooldown_Sound_GunAnail;
+	FGameplayTag Cooldown_Sound_DeanAite;
+	FGameplayTag Cooldown_Sound_AmMall;
+	FGameplayTag Cooldown_Sound_GunGhluasad;
+	FGameplayTag Cooldown_Sound_TollahdFainne;
+	
+	
+	/* Shadow Mage Cooldown Tags */
+	FGameplayTag Cooldown_Shadow_DustBomb;
+	FGameplayTag Cooldown_Shadow_JokersFacade;
+	FGameplayTag Cooldown_Shadow_SmokeScreenShuffle;
+	FGameplayTag Cooldown_Shadow_ShadowGuide;
+	FGameplayTag Cooldown_Shadow_VapourRush;
+	FGameplayTag Cooldown_Shadow_HiddenShadowTechnique;
+	
+	
+	/* Necromancer Mage Cooldown Tags */
+	FGameplayTag Cooldown_Necromancer_BubbleTrouble;
+	FGameplayTag Cooldown_Necromancer_UndeathMark;
+	FGameplayTag Cooldown_Necromancer_OldSkeller;
+	FGameplayTag Cooldown_Necromancer_LivingBlockade;
+	FGameplayTag Cooldown_Necromancer_WrithingGrasp;
+	FGameplayTag Cooldown_Necromancer_RiseOfTheBlackCurse;
+	
+	
+	/* Holy Mage Cooldown Tags */
+	FGameplayTag Cooldown_Holy_BeamingBlade;
+	FGameplayTag Cooldown_Holy_SacredSmite;
+	FGameplayTag Cooldown_Holy_HolyBolt_Chain;
+	FGameplayTag Cooldown_Holy_DivineSanctuary;
+	FGameplayTag Cooldown_Holy_HolyBolt_Storm;
+	FGameplayTag Cooldown_Holy_HolyShield;
+	
+	
 	/* Input Tags */
 	FGameplayTag InputTag_LMB;
 	FGameplayTag InputTag_RMB;
@@ -181,7 +280,7 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag DamageType_MagicalDamage_Psychic;
 
 	
-	/* Resistances */
+	/* Resistance Tags */
 	FGameplayTag Resistance_PhysicalDamage;
 	FGameplayTag Resistance_PhysicalDamage_Slashing;
 	FGameplayTag Resistance_PhysicalDamage_Piercing;

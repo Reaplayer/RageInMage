@@ -30,7 +30,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, float,
 
 // Delegate for Widgets
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageWidgetRowSignature, FUIWidgetRow, Row);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoSignature, const FRageInMageAbilityInfo&, AbilityInfo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAbilityInfoSignature, const FRageInMageAbilityInfo&, AbilityInfo, UMaterialInstance*, BackgroundMaterial);
 
 // Delegate for Leveling up
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnXPPercentChangedSignature, float, NewPercent, bool, bLevelUp); // Example usage you might already have or need
@@ -84,7 +84,10 @@ protected:
 	template<typename T>
 	T* GetDataTableRowByTag(UDataTable* DataTable, const FGameplayTag& Tag);
 	
-	void OnInitalizeStartUpAbilities(URageInMageAbilitySystemComponent* RageInMageAbilitySystemComponent);
+	void OnInitialiseStartUpAbilities(URageInMageAbilitySystemComponent* RageInMageAbilitySystemComponent);
+	
+private:
+	UMaterialInstance* CachedBGXPMaterialInstance;
 };
 
 template <typename T>

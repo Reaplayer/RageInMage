@@ -22,6 +22,8 @@ void URageInMageAbilitySystemComponent::AddCharacterAbilities(
 		if (const URageInMageGameplayAbility* MageAbility = Cast<URageInMageGameplayAbility>(AbilitySpec.Ability))
 		{
 			AbilitySpec.GetDynamicSpecSourceTags().AddTag(MageAbility->StartupInputTag);
+			AbilitySpec.GetDynamicSpecSourceTags().AddTag(MageAbility->StartupAbilityTag);
+			AbilitySpec.GetDynamicSpecSourceTags().AddTag(MageAbility->StartupAbilityTypeTag);
 			GiveAbility(AbilitySpec);
 		}
 	}
@@ -66,7 +68,7 @@ void URageInMageAbilitySystemComponent::ForEachAbilitySpec(const FForEachAbility
 	{
 		if (!Delegate.ExecuteIfBound(AbilitySpec))
 		{
-			UE_LOG(LogRageInMage, Error, TEXT("Failed to execute delegate in %s"), *FString(__FUNCTION__))
+			UE_LOG(LogRageInMage, Error, TEXT("Failed to execute delegate in %s"), *FString(__FUNCTION__));
 		}
 	}
 }
@@ -80,11 +82,11 @@ FGameplayTag URageInMageAbilitySystemComponent::GetAbilityTagFromSpec(const FGam
 {
 	if (AbilitySpec.Ability)
 	{
-		for (FGameplayTag InputTag : AbilitySpec.GetDynamicSpecSourceTags())
+		for (FGameplayTag Tag : AbilitySpec.GetDynamicSpecSourceTags())
 		{
-			if (InputTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Ability"))))
+			if (Tag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Ability"))))
 			{
-				return InputTag;
+				return Tag;
 			}
 		}
 	}
@@ -93,14 +95,37 @@ FGameplayTag URageInMageAbilitySystemComponent::GetAbilityTagFromSpec(const FGam
 
 FGameplayTag URageInMageAbilitySystemComponent::GetInputTagFromSpec(const FGameplayAbilitySpec& AbilitySpec)
 {
-	for (FGameplayTag InputTag : AbilitySpec.GetDynamicSpecSourceTags())
+	for (FGameplayTag Tag : AbilitySpec.GetDynamicSpecSourceTags())
 	{
-		if (InputTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("InputTag"))))
+		if (Tag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("InputTag"))))
 		{
-			return InputTag;
+			return Tag;
 		}
 	}
 	return FGameplayTag();
+}
+
+FGameplayTag URageInMageAbilitySystemComponent::GetAbilityTypeTagFromSpec(const FGameplayAbilitySpec& AbilitySpec)
+{
+	for (FGameplayTag Tag : AbilitySpec.GetDynamicSpecSourceTags())
+	{
+		if (Tag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("AbilityType"))))
+		{
+			return Tag;
+		}
+	}
+	return FGameplayTag();
+}
+
+void URageInMageAbilitySystemComponent::OnRep_ActivateAbilities()
+{
+	Super::OnRep_ActivateAbilities();
+	
+	if (!bStartupAbilitiesGiven)
+	{
+		AbilitiesGivenDelegate.Broadcast(this);
+		bStartupAbilitiesGiven = true;
+	}
 }
 
 void URageInMageAbilitySystemComponent::ClientEffectApplied_Implementation(UAbilitySystemComponent* AbilitySystemComponent,

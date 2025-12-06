@@ -60,11 +60,11 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 	{
 		if (RageInMageAbilitySystemComponent->bStartupAbilitiesGiven)
 		{
-			OnInitalizeStartUpAbilities(RageInMageAbilitySystemComponent);
+			OnInitialiseStartUpAbilities(RageInMageAbilitySystemComponent);
 		}
 		else
 		{
-			RageInMageAbilitySystemComponent->AbilitiesGivenDelegate.AddUObject(this, &UOverlayWidgetController::OnInitalizeStartUpAbilities);
+			RageInMageAbilitySystemComponent->AbilitiesGivenDelegate.AddUObject(this, &UOverlayWidgetController::OnInitialiseStartUpAbilities);
 		}
 		RageInMageAbilitySystemComponent->EffectAssetTags.AddLambda(
 			[this](const FGameplayTagContainer& AssetTags)
@@ -85,19 +85,10 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 	}
 }
 
-void UOverlayWidgetController::OnInitalizeStartUpAbilities(
+void UOverlayWidgetController::OnInitialiseStartUpAbilities(
 	URageInMageAbilitySystemComponent* RageInMageAbilitySystemComponent)
 {
 	if (!RageInMageAbilitySystemComponent->bStartupAbilitiesGiven) return;
-	
-	FForEachAbilitySpec BroadCastDelegate;
-	BroadCastDelegate.BindLambda([this, RageInMageAbilitySystemComponent](const FGameplayAbilitySpec& AbilitySpec)
-	{
-		FRageInMageAbilityInfo Info = AbilityInfo->FindAbilityInfoForTag(RageInMageAbilitySystemComponent->GetAbilityTagFromSpec(AbilitySpec));
-		Info.InputTag = RageInMageAbilitySystemComponent->GetInputTagFromSpec(AbilitySpec);
-		AbilityInfoDelegate.Broadcast(Info);
-	});
-	RageInMageAbilitySystemComponent->ForEachAbilitySpec(BroadCastDelegate);
 	
 	// Broadcast Class Visuals
 	if (AActor* AvatarActor = AbilitySystemComponent->GetAvatarActor())
@@ -109,8 +100,20 @@ void UOverlayWidgetController::OnInitalizeStartUpAbilities(
 				const ECharacterClass CharacterClass = CombatInterface->Execute_GetCharacterClass(AvatarActor);
 				const FCharacterClassDefaultInfo DefaultInfo = CharacterClassInfo->GetCharacterClassDefaultInfo(CharacterClass);
 
-				OnSetBGXPStyle.Broadcast(DefaultInfo.ProgressBarColor, DefaultInfo.BackGroundMaterialInstance);
+				CachedBGXPMaterialInstance = DefaultInfo.BackGroundMaterialInstance;
+				OnSetBGXPStyle.Broadcast(DefaultInfo.ProgressBarColor, CachedBGXPMaterialInstance);
 			}
 		}
 	}
+	
+	// Broadcast Ability Info
+	FForEachAbilitySpec BroadCastDelegate;
+	BroadCastDelegate.BindLambda([this, RageInMageAbilitySystemComponent](const FGameplayAbilitySpec& AbilitySpec)
+	{
+		FRageInMageAbilityInfo Info = AbilityInfo->FindAbilityInfoForTag(RageInMageAbilitySystemComponent->GetAbilityTagFromSpec(AbilitySpec));
+		Info.InputTag = RageInMageAbilitySystemComponent->GetInputTagFromSpec(AbilitySpec);
+		Info.AbilityTypeTag = RageInMageAbilitySystemComponent->GetAbilityTypeTagFromSpec(AbilitySpec);
+		AbilityInfoDelegate.Broadcast(Info, CachedBGXPMaterialInstance);
+	});
+	RageInMageAbilitySystemComponent->ForEachAbilitySpec(BroadCastDelegate);
 }

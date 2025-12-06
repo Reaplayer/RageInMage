@@ -107,6 +107,26 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	(FName("Ability.Summon"), FString("Tag for when Summoning."));
 	
 	
+	/* Ability Type Tags */	
+	GameplayTag.AbilityType_Basic = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("AbilityType.Basic"), FString("Tag for when Casting a Basic Spell."));
+	
+	GameplayTag.AbilityType_Secondary = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("AbilityType.Secondary"), FString("Tag for when Casting a Secondary Spell."));
+	
+	GameplayTag.AbilityType_Movement = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("AbilityType.Movement"), FString("Tag for when Casting a Movement Spell."));
+	
+	GameplayTag.AbilityType_Defensive = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("AbilityType.Defensive"), FString("Tag for when Casting a Defensive Spell."));
+	
+	GameplayTag.AbilityType_CrowdControl = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("AbilityType.CrowdControl"), FString("Tag for when Casting a Crowd Control Spell."));
+	
+	GameplayTag.AbilityType_Ultimate = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("AbilityType.Ultimate"), FString("Tag for when Casting an Ultimate Spell."));
+		
+	
 	/* Fire Mage Ability Tags */
 	GameplayTag.Ability_Fire_SearingFlame = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Ability.Fire.SearingFlame"), FString("Tag for when casting Searing Flame."));
@@ -312,6 +332,205 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.Ability_Holy_HolyShield = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Ability.Holy.HolyShield"), FString("Tag for when casting Holy Shield."));
 	
+	
+	/* Fire Mage Cooldown Tags */
+	GameplayTag.Cooldown_Fire_SearingFlame = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Fire.SearingFlame"), FString("Tag for when Searing Flame on Cooldown."));
+	
+	GameplayTag.Cooldown_Fire_ChanneledFire = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Fire.ChanneledFire"), FString("Tag for when Channeled Fire on Cooldown."));
+	
+	GameplayTag.Cooldown_Fire_IgnitionLeap = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Fire.IgnitionLeap"), FString("Tag for when Ignition Leap on Cooldown."));
+	
+	GameplayTag.Cooldown_Fire_RisingFlameWave = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Fire.RisingFlameWave"), FString("Tag for when Rising Flame Wave on Cooldown."));	
+	
+	GameplayTag.Cooldown_Fire_BlazingFlame = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Fire.BlazingFlame"), FString("Tag for when Blazing Flame on Cooldown."));
+	
+	GameplayTag.Cooldown_Fire_FallOfTheScorchingSun = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Fire.FallOfTheScorchingSun"), FString("Tag for when Fall of the Scorching Sun on Cooldown."));
+	
+	
+	/* Water Mage Cooldown Tags */
+	GameplayTag.Cooldown_Water_SimpleIce = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Water.SimpleIce"), FString("Tag for when Simple Ice on Cooldown."));
+	
+	GameplayTag.Cooldown_Water_SwirlingYoyo = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Water.SwirlingYoyo"), FString("Tag for when Swirling Yoyo on Cooldown."));
+	
+	GameplayTag.Cooldown_Water_RidingTide = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Water.RidingTide"), FString("Cooldown Tag for Riding Tide."));
+	
+	GameplayTag.Cooldown_Water_SoothingBubble = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Water.SoothingBubble"), FString("Cooldown Tag for Soothing Bubble."));
+	
+	GameplayTag.Cooldown_Water_DropRippleBlast = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Water.DropRippleBlast"), FString("Cooldown Tag for Drop Ripple Blast."));
+
+	GameplayTag.Cooldown_Water_TearsDoFall = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Water.TearsDoFall"), FString("Cooldown Tag for Tears Do Fall."));
+
+
+	/* Air Mage Cooldown Tags */
+	GameplayTag.Cooldown_Air_SwiftGust = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Air.SwiftGust"), FString("Cooldown Tag for Swift Gust."));
+	
+	GameplayTag.Cooldown_Air_CatapultLaunch = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Air.CatapultLaunch"), FString("Cooldown Tag for Catapult Launch."));
+	
+	GameplayTag.Cooldown_Air_CleanWindDash = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Air.CleanWindDash"), FString("Cooldown Tag for Clean Wind Dash."));
+	
+	GameplayTag.Cooldown_Air_MountainVortex = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Air.MountainVortex"), FString("Cooldown Tag for Mountain Vortex."));
+	
+	GameplayTag.Cooldown_Air_BlueSkyWhirlwind = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Air.BlueSkyWhirlwind"), FString("Cooldown Tag for Blue Sky Whirlwind."));
+	
+	GameplayTag.Cooldown_Air_DanceOfTheWindDragon = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Air.DanceOfTheWindDragon"), FString("Cooldown Tag for Dance Of The Wind Dragon."));
+
+
+	/* Earth Mage Cooldown Tags */
+	GameplayTag.Cooldown_Earth_SlingRock = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Earth.SlingRock"), FString("Cooldown Tag for Sling Rock."));
+
+	GameplayTag.Cooldown_Earth_JewelFistShatter = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Earth.JewelFistShatter"), FString("Cooldown Tag for Jewel Fist Shatter."));
+
+	GameplayTag.Cooldown_Earth_ChargingBull = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Earth.ChargingBull"), FString("Cooldown Tag for Charging Bull."));
+
+	GameplayTag.Cooldown_Earth_RockSolid = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Earth.RockSolid"), FString("Cooldown Tag for Rock Solid."));
+
+	GameplayTag.Cooldown_Earth_GemJail = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Earth.GemJail"), FString("Cooldown Tag for Gem Jail."));
+
+	GameplayTag.Cooldown_Earth_TheBoulder = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Earth.TheBoulder"), FString("Cooldown Tag for The Boulder."));
+
+
+	/* Lightning Mage Cooldown Tags */
+	GameplayTag.Cooldown_Lightning_LightningFlash = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Lightning.LightningFlash"), FString("Cooldown Tag for Lightning Flash."));
+
+	GameplayTag.Cooldown_Lightning_SparkingSphere = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Lightning.SparkingSphere"), FString("Cooldown Tag for Sparking Sphere."));
+
+	GameplayTag.Cooldown_Lightning_ZipNZap = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Lightning.ZipNZap"), FString("Cooldown Tag for Zip N Zap."));
+
+	GameplayTag.Cooldown_Lightning_StaticMegaSurge = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Lightning.StaticMegaSurge"), FString("Cooldown Tag for Static Mega Surge."));
+
+	GameplayTag.Cooldown_Lightning_FlashAndAwe = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Lightning.FlashAndAwe"), FString("Cooldown Tag for Flash And Awe."));
+
+	GameplayTag.Cooldown_Lightning_CeaselessWrath = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Lightning.CeaselessWrath"), FString("Cooldown Tag for Ceaseless Wrath."));
+
+
+	/* Nature Mage Cooldown Tags */
+	GameplayTag.Cooldown_Nature_ThornSpread = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Nature.ThornSpread"), FString("Cooldown Tag for Thorn Spread."));
+
+	GameplayTag.Cooldown_Nature_VenusFlyTrap = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Nature.VenusFlyTrap"), FString("Cooldown Tag for Venus Fly Trap."));
+
+	GameplayTag.Cooldown_Nature_CreepingVines = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Nature.CreepingVines"), FString("Cooldown Tag for Creeping Vines."));
+
+	GameplayTag.Cooldown_Nature_EncasingSurprise = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Nature.EncasingSurprise"), FString("Cooldown Tag for Encasing Surprise."));
+
+	GameplayTag.Cooldown_Nature_LassoOfThorns = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Nature.LassoOfThorns"), FString("Cooldown Tag for Lasso Of Thorns."));
+
+	GameplayTag.Cooldown_Nature_NaturesSpikyGrasp = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Nature.NaturesSpikyGrasp"), FString("Cooldown Tag for Natures Spiky Grasp."));
+
+
+	/* Sound Mage Cooldown Tags */
+	GameplayTag.Cooldown_Sound_Pleasc = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Sound.Pleasc"), FString("Cooldown Tag for Pleasc."));
+
+	GameplayTag.Cooldown_Sound_GunAnail = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Sound.GunAnail"), FString("Cooldown Tag for Gun Anail."));
+
+	GameplayTag.Cooldown_Sound_DeanAite = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Sound.DeanAite"), FString("Cooldown Tag for Dean Aite."));
+
+	GameplayTag.Cooldown_Sound_AmMall = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Sound.AmMall"), FString("Cooldown Tag for Am Mall."));
+
+	GameplayTag.Cooldown_Sound_GunGhluasad = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Sound.GunGhluasad"), FString("Cooldown Tag for Gun Ghluasad."));
+
+	GameplayTag.Cooldown_Sound_TollahdFainne = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Sound.TollahdFainne"), FString("Cooldown Tag for Tollahd Fainne."));
+
+
+	/* Shadow Mage Cooldown Tags */
+	GameplayTag.Cooldown_Shadow_DustBomb = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Shadow.DustBomb"), FString("Cooldown Tag for Dust Bomb."));
+
+	GameplayTag.Cooldown_Shadow_JokersFacade = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Shadow.JokersFacade"), FString("Cooldown Tag for Jokers Facade."));
+
+	GameplayTag.Cooldown_Shadow_SmokeScreenShuffle = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Shadow.SmokeScreenShuffle"), FString("Cooldown Tag for Smoke Screen Shuffle."));
+
+	GameplayTag.Cooldown_Shadow_ShadowGuide = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Shadow.ShadowGuide"), FString("Cooldown Tag for Shadow Guide."));
+
+	GameplayTag.Cooldown_Shadow_VapourRush = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Shadow.VapourRush"), FString("Cooldown Tag for Vapour Rush."));
+
+	GameplayTag.Cooldown_Shadow_HiddenShadowTechnique = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Shadow.HiddenShadowTechnique"), FString("Cooldown Tag for Hidden Shadow Technique."));
+
+
+	/* Necromancer Mage Cooldown Tags */
+	GameplayTag.Cooldown_Necromancer_BubbleTrouble = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Necromancer.BubbleTrouble"), FString("Cooldown Tag for Bubble Trouble."));
+
+	GameplayTag.Cooldown_Necromancer_UndeathMark = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Necromancer.UndeathMark"), FString("Cooldown Tag for Undeath Mark."));
+
+	GameplayTag.Cooldown_Necromancer_OldSkeller = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Necromancer.OldSkeller"), FString("Cooldown Tag for Old Skeller."));
+
+	GameplayTag.Cooldown_Necromancer_LivingBlockade = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Necromancer.LivingBlockade"), FString("Cooldown Tag for Living Blockade."));
+
+	GameplayTag.Cooldown_Necromancer_WrithingGrasp = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Necromancer.WrithingGrasp"), FString("Cooldown Tag for Writhing Grasp."));
+
+	GameplayTag.Cooldown_Necromancer_RiseOfTheBlackCurse = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Necromancer.RiseOfTheBlackCurse"), FString("Cooldown Tag for Rise Of The Black Curse."));
+
+
+	/* Holy Mage Cooldown Tags */
+	GameplayTag.Cooldown_Holy_BeamingBlade = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Holy.BeamingBlade"), FString("Cooldown Tag for Beaming Blade."));
+
+	GameplayTag.Cooldown_Holy_SacredSmite = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Holy.SacredSmite"), FString("Cooldown Tag for Sacred Smite."));
+
+	GameplayTag.Cooldown_Holy_HolyBolt_Chain = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Holy.HolyBolt.Chain"), FString("Cooldown Tag for Holy Bolt Chain."));
+
+	GameplayTag.Cooldown_Holy_DivineSanctuary = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Holy.DivineSanctuary"), FString("Cooldown Tag for Divine Sanctuary."));
+
+	GameplayTag.Cooldown_Holy_HolyBolt_Storm = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Holy.HolyBolt.Storm"), FString("Cooldown Tag for Holy Bolt Storm."));
+
+	GameplayTag.Cooldown_Holy_HolyShield = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Holy.HolyShield"), FString("Cooldown Tag for Holy Shield."));
 	
 	/* Input Tags */
 	GameplayTag.InputTag_LMB = UGameplayTagsManager::Get().AddNativeGameplayTag

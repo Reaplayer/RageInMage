@@ -18,4 +18,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category="Input")
 	FGameplayTag StartupInputTag;
+	UPROPERTY(EditDefaultsOnly, Category="Input")
+	FGameplayTag StartupAbilityTag;
+	UPROPERTY(EditDefaultsOnly, Category="Input")
+	FGameplayTag StartupAbilityTypeTag;
 };

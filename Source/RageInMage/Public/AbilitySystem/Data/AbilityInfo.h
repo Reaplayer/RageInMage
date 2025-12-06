@@ -16,13 +16,10 @@ struct FRageInMageAbilityInfo
 	FGameplayTag AbilityTag = FGameplayTag();
 	
 	UPROPERTY(BlueprintReadOnly)
-	FGameplayTag InputTag = FGameplayTag();
+	FGameplayTag AbilityTypeTag = FGameplayTag();
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Class Defaults")
-	FSlateColor ProgressBarColor = FSlateColor::UseForeground();
-
-	UPROPERTY(EditDefaultsOnly, Category = "Class Defaults")
-	TObjectPtr<UMaterialInterface> BackGroundMaterialInstance = nullptr;
+	UPROPERTY(BlueprintReadOnly)
+	FGameplayTag InputTag = FGameplayTag();
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FText AbilityDefinition = FText();
