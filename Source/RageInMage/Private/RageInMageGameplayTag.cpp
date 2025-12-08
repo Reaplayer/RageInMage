@@ -243,8 +243,8 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.Ability_Nature_CreepingVines = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Ability.Nature.CreepingVines"), FString("Tag for when casting Creeping Vines."));
 
-	GameplayTag.Ability_Nature_EncasingSurprise = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Ability.Nature.EncasingSurprise"), FString("Tag for when casting Encasing Surprise."));
+	GameplayTag.Ability_Nature_SepalSurprise = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Nature.SepalSurprise"), FString("Tag for when casting Sepal Surprise."));
 
 	GameplayTag.Ability_Nature_LassoOfThorns = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Ability.Nature.LassoOfThorns"), FString("Tag for when casting Lasso Of Thorns."));
@@ -286,8 +286,8 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.Ability_Shadow_ShadowGuide = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Ability.Shadow.ShadowGuide"), FString("Tag for when casting Shadow Guide."));
 
-	GameplayTag.Ability_Shadow_VapourRush = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Ability.Shadow.VapourRush"), FString("Tag for when casting Vapour Rush."));
+	GameplayTag.Ability_Shadow_SteamRush = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Shadow.SteamRush"), FString("Tag for when casting Steam Rush."));
 
 	GameplayTag.Ability_Shadow_HiddenShadowTechnique = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Ability.Shadow.HiddenShadowTechnique"), FString("Tag for when casting Hidden Shadow Technique."));
@@ -297,8 +297,8 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.Ability_Necromancer_BubbleTrouble = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Ability.Necromancer.BubbleTrouble"), FString("Tag for when casting Bubble Trouble."));
 
-	GameplayTag.Ability_Necromancer_UndeathMark = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Ability.Necromancer.UndeathMark"), FString("Tag for when casting Undeath Mark."));
+	GameplayTag.Ability_Necromancer_BitsNBones = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Necromancer.BitsNBones"), FString("Tag for when casting Bits 'n' Bones."));
 
 	GameplayTag.Ability_Necromancer_OldSkeller = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Ability.Necromancer.OldSkeller"), FString("Tag for when casting Old Skeller."));
@@ -443,8 +443,8 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.Cooldown_Nature_CreepingVines = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Cooldown.Nature.CreepingVines"), FString("Cooldown Tag for Creeping Vines."));
 
-	GameplayTag.Cooldown_Nature_EncasingSurprise = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Cooldown.Nature.EncasingSurprise"), FString("Cooldown Tag for Encasing Surprise."));
+	GameplayTag.Cooldown_Nature_SepalSurprise = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Nature.SepalSurprise"), FString("Cooldown Tag for Sepal Surprise."));
 
 	GameplayTag.Cooldown_Nature_LassoOfThorns = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Cooldown.Nature.LassoOfThorns"), FString("Cooldown Tag for Lasso Of Thorns."));
@@ -486,8 +486,8 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.Cooldown_Shadow_ShadowGuide = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Cooldown.Shadow.ShadowGuide"), FString("Cooldown Tag for Shadow Guide."));
 
-	GameplayTag.Cooldown_Shadow_VapourRush = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Cooldown.Shadow.VapourRush"), FString("Cooldown Tag for Vapour Rush."));
+	GameplayTag.Cooldown_Shadow_SteamRush = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Shadow.SteamRush"), FString("Cooldown Tag for Steam Rush."));
 
 	GameplayTag.Cooldown_Shadow_HiddenShadowTechnique = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Cooldown.Shadow.HiddenShadowTechnique"), FString("Cooldown Tag for Hidden Shadow Technique."));
@@ -497,8 +497,8 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.Cooldown_Necromancer_BubbleTrouble = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Cooldown.Necromancer.BubbleTrouble"), FString("Cooldown Tag for Bubble Trouble."));
 
-	GameplayTag.Cooldown_Necromancer_UndeathMark = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Cooldown.Necromancer.UndeathMark"), FString("Cooldown Tag for Undeath Mark."));
+	GameplayTag.Cooldown_Necromancer_BitsNBones = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Necromancer.BitsNBones"), FString("Cooldown Tag for Bits 'n' Bones."));
 
 	GameplayTag.Cooldown_Necromancer_OldSkeller = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Cooldown.Necromancer.OldSkeller"), FString("Cooldown Tag for Old Skeller."));

@@ -24,6 +24,7 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 	const URageInMageAttributeSet* MageAttributeSet = CastChecked<URageInMageAttributeSet>(AttributeSet);
 
 	
+	// Health Delegate Dependency
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MageAttributeSet->GetHealthAttribute()).AddLambda(
 	[this](const FOnAttributeChangeData& Data)
 		{
@@ -32,6 +33,7 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 	);
 	
 	
+	// Max Health Delegate Dependency
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MageAttributeSet->GetMaxHealthAttribute()).AddLambda(
 	[this](const FOnAttributeChangeData& Data)
 		{
@@ -40,6 +42,7 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 	);
 	
 	
+	// Mana Delegate Dependency
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MageAttributeSet->GetManaAttribute()).AddLambda(
 	[this](const FOnAttributeChangeData& Data)
 		{
@@ -48,6 +51,7 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 	);
 	
 	
+	// Max Mana Delegate Dependency
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MageAttributeSet->GetMaxManaAttribute()).AddLambda(
 	[this](const FOnAttributeChangeData& Data)
 		{

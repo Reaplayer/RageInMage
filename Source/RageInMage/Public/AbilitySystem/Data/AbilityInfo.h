@@ -15,6 +15,9 @@ struct FRageInMageAbilityInfo
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FGameplayTag AbilityTag = FGameplayTag();
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FGameplayTag AbilityCooldownTag = FGameplayTag();
+	
 	UPROPERTY(BlueprintReadOnly)
 	FGameplayTag AbilityTypeTag = FGameplayTag();
 	

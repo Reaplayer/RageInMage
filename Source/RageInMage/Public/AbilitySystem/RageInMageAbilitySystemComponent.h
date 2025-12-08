@@ -12,7 +12,12 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FAbilitiesGiven, URageInMageAbilitySystemCom
 DECLARE_DELEGATE_OneParam(FForEachAbilitySpec, FGameplayAbilitySpec& /*AbilitySpec*/)
 
 /**
- * 
+ * @class URageInMageAbilitySystemComponent
+ * @brief A specialized extension of UAbilitySystemComponent, customized for the Rage in Mage game,
+ *        which manages abilities and gameplay effect processing for actors.
+ *
+ * This class adds functionality for handling character abilities, Ability Input tags,
+ * and various Gameplay Effects and Ability-related callbacks.
  */
 UCLASS()
 class RAGEINMAGE_API URageInMageAbilitySystemComponent : public UAbilitySystemComponent

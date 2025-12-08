@@ -21,18 +21,24 @@ void URageInMageAbilitySystemComponent::AddCharacterAbilities(
 		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, 1);
 		if (const URageInMageGameplayAbility* MageAbility = Cast<URageInMageGameplayAbility>(AbilitySpec.Ability))
 		{
+			// Add the Tags
 			AbilitySpec.GetDynamicSpecSourceTags().AddTag(MageAbility->StartupInputTag);
 			AbilitySpec.GetDynamicSpecSourceTags().AddTag(MageAbility->StartupAbilityTag);
 			AbilitySpec.GetDynamicSpecSourceTags().AddTag(MageAbility->StartupAbilityTypeTag);
+			
+			// Give Ability
 			GiveAbility(AbilitySpec);
 		}
 	}
 	bStartupAbilitiesGiven = true;
+	
+	// Broadcast Ability Given Event
 	AbilitiesGivenDelegate.Broadcast(this);
 }
 
 void URageInMageAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& InputTag)
 {
+	// Return if Input Tag is not valid
 	if (!InputTag.IsValid()) return;
 
 	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())

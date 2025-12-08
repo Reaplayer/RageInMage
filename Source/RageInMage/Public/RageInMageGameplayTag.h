@@ -123,7 +123,7 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Ability_Nature_ThornSpread;
 	FGameplayTag Ability_Nature_VenusFlyTrap;
 	FGameplayTag Ability_Nature_CreepingVines;
-	FGameplayTag Ability_Nature_EncasingSurprise;
+	FGameplayTag Ability_Nature_SepalSurprise;
 	FGameplayTag Ability_Nature_LassoOfThorns;
 	FGameplayTag Ability_Nature_NaturesSpikyGrasp;
 	
@@ -142,13 +142,13 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Ability_Shadow_JokersFacade;
 	FGameplayTag Ability_Shadow_SmokeScreenShuffle;
 	FGameplayTag Ability_Shadow_ShadowGuide;
-	FGameplayTag Ability_Shadow_VapourRush;
+	FGameplayTag Ability_Shadow_SteamRush;
 	FGameplayTag Ability_Shadow_HiddenShadowTechnique;
 	
 	
 	/* Necromancer Mage Ability Tags */
 	FGameplayTag Ability_Necromancer_BubbleTrouble;
-	FGameplayTag Ability_Necromancer_UndeathMark;
+	FGameplayTag Ability_Necromancer_BitsNBones;
 	FGameplayTag Ability_Necromancer_OldSkeller;
 	FGameplayTag Ability_Necromancer_LivingBlockade;
 	FGameplayTag Ability_Necromancer_WrithingGrasp;
@@ -213,7 +213,7 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Cooldown_Nature_ThornSpread;
 	FGameplayTag Cooldown_Nature_VenusFlyTrap;
 	FGameplayTag Cooldown_Nature_CreepingVines;
-	FGameplayTag Cooldown_Nature_EncasingSurprise;
+	FGameplayTag Cooldown_Nature_SepalSurprise;
 	FGameplayTag Cooldown_Nature_LassoOfThorns;
 	FGameplayTag Cooldown_Nature_NaturesSpikyGrasp;
 	
@@ -232,13 +232,13 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Cooldown_Shadow_JokersFacade;
 	FGameplayTag Cooldown_Shadow_SmokeScreenShuffle;
 	FGameplayTag Cooldown_Shadow_ShadowGuide;
-	FGameplayTag Cooldown_Shadow_VapourRush;
+	FGameplayTag Cooldown_Shadow_SteamRush;
 	FGameplayTag Cooldown_Shadow_HiddenShadowTechnique;
 	
 	
 	/* Necromancer Mage Cooldown Tags */
 	FGameplayTag Cooldown_Necromancer_BubbleTrouble;
-	FGameplayTag Cooldown_Necromancer_UndeathMark;
+	FGameplayTag Cooldown_Necromancer_BitsNBones;
 	FGameplayTag Cooldown_Necromancer_OldSkeller;
 	FGameplayTag Cooldown_Necromancer_LivingBlockade;
 	FGameplayTag Cooldown_Necromancer_WrithingGrasp;
