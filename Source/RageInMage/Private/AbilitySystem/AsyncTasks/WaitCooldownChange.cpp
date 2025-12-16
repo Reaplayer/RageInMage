@@ -34,8 +34,9 @@ UWaitCooldownChange* UWaitCooldownChange::WaitCooldownChange(UAbilitySystemCompo
 void UWaitCooldownChange::EndTask()
 {
 	if (!IsValid(ASC)) return;
-	ASC->RegisterGameplayTagEvent(CooldownTag, EGameplayTagEventType::NewOrRemoved).RemoveAll( this);
-	
+	ASC->RegisterGameplayTagEvent(CooldownTag, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
+	ASC->OnActiveGameplayEffectAddedDelegateToSelf.RemoveAll(this);
+
 	SetReadyToDestroy();
 	MarkAsGarbage();
 }

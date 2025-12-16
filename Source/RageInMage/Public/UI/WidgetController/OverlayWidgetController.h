@@ -30,11 +30,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, float,
 
 // Delegate for Widgets
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageWidgetRowSignature, FUIWidgetRow, Row);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAbilityInfoSignature, const FRageInMageAbilityInfo&, AbilityInfo, UMaterialInstance*, BackgroundMaterial);
-
-// Delegate for Leveling up
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnXPPercentChangedSignature, float, NewPercent, bool, bLevelUp); // Example usage you might already have or need
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLevelChangedSignature, int32, NewLevel, bool, bLevelUp);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoSignature, const FRageInMageAbilityInfo&, AbilityInfo);
 
 // Delegate for Visuals
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSetBGXPStyleSignature, FSlateColor, ProgressBarColor, UMaterialInstance*, BackgroundMaterial);
@@ -73,6 +69,9 @@ public:
 	
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Messages")
 	FOnSetBGXPStyleSignature OnSetBGXPStyle;
+	
+	UPROPERTY(BlueprintAssignable, Category = "GAS|XP")
+	FOnAttributeChangedSignature OnXPPercentChangedDelegate;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WidgetData")
@@ -86,8 +85,10 @@ protected:
 	
 	void OnInitialiseStartUpAbilities(URageInMageAbilitySystemComponent* RageInMageAbilitySystemComponent);
 	
+	void OnXpChanged(int32 NewXP);
+	
 private:
-	UMaterialInstance* CachedBGXPMaterialInstance;
+	
 };
 
 template <typename T>

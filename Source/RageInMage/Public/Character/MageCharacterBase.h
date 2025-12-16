@@ -31,9 +31,6 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UAttributeSet* GetAttributeSet() const { return AttributeSet; };
 	URageInMageAttributeSet* GetRageInMageAttributeSet() const { return CastChecked<URageInMageAttributeSet>(AttributeSet.Get()); }
-	
-	/** Getter for CharacterClassInfo */
-	UCharacterClassInfo* GetCharacterClassInfo() const { return CharacterClassInfo; }
 
 	/* Combat Interface */
 	virtual UAnimMontage* GetHitReactionMontage_Implementation() override;
@@ -93,9 +90,6 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Class Defaults")
 	ECharacterClass CharacterClass = ECharacterClass::Warrior;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Class Defaults")
-	TObjectPtr<UCharacterClassInfo> CharacterClassInfo;
 
 	virtual void InitPlayerAbilityActorInfo();
 

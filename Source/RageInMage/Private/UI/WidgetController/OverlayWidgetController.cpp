@@ -8,7 +8,9 @@
 #include "AbilitySystem/RageInMageAttributeSet.h"
 #include "AbilitySystem/Data/AbilityInfo.h"
 #include "AbilitySystem/Data/CharacterClassInfo.h"
+#include "AbilitySystem/Data/LevelUpInfo.h"
 #include "Interaction/CombatInterface.h"
+#include "Player/MagePlayerState.h"
 
 void UOverlayWidgetController::BroadcastInitalValues()
 {
@@ -21,6 +23,9 @@ void UOverlayWidgetController::BroadcastInitalValues()
 
 void UOverlayWidgetController::BindCallbacksToDependencies()
 {
+	AMagePlayerState* MagePlayerState = CastChecked<AMagePlayerState>(PlayerState);
+	MagePlayerState->OnXPChangedDelegate.AddUObject(this, &UOverlayWidgetController::OnXpChanged);
+	
 	const URageInMageAttributeSet* MageAttributeSet = CastChecked<URageInMageAttributeSet>(AttributeSet);
 
 	
@@ -104,8 +109,8 @@ void UOverlayWidgetController::OnInitialiseStartUpAbilities(
 				const ECharacterClass CharacterClass = CombatInterface->Execute_GetCharacterClass(AvatarActor);
 				const FCharacterClassDefaultInfo DefaultInfo = CharacterClassInfo->GetCharacterClassDefaultInfo(CharacterClass);
 
-				CachedBGXPMaterialInstance = DefaultInfo.BackGroundMaterialInstance;
-				OnSetBGXPStyle.Broadcast(DefaultInfo.ProgressBarColor, CachedBGXPMaterialInstance);
+				// Must be Set before Ability Info so it can be received
+				OnSetBGXPStyle.Broadcast(DefaultInfo.ProgressBarColor, DefaultInfo.BackGroundMaterialInstance);
 			}
 		}
 	}
@@ -117,7 +122,29 @@ void UOverlayWidgetController::OnInitialiseStartUpAbilities(
 		FRageInMageAbilityInfo Info = AbilityInfo->FindAbilityInfoForTag(RageInMageAbilitySystemComponent->GetAbilityTagFromSpec(AbilitySpec));
 		Info.InputTag = RageInMageAbilitySystemComponent->GetInputTagFromSpec(AbilitySpec);
 		Info.AbilityTypeTag = RageInMageAbilitySystemComponent->GetAbilityTypeTagFromSpec(AbilitySpec);
-		AbilityInfoDelegate.Broadcast(Info, CachedBGXPMaterialInstance);
+		AbilityInfoDelegate.Broadcast(Info);
 	});
 	RageInMageAbilitySystemComponent->ForEachAbilitySpec(BroadCastDelegate);
+}
+
+void UOverlayWidgetController::OnXpChanged(int32 NewXP)
+{
+	AMagePlayerState* MagePlayerState = CastChecked<AMagePlayerState>(PlayerState);
+	ULevelUpInfo* LevelUpInfo = MagePlayerState->LevelUpInfo;
+	checkf(LevelUpInfo, TEXT("Unable to find LevelUpInfo, Please fill out MagePlayerState Blueprint"));
+	
+	const int32 Level = LevelUpInfo->FindLevelForXP(NewXP);
+	const int32 MaxLevel = LevelUpInfo->LevelUpInfos.Num();
+	
+	if (Level <= MaxLevel && Level > 0)
+	{
+		const int32 LevelUpRequirement = LevelUpInfo->LevelUpInfos[Level].LevelUpRequirement;
+		const int32 PreviousLevelUpRequirement = LevelUpInfo->LevelUpInfos[Level - 1].LevelUpRequirement;
+		
+		const int32 DeltaLevelRequirement = LevelUpRequirement - PreviousLevelUpRequirement;
+		const int32 XPToNextLevel = NewXP - PreviousLevelUpRequirement;
+		
+		const float XPBarPercentage = static_cast<float>(XPToNextLevel) / static_cast<float>(DeltaLevelRequirement);
+		OnXPPercentChangedDelegate.Broadcast(XPBarPercentage);
+	}
 }
