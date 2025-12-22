@@ -16,8 +16,10 @@ enum class ECharacterClass : uint8
 	Ranger,
 	Warrior,
 	Summoner,
+	Summon,
 	Tank,
 	Assassin,
+	MiniBoss,
 	Boss,
 	FireMage,
 	WaterMage,
@@ -28,7 +30,9 @@ enum class ECharacterClass : uint8
 	SoundMage,
 	ShadowMage,
 	Necromancer,
-	HolyMage
+	HolyMage,
+	PoisonMage,
+	LifeMage
 };
 
 USTRUCT(BlueprintType)
