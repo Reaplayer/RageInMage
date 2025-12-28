@@ -37,9 +37,9 @@ public:
 	FORCEINLINE int32 GetPlayerXP() const { return XP; };
 	
 	UFUNCTION(BlueprintCallable)
-	void AddXP(int32 XPToAdd);
+	void AddToXP(int32 XPToAdd);
 	UFUNCTION(BlueprintCallable)
-	void AddLevel(int32 LevelToAdd);
+	void AddToLevel(int32 LevelToAdd);
 	
 	UFUNCTION(BlueprintCallable)
 	void SetXP(int32 NewXP);

@@ -78,6 +78,9 @@ void URageInMageProjectileSpell::SpawnProjectile(FVector& ProjectileTargetLocati
 		UE_LOG(LogTemp, Error, TEXT("ProjectileClass is null. Unable to spawn projectile."));
 		return;
 	}
+	ARageInMageSphereProjectile* ProjectileCDO = Cast<ARageInMageSphereProjectile>(ProjectileClass->GetDefaultObject());
+	UProjectileMovementComponent* ProjectileMovement = ProjectileCDO->ProjectileMovement;
+	
 
 	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetAvatarActorFromActorInfo()))
 	{
@@ -126,9 +129,9 @@ void URageInMageProjectileSpell::SpawnProjectile(FVector& ProjectileTargetLocati
 
 			// 2. SOLVER
 			float ProjectileSpeed = 0.f;
-			if (ARageInMageSphereProjectile* ProjectileCDO = Cast<ARageInMageSphereProjectile>(ProjectileClass->GetDefaultObject()))
+			if (ProjectileCDO)
 			{
-				if (UProjectileMovementComponent* ProjectileMovement = ProjectileCDO->ProjectileMovement)
+				if (ProjectileMovement)
 				{
 					ProjectileSpeed = ProjectileMovement->InitialSpeed;
 				}
@@ -179,9 +182,9 @@ void URageInMageProjectileSpell::SpawnProjectile(FVector& ProjectileTargetLocati
 				ProjectileTargetLocation = FinalTargetLocation;
 			}
 			// Calculate the launch pitch based on projectile speed and gravity
-			if (ARageInMageSphereProjectile* ProjectileCDO = Cast<ARageInMageSphereProjectile>(ProjectileClass->GetDefaultObject()))
+			if (ProjectileCDO)
 			{
-				if (UProjectileMovementComponent* ProjectileMovement = ProjectileCDO->ProjectileMovement)
+				if (ProjectileMovement)
 				{
 					const float LaunchSpeed = ProjectileMovement->InitialSpeed;
 					FVector LaunchVelocity;
@@ -224,7 +227,17 @@ void URageInMageProjectileSpell::SpawnProjectile(FVector& ProjectileTargetLocati
 		}
 		FTransform SpawnTransform;
 		SpawnTransform.SetLocation(SocketLocation);
-		SpawnTransform.SetRotation(Rotation.Quaternion());
+		if (ProjectileMovement->ProjectileGravityScale < KINDA_SMALL_NUMBER)
+		{
+			Rotation.Pitch = 0.f;
+			SpawnTransform.SetRotation(Rotation.Quaternion());
+		}
+		else
+		{
+			SpawnTransform.SetRotation(Rotation.Quaternion());
+		}
+		
+		
 
 		// Start the Spawning of the Projectile
 		ARageInMageSphereProjectile* Projectile = GetWorld()->SpawnActorDeferred<ARageInMageSphereProjectile>(

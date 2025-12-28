@@ -95,9 +95,9 @@ void URageInMageAbilitySystemLibrary::GiveStartupAbilities(const UObject* WorldC
 	const FCharacterClassDefaultInfo& CharacterClassDefaultInfo = CharacterClassInfo->GetCharacterClassDefaultInfo(CharacterClass);
 	for (TSubclassOf<UGameplayAbility> AbilityClass : CharacterClassDefaultInfo.StartupAbilities)
 	{
-		if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(ASC->GetAvatarActor()))
+		if (ASC->GetAvatarActor()->Implements<UCombatInterface>())
 		{
-			FGameplayAbilitySpec(AbilityClass, CombatInterface->GetPlayerLevel());
+			FGameplayAbilitySpec(AbilityClass, ICombatInterface::Execute_GetCharacterLevel(ASC->GetAvatarActor()));
 			ASC->GiveAbility(AbilityClass);
 		}
 	}
@@ -251,4 +251,19 @@ FGameplayTagContainer URageInMageAbilitySystemLibrary::GetOwnedGameplayTags(AAct
 		ASC->GetOwnedGameplayTags(OwnedGameplayTags);
 	}
 	return OwnedGameplayTags;
+}
+
+int32 URageInMageAbilitySystemLibrary::GetXPRewardForClassAndLevel(ECharacterClass CharacterClass, int32 Level,
+	const UObject* WorldContextObject)
+{
+	// Retrieve the GameState cast to our custom class
+	ARageInMageGameState* GameState = Cast<ARageInMageGameState>(UGameplayStatics::GetGameState(WorldContextObject));
+	if (!GameState || !GameState->CharacterClassInfo) return 0;
+	
+	// Retrieve Character Class Info
+	UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
+	if (!CharacterClassInfo) return 0;
+	const FCharacterClassDefaultInfo CharacterClassDefaultInfo = CharacterClassInfo->GetCharacterClassDefaultInfo(CharacterClass);
+	const float XPReward = CharacterClassDefaultInfo.XPReward.GetValueAtLevel(Level);
+	return FMath::RoundToInt(XPReward);
 }

@@ -66,4 +66,6 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "RageInMageAbilitySystemLibrary|GameplayTags")
 	static FGameplayTagContainer GetOwnedGameplayTags(AActor* Actor);
+	
+	static int32 GetXPRewardForClassAndLevel(ECharacterClass CharacterClass, int32 Level, const UObject* WorldContextObject);
 };

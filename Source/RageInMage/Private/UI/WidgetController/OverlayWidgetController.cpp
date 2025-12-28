@@ -25,6 +25,7 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 {
 	AMagePlayerState* MagePlayerState = CastChecked<AMagePlayerState>(PlayerState);
 	MagePlayerState->OnXPChangedDelegate.AddUObject(this, &UOverlayWidgetController::OnXpChanged);
+	MagePlayerState->OnLevelUpDelegate.AddLambda([this](int32 NewLevel) { OnPlayerLevelChangedDelegate.Broadcast(NewLevel); });
 	
 	const URageInMageAttributeSet* MageAttributeSet = CastChecked<URageInMageAttributeSet>(AttributeSet);
 

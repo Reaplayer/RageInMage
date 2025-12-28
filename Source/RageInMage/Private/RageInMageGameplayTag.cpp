@@ -91,6 +91,9 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 
 	GameplayTag.Attributes_Mechanics_Charge = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Attributes.Mechanics.Charge"), FString("How Charged a Character is for determining Lightning Effects."));
+	
+	GameplayTag.Attributes_Mechanics_XP = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Attributes.Mechanics.XP"), FString("How much XP a Character has for determining Leveling up."));
 
 
 	/* Ability Tags */
@@ -320,17 +323,37 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.Ability_Holy_SacredSmite = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Ability.Holy.SacredSmite"), FString("Tag for when casting Sacred Smite."));
 
-	GameplayTag.Ability_Holy_HolyBolt_Chain = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Ability.Holy.HolyBolt.Chain"), FString("Tag for when casting Holy Bolt Chain."));
+	GameplayTag.Ability_Holy_RadiantAscent = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Holy.RadiantAscent"), FString("Tag for when casting Radiant Ascent."));
 
 	GameplayTag.Ability_Holy_DivineSanctuary = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Ability.Holy.DivineSanctuary"), FString("Tag for when casting Divine Sanctuary."));
 
-	GameplayTag.Ability_Holy_HolyBolt_Storm = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Ability.Holy.HolyBolt.Storm"), FString("Tag for when casting Holy Bolt Storm."));
+	GameplayTag.Ability_Holy_ChainsOfAtonement = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Holy.ChainsOfAtonement"), FString("Tag for when casting Chains of Atonement."));
 
-	GameplayTag.Ability_Holy_HolyShield = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Ability.Holy.HolyShield"), FString("Tag for when casting Holy Shield."));
+	GameplayTag.Ability_Holy_AngelicReckoning = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Holy.AngelicReckoning"), FString("Tag for when casting Angelic Reckoning."));
+	
+	
+	/* Life Mage Ability Tags */
+	GameplayTag.Ability_Life_EssenceTap = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Life.EssenceTap"), FString("Tag for when casting Essence Tap."));
+	
+	GameplayTag.Ability_Life_CircleOfLife = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Life.CircleOfLife"), FString("Tag for when casting Circle of Life."));
+	
+	GameplayTag.Ability_Life_LuckyEscape = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Life.LuckyEscape"), FString("Tag for when casting Lucky Escape."));
+	
+	GameplayTag.Ability_Life_Elevate = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Life.Elevate"), FString("Tag for when casting Elevate."));
+	
+	GameplayTag.Ability_Life_Dispel = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Life.Dispel"), FString("Tag for when casting Dispel."));
+	
+	GameplayTag.Ability_Life_ImpenetrableBarrier = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Life.ImpenetrableBarrier"), FString("Tag for when casting Impenetrable Barrier."));
 	
 	
 	/* Fire Mage Cooldown Tags */
@@ -520,24 +543,66 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.Cooldown_Holy_SacredSmite = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Cooldown.Holy.SacredSmite"), FString("Cooldown Tag for Sacred Smite."));
 
-	GameplayTag.Cooldown_Holy_HolyBolt_Chain = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Cooldown.Holy.HolyBolt.Chain"), FString("Cooldown Tag for Holy Bolt Chain."));
+	GameplayTag.Cooldown_Holy_RadiantAscent = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Holy.RadiantAscent"), FString("Cooldown Tag for Radiant Ascent."));
 
 	GameplayTag.Cooldown_Holy_DivineSanctuary = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Cooldown.Holy.DivineSanctuary"), FString("Cooldown Tag for Divine Sanctuary."));
 
-	GameplayTag.Cooldown_Holy_HolyBolt_Storm = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Cooldown.Holy.HolyBolt.Storm"), FString("Cooldown Tag for Holy Bolt Storm."));
+	GameplayTag.Cooldown_Holy_ChainsOfAtonement = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Holy.ChainsOfAtonement"), FString("Cooldown Tag for Chains of Atonement."));
 
-	GameplayTag.Cooldown_Holy_HolyShield = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Cooldown.Holy.HolyShield"), FString("Cooldown Tag for Holy Shield."));
+	GameplayTag.Cooldown_Holy_AngelicReckoning = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Holy.AngelicReckoning"), FString("Cooldown Tag for Angelic Reckoning."));
 	
-	/* Input Tags */
+	
+	/* Life Mage Cooldown Tags */
+	GameplayTag.Cooldown_Life_EssenceTap = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Life.EssenceTap"), FString("Cooldown Tag for Essence Tap."));
+	
+	GameplayTag.Cooldown_Life_CircleOfLife = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Life.CircleOfLife"), FString("Cooldown Tag for Circle of Life."));
+	
+	GameplayTag.Cooldown_Life_LuckyEscape = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Life.LuckyEscape"), FString("Cooldown Tag for Lucky Escape."));
+	
+	GameplayTag.Cooldown_Life_Elevate = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Life.Elevate"), FString("Cooldown Tag for Elevate."));
+	
+	GameplayTag.Cooldown_Life_Dispel = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Life.Dispel"), FString("Cooldown Tag for Dispel."));
+	
+	GameplayTag.Cooldown_Life_ImpenetrableBarrier = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Life.ImpenetrableBarrier"), FString("Cooldown Tag for Impenetrable Barrier."));
+	
+	
+	/* M&K Input Tags */
 	GameplayTag.InputTag_LMB = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("InputTag.LMB"), FString("Input Tag for Left Mouse Button."));
 	
 	GameplayTag.InputTag_RMB = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("InputTag.RMB"), FString("Input Tag for Right Mouse Button."));
+	
+	GameplayTag.InputTag_W = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.W"), FString("Input Tag for W Key."));
+	
+	GameplayTag.InputTag_A = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.A"), FString("Input Tag for A Key."));
+	
+	GameplayTag.InputTag_S = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.S"), FString("Input Tag for S Key."));
+	
+	GameplayTag.InputTag_D = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.D"), FString("Input Tag for D Key."));
+	
+	GameplayTag.InputTag_Q = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.Q"), FString("Input Tag for Q Key."));
+	
+	GameplayTag.InputTag_E = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.E"), FString("Input Tag for E Key."));
+	
+	GameplayTag.InputTag_Shift = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.Shift"), FString("Input Tag for Shift Key."));
 	
 	GameplayTag.InputTag_1 = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("InputTag.1"), FString("Input Tag for  1 Key."));
@@ -550,8 +615,58 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	
 	GameplayTag.InputTag_4 = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("InputTag.4"), FString("Input Tag for 4 Key."));
-
 	
+	
+	/* Controller Input Tags */
+	GameplayTag.InputTag_Controller_LeftStick = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.Controller.LeftStick"), FString("Input Tag for Controller Left Stick."));
+
+	GameplayTag.InputTag_Controller_RightStick = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.Controller.RightStick"), FString("Input Tag for Controller Right Stick."));
+
+	GameplayTag.InputTag_Controller_LeftShoulder = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.Controller.LeftShoulder"), FString("Input Tag for Controller Left Shoulder Button."));
+
+	GameplayTag.InputTag_Controller_RightShoulder = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.Controller.RightShoulder"), FString("Input Tag for Controller Right Shoulder Button."));
+
+	GameplayTag.InputTag_Controller_A = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.Controller.A"), FString("Input Tag for Controller A Button."));
+
+	GameplayTag.InputTag_Controller_B = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.Controller.B"), FString("Input Tag for Controller B Button."));
+
+	GameplayTag.InputTag_Controller_X = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.Controller.X"), FString("Input Tag for Controller X Button."));
+
+	GameplayTag.InputTag_Controller_Y = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.Controller.Y"), FString("Input Tag for Controller Y Button."));
+
+	GameplayTag.InputTag_Controller_LT = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.Controller.LT"), FString("Input Tag for Controller Left Trigger."));
+
+	GameplayTag.InputTag_Controller_RT = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.Controller.RT"), FString("Input Tag for Controller Right Trigger."));
+
+	GameplayTag.InputTag_Controller_Up = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.Controller.Up"), FString("Input Tag for Controller D-Pad Up."));
+
+	GameplayTag.InputTag_Controller_Down = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.Controller.Down"), FString("Input Tag for Controller D-Pad Down."));
+
+	GameplayTag.InputTag_Controller_Left = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.Controller.Left"), FString("Input Tag for Controller D-Pad Left."));
+
+	GameplayTag.InputTag_Controller_Right = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.Controller.Right"), FString("Input Tag for Controller D-Pad Right."));
+
+	GameplayTag.InputTag_Controller_Start = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.Controller.Start"), FString("Input Tag for Controller Start Button."));
+
+	GameplayTag.InputTag_Controller_Back = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("InputTag.Controller.Back"), FString("Input Tag for Controller Back Button."));
+
+
 	/* Damage Type Tags */
 	GameplayTag.DamageType_PhysicalDamage = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("DamageType.PhysicalDamage"), FString("Amount of Physical Damage Done."));
@@ -752,34 +867,34 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	
 	/* Montage Attack Tags */
 	GameplayTag.Montage_Attack_1 = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Montage.Attack.1"), FString("Tag for Montage Attacks."));
+	(FName("Montage.Attack.1"), FString("Tag for Montage Attack 1."));
 	
 	GameplayTag.Montage_Attack_2 = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Montage.Attack.2"), FString("Tag for Montage Attacks."));
+	(FName("Montage.Attack.2"), FString("Tag for Montage Attack 2."));
 	
 	GameplayTag.Montage_Attack_3 = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Montage.Attack.3"), FString("Tag for Montage Attacks."));
+	(FName("Montage.Attack.3"), FString("Tag for Montage Attack 3."));
 	
 	GameplayTag.Montage_Attack_4 = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Montage.Attack.4"), FString("Tag for Montage Attacks."));
+	(FName("Montage.Attack.4"), FString("Tag for Montage Attack 4."));
 	
 	GameplayTag.Montage_Attack_5 = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Montage.Attack.5"), FString("Tag for Montage Attacks."));
+	(FName("Montage.Attack.5"), FString("Tag for Montage Attack 5."));
 	
 	GameplayTag.Montage_Attack_6 = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Montage.Attack.6"), FString("Tag for Montage Attacks."));
+	(FName("Montage.Attack.6"), FString("Tag for Montage Attack 6."));
 	
 	GameplayTag.Montage_Attack_7 = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Montage.Attack.7"), FString("Tag for Montage Attacks."));
+	(FName("Montage.Attack.7"), FString("Tag for Montage Attack 7."));
 	
 	GameplayTag.Montage_Attack_8 = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Montage.Attack.8"), FString("Tag for Montage Attacks."));
+	(FName("Montage.Attack.8"), FString("Tag for Montage Attack 8."));
 	
 	GameplayTag.Montage_Attack_9 = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Montage.Attack.9"), FString("Tag for Montage Attacks."));
+	(FName("Montage.Attack.9"), FString("Tag for Montage Attack 9."));
 	
 	GameplayTag.Montage_Attack_10 = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Montage.Attack.10"), FString("Tag for Montage Attacks."));
+	(FName("Montage.Attack.10"), FString("Tag for Montage Attack 10."));
 	
 	
 	/* Team Tags */

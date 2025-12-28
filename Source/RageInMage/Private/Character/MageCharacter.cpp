@@ -5,7 +5,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
-#include "AbilitySystem/Data/CharacterClassInfo.h"
+#include "AbilitySystem/Data/LevelUpInfo.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Player/MagePlayerController.h"
 #include "Player/MagePlayerState.h"
@@ -46,11 +46,69 @@ void AMageCharacter::OnRep_PlayerState()
 	InitPlayerAbilityActorInfo();
 }
 
-int32 AMageCharacter::GetPlayerLevel()
+int32 AMageCharacter::GetCharacterLevel_Implementation()
 {
 	const AMagePlayerState* MagePlayerState = GetPlayerState<AMagePlayerState>();
 	check(MagePlayerState);
 	return MagePlayerState->GetPlayerLevel();
+}
+
+void AMageCharacter::AddToXP_Implementation(int32 InXP)
+{
+	AMagePlayerState* MagePlayerState = GetPlayerState<AMagePlayerState>();
+	check(MagePlayerState);
+	MagePlayerState->AddToXP(InXP);
+}
+
+void AMageCharacter::LevelUp_Implementation()
+{
+	
+}
+
+int32 AMageCharacter::GetXP_Implementation() const
+{
+	const AMagePlayerState* MagePlayerState = GetPlayerState<AMagePlayerState>();
+	check(MagePlayerState);
+	return MagePlayerState->GetPlayerXP();
+	
+}
+
+int32 AMageCharacter::FindLevelForXP_Implementation(int32 InXP) const
+{
+	const AMagePlayerState* MagePlayerState = GetPlayerState<AMagePlayerState>();
+	check(MagePlayerState);
+	return MagePlayerState->LevelUpInfo->FindLevelForXP(InXP);
+}
+
+int32 AMageCharacter::GetAttributePointsReward_Implementation(int32 InLevel) const
+{
+	const AMagePlayerState* MagePlayerState = GetPlayerState<AMagePlayerState>();
+	check(MagePlayerState);
+	return MagePlayerState->LevelUpInfo->LevelUpInfos[InLevel].AttributePointsReward;
+}
+
+int32 AMageCharacter::GetSpellPointsReward_Implementation(int32 InLevel) const
+{
+	const AMagePlayerState* MagePlayerState = GetPlayerState<AMagePlayerState>();
+	check(MagePlayerState);
+	return MagePlayerState->LevelUpInfo->LevelUpInfos[InLevel].SpellPointsReward;
+}
+
+void AMageCharacter::AddToAttributePoints_Implementation(int32 InAttributePoints) const
+{
+	IPlayerInterface::AddToAttributePoints_Implementation(InAttributePoints);
+}
+
+void AMageCharacter::AddToSpellPoints_Implementation(int32 InSpellPoints) const
+{
+	IPlayerInterface::AddToSpellPoints_Implementation(InSpellPoints);
+}
+
+void AMageCharacter::AddToPlayerLevel_Implementation(int32 InLevel) const
+{
+	AMagePlayerState* MagePlayerState = GetPlayerState<AMagePlayerState>();
+	check(MagePlayerState);
+	MagePlayerState->AddToLevel(InLevel);
 }
 
 void AMageCharacter::InitPlayerAbilityActorInfo()

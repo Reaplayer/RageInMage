@@ -55,6 +55,7 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	/* Mechanics Attributes */
 	FGameplayTag Attributes_Mechanics_Heat;
 	FGameplayTag Attributes_Mechanics_Charge;
+	FGameplayTag Attributes_Mechanics_XP;
 
 
 	/* Ability Tags */
@@ -158,10 +159,19 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	/* Holy Mage Ability Tags */
 	FGameplayTag Ability_Holy_BeamingBlade;
 	FGameplayTag Ability_Holy_SacredSmite;
-	FGameplayTag Ability_Holy_HolyBolt_Chain;
+	FGameplayTag Ability_Holy_RadiantAscent;
 	FGameplayTag Ability_Holy_DivineSanctuary;
-	FGameplayTag Ability_Holy_HolyBolt_Storm;
-	FGameplayTag Ability_Holy_HolyShield;
+	FGameplayTag Ability_Holy_ChainsOfAtonement;
+	FGameplayTag Ability_Holy_AngelicReckoning;
+	
+	
+	/* Life Mage Ability Tags*/
+	FGameplayTag Ability_Life_EssenceTap;
+	FGameplayTag Ability_Life_CircleOfLife;
+	FGameplayTag Ability_Life_LuckyEscape;
+	FGameplayTag Ability_Life_Elevate;
+	FGameplayTag Ability_Life_Dispel;
+	FGameplayTag Ability_Life_ImpenetrableBarrier;
 	
 	
 	/* Fire Mage Cooldown Tags */
@@ -248,20 +258,55 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	/* Holy Mage Cooldown Tags */
 	FGameplayTag Cooldown_Holy_BeamingBlade;
 	FGameplayTag Cooldown_Holy_SacredSmite;
-	FGameplayTag Cooldown_Holy_HolyBolt_Chain;
+	FGameplayTag Cooldown_Holy_RadiantAscent;
 	FGameplayTag Cooldown_Holy_DivineSanctuary;
-	FGameplayTag Cooldown_Holy_HolyBolt_Storm;
-	FGameplayTag Cooldown_Holy_HolyShield;
+	FGameplayTag Cooldown_Holy_ChainsOfAtonement;
+	FGameplayTag Cooldown_Holy_AngelicReckoning;
 	
 	
-	/* Input Tags */
+	/* Life Mage Cooldown Tags*/
+	FGameplayTag Cooldown_Life_EssenceTap;
+	FGameplayTag Cooldown_Life_CircleOfLife;
+	FGameplayTag Cooldown_Life_LuckyEscape;
+	FGameplayTag Cooldown_Life_Elevate;
+	FGameplayTag Cooldown_Life_Dispel;
+	FGameplayTag Cooldown_Life_ImpenetrableBarrier;
+	
+	
+	/* M&K Input Tags */
 	FGameplayTag InputTag_LMB;
 	FGameplayTag InputTag_RMB;
+	FGameplayTag InputTag_W;
+	FGameplayTag InputTag_A;
+	FGameplayTag InputTag_S;
+	FGameplayTag InputTag_D;
+	FGameplayTag InputTag_Q;
+	FGameplayTag InputTag_E;
+	FGameplayTag InputTag_Shift;
 	FGameplayTag InputTag_1;
 	FGameplayTag InputTag_2;
 	FGameplayTag InputTag_3;
 	FGameplayTag InputTag_4;
-
+	
+	
+	/* Controller Input Tags */
+	FGameplayTag InputTag_Controller_LeftStick;
+	FGameplayTag InputTag_Controller_RightStick;
+	FGameplayTag InputTag_Controller_LeftShoulder;
+	FGameplayTag InputTag_Controller_RightShoulder;
+	FGameplayTag InputTag_Controller_A;
+	FGameplayTag InputTag_Controller_B;
+	FGameplayTag InputTag_Controller_X;
+	FGameplayTag InputTag_Controller_Y;
+	FGameplayTag InputTag_Controller_LT;
+	FGameplayTag InputTag_Controller_RT;
+	FGameplayTag InputTag_Controller_Up;
+	FGameplayTag InputTag_Controller_Down;
+	FGameplayTag InputTag_Controller_Left;
+	FGameplayTag InputTag_Controller_Right;
+	FGameplayTag InputTag_Controller_Start;
+	FGameplayTag InputTag_Controller_Back;
+	
 	
 	/* Damage Type Tags */
 	FGameplayTag DamageType_PhysicalDamage;

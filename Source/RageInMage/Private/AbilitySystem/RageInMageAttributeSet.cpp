@@ -10,7 +10,9 @@
 #include "RageInMageGameplayTag.h"
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
 #include "Interaction/CombatInterface.h"
+#include "Interaction/PlayerInterface.h"
 #include "Player/MagePlayerController.h"
+#include "RageInMage/RageInMageLogChannels.h"
 
 URageInMageAttributeSet::URageInMageAttributeSet()
 {
@@ -140,6 +142,7 @@ void URageInMageAttributeSet::PostGameplayEffectExecute(const FGameplayEffectMod
 				{
 					CombatInterface->Die();
 				}
+				SendXPEvent(Properties);
 			}
 			else
 			{
@@ -185,6 +188,37 @@ void URageInMageAttributeSet::PostGameplayEffectExecute(const FGameplayEffectMod
 			
 		}
 	}
+	// Set XP Change
+	if (Data.EvaluatedData.Attribute == GetIncomingXPAttribute())
+	{
+		const float LocalXP = GetIncomingXP();
+		SetIncomingXP(0.f);
+		
+		//TODO: See if we should level up
+		if (Properties.SourceCharacter->Implements<UPlayerInterface>())
+		{
+			const int32 CurrentLevel = ICombatInterface::Execute_GetCharacterLevel(Properties.SourceCharacter);
+			const int32 CurrentXP = IPlayerInterface::Execute_GetXP(Properties.SourceCharacter);
+			
+			const int32 NewLevel = IPlayerInterface::Execute_FindLevelForXP(Properties.SourceCharacter, CurrentXP + LocalXP);
+			const int32 NumLevelUpsToApply = NewLevel - CurrentLevel;
+			if (NumLevelUpsToApply > 0)
+			{
+				const int32 AttributePointsReward = IPlayerInterface::Execute_GetAttributePointsReward(Properties.SourceCharacter, CurrentLevel);
+				const int32 SpellPointsReward = IPlayerInterface::Execute_GetSpellPointsReward(Properties.SourceCharacter, CurrentLevel);
+				IPlayerInterface::Execute_AddToPlayerLevel(Properties.SourceCharacter, NumLevelUpsToApply);
+				IPlayerInterface::Execute_AddToAttributePoints(Properties.SourceCharacter, AttributePointsReward * NumLevelUpsToApply);
+				IPlayerInterface::Execute_AddToSpellPoints(Properties.SourceCharacter, SpellPointsReward * NumLevelUpsToApply);
+				
+				SetHealth(GetMaxHealth());
+				SetMana(GetMaxMana());
+				
+				IPlayerInterface::Execute_LevelUp(Properties.SourceCharacter);
+			}
+			
+			IPlayerInterface::Execute_AddToXP(Properties.SourceCharacter, LocalXP);
+		}
+	}
 }
 
 
@@ -201,6 +235,22 @@ void URageInMageAttributeSet::ShowFloatingText(const FEffectProperties& Properti
 		{
 			PC->ShowDamageNumber(Damage, Properties.TargetCharacter, bIsCriticalHit, bIsVulnerableHit, bIsResistantHit);
 		}
+	}
+}
+
+void URageInMageAttributeSet::SendXPEvent(const FEffectProperties& Properties) const
+{
+	if (Properties.TargetCharacter->Implements<UCombatInterface>())
+	{
+		const int32 TargetLevel = ICombatInterface::Execute_GetCharacterLevel(Properties.TargetCharacter);
+		const ECharacterClass TargetClass = ICombatInterface::Execute_GetCharacterClass(Properties.TargetCharacter);
+		const int32 XPReward = URageInMageAbilitySystemLibrary::GetXPRewardForClassAndLevel(TargetClass, TargetLevel, Properties.TargetCharacter);
+		
+		const FRageInMageGameplayTag& GameplayTag = FRageInMageGameplayTag::Get();
+		FGameplayEventData Payload;
+		Payload.EventTag = GameplayTag.Attributes_Mechanics_XP;
+		Payload.EventMagnitude = XPReward;
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Properties.SourceCharacter, Payload.EventTag, Payload);
 	}
 }
 

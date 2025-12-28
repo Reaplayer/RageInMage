@@ -36,6 +36,16 @@ void URageInMageAbilitySystemComponent::AddCharacterAbilities(
 	AbilitiesGivenDelegate.Broadcast(this);
 }
 
+void URageInMageAbilitySystemComponent::AddCharacterPassiveAbilities(
+	const TArray<TSubclassOf<UGameplayAbility>>& StartupPassiveAbilities)
+{
+	for (const TSubclassOf<UGameplayAbility> AbilityClass : StartupPassiveAbilities)
+	{
+		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, 1);
+		GiveAbilityAndActivateOnce(AbilitySpec);
+	}
+}
+
 void URageInMageAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& InputTag)
 {
 	// Return if Input Tag is not valid

@@ -223,6 +223,7 @@ void AMageCharacterBase::AddCharacterAbilities()
 	URageInMageAbilitySystemComponent* MageASC = CastChecked<URageInMageAbilitySystemComponent>(AbilitySystemComponent);
 	if (!HasAuthority()) return;
 
+	MageASC->AddCharacterPassiveAbilities(StartupPassiveAbilities);
 	MageASC->AddCharacterAbilities(StartupAbilities);
 }
 

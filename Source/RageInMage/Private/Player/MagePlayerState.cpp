@@ -31,13 +31,13 @@ UAbilitySystemComponent* AMagePlayerState::GetAbilitySystemComponent() const
 	return AbilitySystemComponent;
 }
 
-void AMagePlayerState::AddXP(int32 XPToAdd)
+void AMagePlayerState::AddToXP(int32 XPToAdd)
 {
 	XP += XPToAdd;
 	OnXPChangedDelegate.Broadcast(XP);
 }
 
-void AMagePlayerState::AddLevel(int32 LevelToAdd)
+void AMagePlayerState::AddToLevel(int32 LevelToAdd)
 {
 	Level += LevelToAdd;
 	OnLevelUpDelegate.Broadcast(Level);
