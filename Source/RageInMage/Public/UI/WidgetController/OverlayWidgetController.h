@@ -90,9 +90,16 @@ protected:
 	void OnInitialiseStartUpAbilities(URageInMageAbilitySystemComponent* RageInMageAbilitySystemComponent);
 	
 	void OnXpChanged(int32 NewXP);
-	
+
 private:
-	
+	void InterpXPPercent();
+
+	FTimerHandle XPInterpTimerHandle;
+	float CurrentXPPercent = 0.f;
+	float TargetXPPercent = 0.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "XP")
+	float XPInterpSpeed = 2.f;
 };
 
 template <typename T>

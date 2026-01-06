@@ -8,6 +8,9 @@
 #include "Interaction/PlayerInterface.h"
 #include "MageCharacter.generated.h"
 
+class USpringArmComponent;
+class UCameraComponent;
+class UNiagaraComponent;
 /**
  * 
  */
@@ -34,12 +37,21 @@ public:
 	virtual void AddToAttributePoints_Implementation(int32 InAttributePoints) const override;
 	virtual void AddToSpellPoints_Implementation(int32 InSpellPoints) const override;
 	virtual void AddToPlayerLevel_Implementation(int32 InLevel) const override;
-	
 	/* End Player Interface */
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<UNiagaraComponent> LevelUpNiagaraComponent;
 
 protected:
-	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<USpringArmComponent> CameraBoom;
 
 private:
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UCameraComponent> TopDownCameraComponent;
+	
 	virtual void InitPlayerAbilityActorInfo() override;
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void MultiCastLevelUpParticleEffect();
 };

@@ -32,38 +32,22 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 	
 	// Health Delegate Dependency
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MageAttributeSet->GetHealthAttribute()).AddLambda(
-	[this](const FOnAttributeChangeData& Data)
-		{
-		OnHealthChanged.Broadcast(Data.NewValue);
-		}
-	);
+	[this](const FOnAttributeChangeData& Data){OnHealthChanged.Broadcast(Data.NewValue);});
 	
 	
 	// Max Health Delegate Dependency
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MageAttributeSet->GetMaxHealthAttribute()).AddLambda(
-	[this](const FOnAttributeChangeData& Data)
-		{
-		OnMaxHealthChanged.Broadcast(Data.NewValue);
-		}
-	);
+	[this](const FOnAttributeChangeData& Data){OnMaxHealthChanged.Broadcast(Data.NewValue);});
 	
 	
 	// Mana Delegate Dependency
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MageAttributeSet->GetManaAttribute()).AddLambda(
-	[this](const FOnAttributeChangeData& Data)
-		{
-		OnManaChanged.Broadcast(Data.NewValue);
-		}
-	);
+	[this](const FOnAttributeChangeData& Data){OnManaChanged.Broadcast(Data.NewValue);});
 	
 	
 	// Max Mana Delegate Dependency
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MageAttributeSet->GetMaxManaAttribute()).AddLambda(
-	[this](const FOnAttributeChangeData& Data)
-		{
-		OnMaxManaChanged.Broadcast(Data.NewValue);	
-		}
-	);
+	[this](const FOnAttributeChangeData& Data){OnMaxManaChanged.Broadcast(Data.NewValue);});
 
 	
 	if (URageInMageAbilitySystemComponent* RageInMageAbilitySystemComponent = Cast<URageInMageAbilitySystemComponent>(AbilitySystemComponent))
@@ -133,19 +117,41 @@ void UOverlayWidgetController::OnXpChanged(int32 NewXP)
 	AMagePlayerState* MagePlayerState = CastChecked<AMagePlayerState>(PlayerState);
 	ULevelUpInfo* LevelUpInfo = MagePlayerState->LevelUpInfo;
 	checkf(LevelUpInfo, TEXT("Unable to find LevelUpInfo, Please fill out MagePlayerState Blueprint"));
-	
+
 	const int32 Level = LevelUpInfo->FindLevelForXP(NewXP);
 	const int32 MaxLevel = LevelUpInfo->LevelUpInfos.Num();
-	
+
 	if (Level <= MaxLevel && Level > 0)
 	{
 		const int32 LevelUpRequirement = LevelUpInfo->LevelUpInfos[Level].LevelUpRequirement;
 		const int32 PreviousLevelUpRequirement = LevelUpInfo->LevelUpInfos[Level - 1].LevelUpRequirement;
-		
+
 		const int32 DeltaLevelRequirement = LevelUpRequirement - PreviousLevelUpRequirement;
 		const int32 XPToNextLevel = NewXP - PreviousLevelUpRequirement;
-		
-		const float XPBarPercentage = static_cast<float>(XPToNextLevel) / static_cast<float>(DeltaLevelRequirement);
-		OnXPPercentChangedDelegate.Broadcast(XPBarPercentage);
+
+		TargetXPPercent = static_cast<float>(XPToNextLevel) / static_cast<float>(DeltaLevelRequirement);
+
+		// Start the interpolation timer if not already running
+		if (!GetWorld()->GetTimerManager().IsTimerActive(XPInterpTimerHandle))
+		{
+			GetWorld()->GetTimerManager().SetTimer(XPInterpTimerHandle, this, &UOverlayWidgetController::InterpXPPercent, 0.016f, true);
+		}
+	}
+}
+
+void UOverlayWidgetController::InterpXPPercent()
+{
+	if (FMath::IsNearlyEqual(CurrentXPPercent, TargetXPPercent, 0.001f))
+	{
+		CurrentXPPercent = TargetXPPercent;
+		OnXPPercentChangedDelegate.Broadcast(CurrentXPPercent);
+
+		// Stop the timer since we've reached the target
+		GetWorld()->GetTimerManager().ClearTimer(XPInterpTimerHandle);
+	}
+	else
+	{
+		CurrentXPPercent = FMath::FInterpTo(CurrentXPPercent, TargetXPPercent, 0.016f, XPInterpSpeed);
+		OnXPPercentChangedDelegate.Broadcast(CurrentXPPercent);
 	}
 }
