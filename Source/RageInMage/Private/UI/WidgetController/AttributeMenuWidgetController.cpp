@@ -3,6 +3,7 @@
 
 #include "UI/WidgetController/AttributeMenuWidgetController.h"
 #include "AbilitySystem/RageInMageAttributeSet.h"
+#include "Player/MagePlayerState.h"
 #include "AbilitySystem/Data/AttributeInfo.h"
 
 void UAttributeMenuWidgetController::BindCallbacksToDependencies()
@@ -20,6 +21,10 @@ void UAttributeMenuWidgetController::BindCallbacksToDependencies()
 		}
 		);
 	}
+	
+	AMagePlayerState* MagePlayerState = CastChecked<AMagePlayerState>(PlayerState);
+	MagePlayerState->OnAttributePointsChangedDelegate.AddLambda([this](int32 Points){ AttributePointsChangedDelegate.Broadcast(Points); });
+	MagePlayerState->OnSpellPointsChangedDelegate.AddLambda([this](int32 Points){ SpellPointsChangedDelegate.Broadcast(Points); });
 }
 
 void UAttributeMenuWidgetController::BroadcastInitalValues()
@@ -32,6 +37,10 @@ void UAttributeMenuWidgetController::BroadcastInitalValues()
 	{
 		BroadcastAttributeInfo(Pair.Key, Pair.Value());
 	}
+	
+	AMagePlayerState* MagePlayerState = CastChecked<AMagePlayerState>(PlayerState);
+	AttributePointsChangedDelegate.Broadcast(MagePlayerState->GetAttributePoints());
+	SpellPointsChangedDelegate.Broadcast(MagePlayerState->GetSpellPoints());
 }
 
 void UAttributeMenuWidgetController::BroadcastAttributeInfo(const FGameplayTag& AttributeTag,

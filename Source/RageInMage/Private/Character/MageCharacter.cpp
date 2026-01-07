@@ -125,12 +125,16 @@ int32 AMageCharacter::GetSpellPointsReward_Implementation(int32 InLevel) const
 
 void AMageCharacter::AddToAttributePoints_Implementation(int32 InAttributePoints) const
 {
-	IPlayerInterface::AddToAttributePoints_Implementation(InAttributePoints);
+	AMagePlayerState* MagePlayerState = GetPlayerState<AMagePlayerState>();
+	check(MagePlayerState);
+	MagePlayerState->AddToAttributePoints(InAttributePoints);
 }
 
 void AMageCharacter::AddToSpellPoints_Implementation(int32 InSpellPoints) const
 {
-	IPlayerInterface::AddToSpellPoints_Implementation(InSpellPoints);
+	AMagePlayerState* MagePlayerState = GetPlayerState<AMagePlayerState>();
+	check(MagePlayerState);
+	MagePlayerState->AddToSpellPoints(InSpellPoints);
 }
 
 void AMageCharacter::AddToPlayerLevel_Implementation(int32 InLevel) const

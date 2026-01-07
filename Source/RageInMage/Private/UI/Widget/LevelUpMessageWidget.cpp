@@ -4,6 +4,7 @@
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/TextBlock.h"
+#include "Engine/Font.h"
 
 void ULevelUpMessageWidget::NativeConstruct()
 {
@@ -14,12 +15,12 @@ void ULevelUpMessageWidget::NativeTick(const FGeometry& MyGeometry, float InDelt
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	if (bIsRevealing || bIsTransforming)
+	if (bIsRevealing || bIsSpinning || bIsTransforming)
 	{
 		CurrentAnimationTime += InDeltaTime;
 	}
 
-	if (bIsRevealing)
+	if (bIsSpinning)
 	{
 		UpdateLetterSpinAnimation(InDeltaTime);
 	}
@@ -66,6 +67,7 @@ void ULevelUpMessageWidget::PlayMultiLineLevelUpAnimation(const FText& Line1, UH
 
 	// Start the reveal phase
 	bIsRevealing = true;
+	bIsSpinning = true;
 	CurrentLetterIndex = 0;
 	CurrentAnimationTime = 0.0f;
 
@@ -138,17 +140,36 @@ void ULevelUpMessageWidget::RevealNextLetter()
 	// Get the character to display
 	TCHAR CurrentChar = LinesToDisplay[CurrentLineIndex][CharIndexInLine];
 
+	// DEBUG: Log what character we're processing
+	UE_LOG(LogTemp, Warning, TEXT("Character: '%c' (ASCII: %d)"), CurrentChar, (int32)CurrentChar);
+
 	// Create a new text block for this letter
 	UTextBlock* LetterWidget = NewObject<UTextBlock>(this, UTextBlock::StaticClass());
 	if (LetterWidget)
 	{
 		// Set initial properties - display as rune
 		FString RuneChar = GetRuneForCharacter(CurrentChar);
+
+		// DEBUG: Log what rune we got back
+		UE_LOG(LogTemp, Warning, TEXT("Rune returned: %s"), *RuneChar);
+
 		LetterWidget->SetText(FText::FromString(RuneChar));
 
 		// Set font size and color
-		FSlateFontInfo FontInfo = LetterWidget->GetFont();
-		FontInfo.Size = FontSize;
+		FSlateFontInfo FontInfo;
+		if (RuneFont)
+		{
+			// Use the custom rune font if provided
+			UE_LOG(LogTemp, Warning, TEXT("Using RuneFont: %s"), *RuneFont->GetName());
+			FontInfo = FSlateFontInfo(RuneFont, FontSize);
+		}
+		else
+		{
+			// Fallback to default font
+			UE_LOG(LogTemp, Error, TEXT("RuneFont is NULL! Please assign a font in the widget properties!"));
+			FontInfo = LetterWidget->GetFont();
+			FontInfo.Size = FontSize;
+		}
 		LetterWidget->SetFont(FontInfo);
 		LetterWidget->SetColorAndOpacity(TextColor);
 
@@ -175,6 +196,8 @@ void ULevelUpMessageWidget::RevealNextLetter()
 
 void ULevelUpMessageWidget::UpdateLetterSpinAnimation(float DeltaTime)
 {
+	bool bAnyLetterStillSpinning = false;
+
 	// Each letter spins for SpinDuration seconds when it appears
 	for (FLetterAnimationData& AnimData : LetterAnimationData)
 	{
@@ -185,16 +208,23 @@ void ULevelUpMessageWidget::UpdateLetterSpinAnimation(float DeltaTime)
 
 		if (LetterAge >= 0.0f && LetterAge <= SpinDuration)
 		{
+			bAnyLetterStillSpinning = true;
+
 			// Spin animation progress (0 to 1)
 			float SpinProgress = LetterAge / SpinDuration;
 
 			// Rotate from 0 to 360 degrees with ease-in-out
 			float EasedProgress = FMath::InterpEaseInOut(0.0f, 1.0f, SpinProgress, 2.0f);
 			float RotationAngle = EasedProgress * 360.0f;
+			
+			// Apply an increasing scale size
+			float ScaleProgress = FMath::Clamp(LetterAge / SpinDuration, 0.0f, 1.0f);
+			float ScaleFactor = FMath::InterpEaseInOut(0.0f, 1.0f, ScaleProgress, 2.0f);
 
-			// Apply rotation
+			// Apply rotation and scale
 			FWidgetTransform Transform;
 			Transform.Angle = RotationAngle;
+			Transform.Scale = FVector2D(ScaleFactor, ScaleFactor);
 			AnimData.Widget->SetRenderTransform(Transform);
 		}
 		else if (LetterAge > SpinDuration)
@@ -204,6 +234,12 @@ void ULevelUpMessageWidget::UpdateLetterSpinAnimation(float DeltaTime)
 			Transform.Angle = 0.0f;
 			AnimData.Widget->SetRenderTransform(Transform);
 		}
+	}
+
+	// If no letters are spinning anymore, turn off the spinning flag
+	if (!bAnyLetterStillSpinning && LetterAnimationData.Num() > 0)
+	{
+		bIsSpinning = false;
 	}
 }
 
@@ -235,10 +271,37 @@ void ULevelUpMessageWidget::UpdateTransformAnimation(float DeltaTime)
 			BoxSlot->SetPadding(FMargin(CurrentSpacing / 2.0f, 0.0f, CurrentSpacing / 2.0f, 0.0f));
 		}
 
-		// At the midpoint of the animation, change from runes to actual letters
-		if (Progress >= 0.5f && AnimData.Widget->GetText().ToString() != FString::Chr(AnimData.ActualCharacter))
+		// At the midpoint of the animation, transform from runes to readable text
+		if (Progress >= 0.5f && !AnimData.bHasTransformed)
 		{
-			AnimData.Widget->SetText(FText::FromString(FString::Chr(AnimData.ActualCharacter)));
+			// Mark as transformed so we only do this once
+			AnimData.bHasTransformed = true;
+
+			// Switch from rune font to text font
+			FSlateFontInfo NewFontInfo;
+			if (TextFont)
+			{
+				// Use the custom text font for readable letters
+				UE_LOG(LogTemp, Warning, TEXT("Switching to TextFont: %s"), *TextFont->GetName());
+				NewFontInfo = FSlateFontInfo(TextFont, FontSize);
+			}
+			else
+			{
+				// Fallback to default font (Roboto)
+				UE_LOG(LogTemp, Error, TEXT("TextFont is NULL! Using default font."));
+				NewFontInfo = FSlateFontInfo(FName("Roboto"), FontSize);
+			}
+			AnimData.Widget->SetFont(NewFontInfo);
+
+			// If the actual character is a number, we need to change the text back to the number
+			// (since we mapped it to a letter for the rune font)
+			if (AnimData.ActualCharacter >= '0' && AnimData.ActualCharacter <= '9')
+			{
+				// Change from letter (A-J) back to number (0-9)
+				AnimData.Widget->SetText(FText::FromString(FString::Chr(AnimData.ActualCharacter)));
+				UE_LOG(LogTemp, Warning, TEXT("Converting back to number: %c"), AnimData.ActualCharacter);
+			}
+			// For letters and other characters, the text stays the same (font change is enough)
 
 			// Optional: Add a scale "pop" effect when transforming
 			FWidgetTransform Transform = AnimData.Widget->GetRenderTransform();
@@ -277,69 +340,35 @@ void ULevelUpMessageWidget::UpdateTransformAnimation(float DeltaTime)
 
 FString ULevelUpMessageWidget::GetRuneForCharacter(TCHAR Character) const
 {
-	// Elder Futhark Runes (Unicode U+16A0 to U+16F8)
-	// We'll create a simple mapping system
+	// Since the Elder Futhark font maps A-Z to runes directly (not using Unicode codepoints),
+	// we just return the character as-is and let the font handle the conversion!
 
 	// Convert to uppercase for consistency
 	TCHAR UpperChar = FChar::ToUpper(Character);
 
-	// Map A-Z to runes
-	// Using Elder Futhark rune order: ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ
-	static const TArray<FString> RuneMapping = {
-		TEXT("\u16A0"), // A -> ᚠ (Fehu)
-		TEXT("\u16A2"), // B -> ᚢ (Uruz)
-		TEXT("\u16A6"), // C -> ᚦ (Thurisaz)
-		TEXT("\u16A8"), // D -> ᚨ (Ansuz)
-		TEXT("\u16B1"), // E -> ᚱ (Raidho)
-		TEXT("\u16B2"), // F -> ᚲ (Kenaz)
-		TEXT("\u16B7"), // G -> ᚷ (Gebo)
-		TEXT("\u16B9"), // H -> ᚹ (Wunjo)
-		TEXT("\u16BA"), // I -> ᚺ (Hagalaz)
-		TEXT("\u16BE"), // J -> ᚾ (Nauthiz)
-		TEXT("\u16C1"), // K -> ᛁ (Isa)
-		TEXT("\u16C3"), // L -> ᛃ (Jera)
-		TEXT("\u16C7"), // M -> ᛇ (Eihwaz)
-		TEXT("\u16C8"), // N -> ᛈ (Perthro)
-		TEXT("\u16C9"), // O -> ᛉ (Algiz)
-		TEXT("\u16CA"), // P -> ᛊ (Sowilo)
-		TEXT("\u16CF"), // Q -> ᛏ (Tiwaz)
-		TEXT("\u16D2"), // R -> ᛒ (Berkano)
-		TEXT("\u16D6"), // S -> ᛖ (Ehwaz)
-		TEXT("\u16D7"), // T -> ᛗ (Mannaz)
-		TEXT("\u16DA"), // U -> ᛚ (Laguz)
-		TEXT("\u16DC"), // V -> ᛜ (Ingwaz)
-		TEXT("\u16DE"), // W -> ᛞ (Dagaz)
-		TEXT("\u16DF"), // X -> ᛟ (Othala)
-		TEXT("\u16A0"), // Y -> ᚠ (wrap around)
-		TEXT("\u16A2")  // Z -> ᚢ (wrap around)
-	};
-
-	// Check if it's a letter A-Z
+	// For letters A-Z, just return the letter - the font will convert it to a rune
 	if (UpperChar >= 'A' && UpperChar <= 'Z')
 	{
-		int32 Index = UpperChar - 'A';
-		return RuneMapping[Index];
+		return FString::Chr(UpperChar);
 	}
 
-	// For spaces, return a special character or space
+	// For spaces, return a space
 	if (UpperChar == ' ')
 	{
 		return TEXT(" ");
 	}
 
-	// For numbers and special characters, use geometric runes
+	// For numbers 0-9, map them to letters so the font can display them as runes
+	// Since most rune fonts don't have number glyphs, we'll map 0-9 to A-J
 	if (UpperChar >= '0' && UpperChar <= '9')
 	{
-		// Use some nice runes for numbers
-		static const TArray<FString> NumberRunes = {
-			TEXT("\u16A0"), TEXT("\u16A2"), TEXT("\u16A6"), TEXT("\u16A8"), TEXT("\u16B1"),
-			TEXT("\u16B2"), TEXT("\u16B7"), TEXT("\u16B9"), TEXT("\u16BA"), TEXT("\u16BE")
-		};
-		return NumberRunes[UpperChar - '0'];
+		// Map 0->A, 1->B, 2->C, ... 9->J
+		TCHAR MappedChar = 'A' + (UpperChar - '0');
+		return FString::Chr(MappedChar);
 	}
 
-	// Default: return a generic rune
-	return TEXT("\u16A0");
+	// For any other character, return 'A' as a default
+	return TEXT("A");
 }
 
 void ULevelUpMessageWidget::StopLevelUpAnimation()
@@ -372,6 +401,7 @@ void ULevelUpMessageWidget::CleanupAnimation()
 	CurrentLetterIndex = 0;
 	CurrentAnimationTime = 0.0f;
 	bIsRevealing = false;
+	bIsSpinning = false;
 	bIsTransforming = false;
 	TransformTimer = 0.0f;
 }

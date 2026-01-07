@@ -56,6 +56,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	float SlamDuration = 0.4f;
 
+	// Font to use for runes at the start (must support Elder Futhark Unicode characters)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	TObjectPtr<UFont> RuneFont;
+
+	// Font to use for readable text at the end (after transformation)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	TObjectPtr<UFont> TextFont;
+
 	// Font size for the letters
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	int32 FontSize = 48;
@@ -72,6 +80,7 @@ private:
 		float SpawnTime = 0.0f;
 		TCHAR ActualCharacter = ' ';
 		UHorizontalBox* ParentContainer = nullptr;
+		bool bHasTransformed = false; // Track if we've already switched from rune to text font
 	};
 
 	// Internal state tracking
@@ -81,6 +90,7 @@ private:
 	int32 CurrentLetterIndex = 0;
 	float CurrentAnimationTime = 0.0f;
 	bool bIsRevealing = false;
+	bool bIsSpinning = false;
 	bool bIsTransforming = false;
 	float TransformTimer = 0.0f;
 
