@@ -144,6 +144,20 @@ void AMageCharacter::AddToPlayerLevel_Implementation(int32 InLevel) const
 	MagePlayerState->AddToLevel(InLevel);
 }
 
+int32 AMageCharacter::GetAttributePoints_Implementation() const
+{
+	const AMagePlayerState* MagePlayerState = GetPlayerState<AMagePlayerState>();
+	check(MagePlayerState);
+	return MagePlayerState->GetAttributePoints();
+}
+
+int32 AMageCharacter::GetSpellPoints_Implementation() const
+{
+	const AMagePlayerState* MagePlayerState = GetPlayerState<AMagePlayerState>();
+	check(MagePlayerState);
+	return MagePlayerState->GetSpellPoints();
+}
+
 void AMageCharacter::InitPlayerAbilityActorInfo()
 {
 	AMagePlayerState* MagePlayerState = GetPlayerState<AMagePlayerState>();

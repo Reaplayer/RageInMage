@@ -2,7 +2,10 @@
 
 
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/Abilities/RageInMageGameplayAbility.h"
+#include "Interaction/PlayerInterface.h"
 #include "RageInMage/RageInMageLogChannels.h"
 
 void URageInMageAbilitySystemComponent::AbilityActorInfoSet()
@@ -131,6 +134,29 @@ FGameplayTag URageInMageAbilitySystemComponent::GetAbilityTypeTagFromSpec(const 
 		}
 	}
 	return FGameplayTag();
+}
+
+void URageInMageAbilitySystemComponent::UpgradeAttribute(const FGameplayTag& AttributeTag)
+{
+	if (GetAvatarActor()->Implements<UPlayerInterface>())
+	{
+		if (IPlayerInterface::Execute_GetAttributePoints(GetAvatarActor()) > 0)
+		{
+			ServerUpgradeAttribute(AttributeTag);
+		}
+	}
+}
+
+void URageInMageAbilitySystemComponent::ServerUpgradeAttribute_Implementation(const FGameplayTag& AttributeTag)
+{
+	FGameplayEventData Payload;
+	Payload.EventTag = AttributeTag;
+	Payload.EventMagnitude = 1.0f;
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(), AttributeTag, Payload);
+	if (GetAvatarActor()->Implements<UPlayerInterface>())
+	{
+		IPlayerInterface::Execute_AddToAttributePoints(GetAvatarActor(), -1);
+	}
 }
 
 void URageInMageAbilitySystemComponent::OnRep_ActivateAbilities()

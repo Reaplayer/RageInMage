@@ -2,6 +2,8 @@
 
 
 #include "UI/WidgetController/AttributeMenuWidgetController.h"
+
+#include "AbilitySystem/RageInMageAbilitySystemComponent.h"
 #include "AbilitySystem/RageInMageAttributeSet.h"
 #include "Player/MagePlayerState.h"
 #include "AbilitySystem/Data/AttributeInfo.h"
@@ -43,8 +45,14 @@ void UAttributeMenuWidgetController::BroadcastInitalValues()
 	SpellPointsChangedDelegate.Broadcast(MagePlayerState->GetSpellPoints());
 }
 
+void UAttributeMenuWidgetController::UpgradeAttribute(const FGameplayTag& AttributeTag)
+{
+	URageInMageAbilitySystemComponent* RageInMageAbilitySystemComponent = CastChecked<URageInMageAbilitySystemComponent>(AbilitySystemComponent);
+	RageInMageAbilitySystemComponent->UpgradeAttribute(AttributeTag);
+}
+
 void UAttributeMenuWidgetController::BroadcastAttributeInfo(const FGameplayTag& AttributeTag,
-	const FGameplayAttribute& Attribute)
+                                                            const FGameplayAttribute& Attribute)
 {
 	FRageInMageAttributeInfo Info = AttributeInfo->FindAttributeInfoForTag(AttributeTag);
 	Info.AttributeValue = 	Attribute.GetNumericValue(AttributeSet);

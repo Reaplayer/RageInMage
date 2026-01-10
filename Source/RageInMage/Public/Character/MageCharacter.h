@@ -37,6 +37,8 @@ public:
 	virtual void AddToAttributePoints_Implementation(int32 InAttributePoints) const override;
 	virtual void AddToSpellPoints_Implementation(int32 InSpellPoints) const override;
 	virtual void AddToPlayerLevel_Implementation(int32 InLevel) const override;
+	virtual int32 GetAttributePoints_Implementation() const override;
+	virtual int32 GetSpellPoints_Implementation() const override;
 	/* End Player Interface */
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
