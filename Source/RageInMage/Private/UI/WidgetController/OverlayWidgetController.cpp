@@ -10,9 +10,9 @@
 #include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "AbilitySystem/Data/LevelUpInfo.h"
 #include "Interaction/CombatInterface.h"
-#include "Player/MagePlayerState.h"
+#include "Player/RageInMagePlayerState.h"
 
-void UOverlayWidgetController::BroadcastInitalValues()
+void UOverlayWidgetController::BroadcastInitialValues()
 {
 	const URageInMageAttributeSet* MageAttributeSet = CastChecked<URageInMageAttributeSet>(AttributeSet);
 	OnHealthChanged.Broadcast(MageAttributeSet->GetHealth());
@@ -23,44 +23,45 @@ void UOverlayWidgetController::BroadcastInitalValues()
 
 void UOverlayWidgetController::BindCallbacksToDependencies()
 {
-	AMagePlayerState* MagePlayerState = CastChecked<AMagePlayerState>(PlayerState);
-	MagePlayerState->OnXPChangedDelegate.AddUObject(this, &UOverlayWidgetController::OnXpChanged);
-	MagePlayerState->OnLevelUpDelegate.AddLambda([this](int32 NewLevel) { OnPlayerLevelChangedDelegate.Broadcast(NewLevel); });
-	
-	const URageInMageAttributeSet* MageAttributeSet = CastChecked<URageInMageAttributeSet>(AttributeSet);
-
-	
-	// Health Delegate Dependency
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MageAttributeSet->GetHealthAttribute()).AddLambda(
-	[this](const FOnAttributeChangeData& Data){OnHealthChanged.Broadcast(Data.NewValue);});
-	
-	
-	// Max Health Delegate Dependency
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MageAttributeSet->GetMaxHealthAttribute()).AddLambda(
-	[this](const FOnAttributeChangeData& Data){OnMaxHealthChanged.Broadcast(Data.NewValue);});
-	
-	
-	// Mana Delegate Dependency
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MageAttributeSet->GetManaAttribute()).AddLambda(
-	[this](const FOnAttributeChangeData& Data){OnManaChanged.Broadcast(Data.NewValue);});
-	
-	
-	// Max Mana Delegate Dependency
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(MageAttributeSet->GetMaxManaAttribute()).AddLambda(
-	[this](const FOnAttributeChangeData& Data){OnMaxManaChanged.Broadcast(Data.NewValue);});
-
-	
-	if (URageInMageAbilitySystemComponent* RageInMageAbilitySystemComponent = Cast<URageInMageAbilitySystemComponent>(AbilitySystemComponent))
+	if (RagePlayerState)
 	{
-		if (RageInMageAbilitySystemComponent->bStartupAbilitiesGiven)
+		RagePlayerState->OnXPChangedDelegate.AddUObject(this, &UOverlayWidgetController::OnXpChanged);
+		RagePlayerState->OnLevelUpDelegate.AddLambda([this](int32 NewLevel) { OnPlayerLevelChangedDelegate.Broadcast(NewLevel); });
+	}
+	
+	if (AbilitySystemComponent)
+	{
+		// Health Delegate Dependency
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(RageAS->GetHealthAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data){OnHealthChanged.Broadcast(Data.NewValue);});
+	
+	
+		// Max Health Delegate Dependency
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(RageAS->GetMaxHealthAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data){OnMaxHealthChanged.Broadcast(Data.NewValue);});
+	
+	
+		// Mana Delegate Dependency
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(RageAS->GetManaAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data){OnManaChanged.Broadcast(Data.NewValue);});
+	
+	
+		// Max Mana Delegate Dependency
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(RageAS->GetMaxManaAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data){OnMaxManaChanged.Broadcast(Data.NewValue);});
+	}
+	
+	if (RageASC)
+	{
+		if (RageASC->bStartupAbilitiesGiven)
 		{
-			OnInitialiseStartUpAbilities(RageInMageAbilitySystemComponent);
+			OnInitialiseStartUpAbilities(RageASC);
 		}
 		else
 		{
-			RageInMageAbilitySystemComponent->AbilitiesGivenDelegate.AddUObject(this, &UOverlayWidgetController::OnInitialiseStartUpAbilities);
+			RageASC->AbilitiesGivenDelegate.AddUObject(this, &UOverlayWidgetController::OnInitialiseStartUpAbilities);
 		}
-		RageInMageAbilitySystemComponent->EffectAssetTags.AddLambda(
+		RageASC->EffectAssetTags.AddLambda(
 			[this](const FGameplayTagContainer& AssetTags)
 			{
 				for (const FGameplayTag& Tag : AssetTags)
@@ -77,12 +78,13 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 			}
 		);
 	}
+	RageWidgetController->SetOverlayWidgetController(this);
 }
 
 void UOverlayWidgetController::OnInitialiseStartUpAbilities(
-	URageInMageAbilitySystemComponent* RageInMageAbilitySystemComponent)
+	URageInMageAbilitySystemComponent* InRageInMageAbilitySystemComponent)
 {
-	if (!RageInMageAbilitySystemComponent->bStartupAbilitiesGiven) return;
+	if (!InRageInMageAbilitySystemComponent->bStartupAbilitiesGiven) return;
 	
 	// Broadcast Class Visuals
 	if (AActor* AvatarActor = AbilitySystemComponent->GetAvatarActor())
@@ -94,47 +96,52 @@ void UOverlayWidgetController::OnInitialiseStartUpAbilities(
 				const ECharacterClass CharacterClass = CombatInterface->Execute_GetCharacterClass(AvatarActor);
 				const FCharacterClassDefaultInfo DefaultInfo = CharacterClassInfo->GetCharacterClassDefaultInfo(CharacterClass);
 
-				// Must be Set before Ability Info so it can be received
-				OnSetBGXPStyle.Broadcast(DefaultInfo.ProgressBarColor, DefaultInfo.BackGroundMaterialInstance);
+				// Store the style in MageWidgetController for late-joining widgets
+				RageWidgetController->HandleBGXPStyleChanged(DefaultInfo.ProgressBarColor, DefaultInfo.BackGroundMaterialInstance);
+
+				// Broadcast to the base MageWidgetController delegate so all child controllers can receive it
+				RageWidgetController->OnSetBGXPStyle.Broadcast(DefaultInfo.ProgressBarColor, DefaultInfo.BackGroundMaterialInstance);
 			}
 		}
 	}
 	
 	// Broadcast Ability Info
 	FForEachAbilitySpec BroadCastDelegate;
-	BroadCastDelegate.BindLambda([this, RageInMageAbilitySystemComponent](const FGameplayAbilitySpec& AbilitySpec)
+	BroadCastDelegate.BindLambda([this, InRageInMageAbilitySystemComponent](const FGameplayAbilitySpec& AbilitySpec)
 	{
-		FRageInMageAbilityInfo Info = AbilityInfo->FindAbilityInfoForTag(RageInMageAbilitySystemComponent->GetAbilityTagFromSpec(AbilitySpec));
-		Info.InputTag = RageInMageAbilitySystemComponent->GetInputTagFromSpec(AbilitySpec);
-		Info.AbilityTypeTag = RageInMageAbilitySystemComponent->GetAbilityTypeTagFromSpec(AbilitySpec);
+		FRageInMageAbilityInfo Info = AbilityInfo->FindAbilityInfoForTag(InRageInMageAbilitySystemComponent->GetAbilityTagFromSpec(AbilitySpec));
+		Info.InputTag = InRageInMageAbilitySystemComponent->GetInputTagFromSpec(AbilitySpec);
+		Info.AbilityTypeTag = InRageInMageAbilitySystemComponent->GetAbilityTypeTagFromSpec(AbilitySpec);
 		AbilityInfoDelegate.Broadcast(Info);
 	});
-	RageInMageAbilitySystemComponent->ForEachAbilitySpec(BroadCastDelegate);
+	InRageInMageAbilitySystemComponent->ForEachAbilitySpec(BroadCastDelegate);
 }
 
 void UOverlayWidgetController::OnXpChanged(int32 NewXP)
 {
-	AMagePlayerState* MagePlayerState = CastChecked<AMagePlayerState>(PlayerState);
-	ULevelUpInfo* LevelUpInfo = MagePlayerState->LevelUpInfo;
-	checkf(LevelUpInfo, TEXT("Unable to find LevelUpInfo, Please fill out MagePlayerState Blueprint"));
-
-	const int32 Level = LevelUpInfo->FindLevelForXP(NewXP);
-	const int32 MaxLevel = LevelUpInfo->LevelUpInfos.Num();
-
-	if (Level <= MaxLevel && Level > 0)
+	if (RagePlayerState)
 	{
-		const int32 LevelUpRequirement = LevelUpInfo->LevelUpInfos[Level].LevelUpRequirement;
-		const int32 PreviousLevelUpRequirement = LevelUpInfo->LevelUpInfos[Level - 1].LevelUpRequirement;
+		ULevelUpInfo* LevelUpInfo = RagePlayerState->LevelUpInfo;
+		checkf(LevelUpInfo, TEXT("Unable to find LevelUpInfo, Please fill out MagePlayerState Blueprint"));
+		
+		const int32 Level = LevelUpInfo->FindLevelForXP(NewXP);
+		const int32 MaxLevel = LevelUpInfo->LevelUpInfos.Num();
 
-		const int32 DeltaLevelRequirement = LevelUpRequirement - PreviousLevelUpRequirement;
-		const int32 XPToNextLevel = NewXP - PreviousLevelUpRequirement;
-
-		TargetXPPercent = static_cast<float>(XPToNextLevel) / static_cast<float>(DeltaLevelRequirement);
-
-		// Start the interpolation timer if not already running
-		if (!GetWorld()->GetTimerManager().IsTimerActive(XPInterpTimerHandle))
+		if (Level <= MaxLevel && Level > 0)
 		{
-			GetWorld()->GetTimerManager().SetTimer(XPInterpTimerHandle, this, &UOverlayWidgetController::InterpXPPercent, 0.016f, true);
+			const int32 LevelUpRequirement = LevelUpInfo->LevelUpInfos[Level].LevelUpRequirement;
+			const int32 PreviousLevelUpRequirement = LevelUpInfo->LevelUpInfos[Level - 1].LevelUpRequirement;
+
+			const int32 DeltaLevelRequirement = LevelUpRequirement - PreviousLevelUpRequirement;
+			const int32 XPToNextLevel = NewXP - PreviousLevelUpRequirement;
+
+			TargetXPPercent = static_cast<float>(XPToNextLevel) / static_cast<float>(DeltaLevelRequirement);
+
+			// Start the interpolation timer if not already running
+			if (!GetWorld()->GetTimerManager().IsTimerActive(XPInterpTimerHandle))
+			{
+				GetWorld()->GetTimerManager().SetTimer(XPInterpTimerHandle, this, &UOverlayWidgetController::InterpXPPercent, 0.016f, true);
+			}
 		}
 	}
 }

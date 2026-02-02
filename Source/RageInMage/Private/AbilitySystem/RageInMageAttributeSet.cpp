@@ -11,7 +11,7 @@
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
 #include "Interaction/CombatInterface.h"
 #include "Interaction/PlayerInterface.h"
-#include "Player/MagePlayerController.h"
+#include "Player/RageInMagePlayerController.h"
 #include "RageInMage/RageInMageLogChannels.h"
 
 URageInMageAttributeSet::URageInMageAttributeSet()
@@ -243,12 +243,12 @@ void URageInMageAttributeSet::ShowFloatingText(const FEffectProperties& Properti
 {
 	if (Properties.SourceCharacter != Properties.TargetCharacter)
 	{
-		if (AMagePlayerController* PC = Cast<AMagePlayerController>(Properties.SourceController))
+		if (ARageInMagePlayerController* PC = Cast<ARageInMagePlayerController>(Properties.SourceController))
 		{
 			PC->ShowDamageNumber(Damage, Properties.TargetCharacter, bIsCriticalHit, bIsVulnerableHit, bIsResistantHit);
 			return;
 		}
-		if (AMagePlayerController* PC = Cast<AMagePlayerController>(Properties.TargetController))
+		if (ARageInMagePlayerController* PC = Cast<ARageInMagePlayerController>(Properties.TargetController))
 		{
 			PC->ShowDamageNumber(Damage, Properties.TargetCharacter, bIsCriticalHit, bIsVulnerableHit, bIsResistantHit);
 		}
@@ -468,4 +468,49 @@ void URageInMageAttributeSet::OnRep_Heat(const FGameplayAttributeData& OldHeat) 
 void URageInMageAttributeSet::OnRep_Charge(const FGameplayAttributeData& OldCharge) const
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Charge, OldCharge);
+}
+
+void URageInMageAttributeSet::OnRep_Momentum(const FGameplayAttributeData& OldMomentum) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Momentum, OldMomentum);
+}
+
+void URageInMageAttributeSet::OnRep_ImmovableMass(const FGameplayAttributeData& OldImmovableMass) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, ImmovableMass, OldImmovableMass);
+}
+
+void URageInMageAttributeSet::OnRep_OverGrowth(const FGameplayAttributeData& OldOverGrowth) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, OverGrowth, OldOverGrowth);
+}
+
+void URageInMageAttributeSet::OnRep_Crescendo(const FGameplayAttributeData& OldCrescendo) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Crescendo, OldCrescendo);
+}
+
+void URageInMageAttributeSet::OnRep_Obscurity(const FGameplayAttributeData& OldObscurity) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Obscurity, OldObscurity);
+}
+
+void URageInMageAttributeSet::OnRep_BlackOmen(const FGameplayAttributeData& OldBlackOmen) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, BlackOmen, OldBlackOmen);
+}
+
+void URageInMageAttributeSet::OnRep_Retribution(const FGameplayAttributeData& OldRetribution) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Retribution, OldRetribution);
+}
+
+void URageInMageAttributeSet::OnRep_ConstantCirculation(const FGameplayAttributeData& OldConstantCirculation) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, ConstantCirculation, OldConstantCirculation);
+}
+
+void URageInMageAttributeSet::OnRep_LethalToxins(const FGameplayAttributeData& OldLethalToxins) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, LethalToxins, OldLethalToxins);
 }

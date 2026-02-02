@@ -208,8 +208,35 @@ public:
 	FGameplayAttributeData Heat;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Heat);
 	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	FGameplayAttributeData Momentum;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Momentum);
+	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	FGameplayAttributeData ImmovableMass;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, ImmovableMass);
+	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
 	FGameplayAttributeData Charge;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Charge);
+	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	FGameplayAttributeData OverGrowth;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, OverGrowth);
+	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	FGameplayAttributeData Crescendo;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Crescendo);
+	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	FGameplayAttributeData Obscurity;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Obscurity);
+	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	FGameplayAttributeData BlackOmen;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, BlackOmen);
+	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	FGameplayAttributeData Retribution;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Retribution);
+	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	FGameplayAttributeData ConstantCirculation;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, ConstantCirculation);
+	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	FGameplayAttributeData LethalToxins;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, LethalToxins);
 	
 
 	
@@ -312,6 +339,24 @@ public:
 	void OnRep_Heat(const FGameplayAttributeData& OldHeat) const;
 	UFUNCTION()
 	void OnRep_Charge(const FGameplayAttributeData& OldCharge) const;
+	UFUNCTION()
+	void OnRep_Momentum(const FGameplayAttributeData& OldMomentum) const;
+	UFUNCTION()
+	void OnRep_ImmovableMass(const FGameplayAttributeData& OldImmovableMass) const;
+	UFUNCTION()
+	void OnRep_OverGrowth(const FGameplayAttributeData& OldOverGrowth) const;
+	UFUNCTION()
+	void OnRep_Crescendo(const FGameplayAttributeData& OldCrescendo) const;
+	UFUNCTION()
+	void OnRep_Obscurity(const FGameplayAttributeData& OldObscurity) const;
+	UFUNCTION()
+	void OnRep_BlackOmen(const FGameplayAttributeData& OldBlackOmen) const;
+	UFUNCTION()
+	void OnRep_Retribution(const FGameplayAttributeData& OldRetribution) const;
+	UFUNCTION()
+	void OnRep_ConstantCirculation(const FGameplayAttributeData& OldConstantCirculation) const;
+	UFUNCTION()
+	void OnRep_LethalToxins(const FGameplayAttributeData& OldLethalToxins) const;
 	
 	
 	

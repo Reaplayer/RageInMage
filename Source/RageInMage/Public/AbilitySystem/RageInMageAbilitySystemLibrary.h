@@ -8,6 +8,9 @@
 #include "Data/CharacterClassInfo.h"
 #include "RageInMageAbilitySystemLibrary.generated.h"
 
+class UTabbedMenuWidgetController;
+class USpellMenuWidgetController;
+class UAttributeMenuWidgetController;
 struct FGameplayEffectContextHandle;
 class UAbilitySystemComponent;
 class UOverlayWidgetController;
@@ -22,14 +25,11 @@ class RAGEINMAGE_API URageInMageAbilitySystemLibrary : public UBlueprintFunction
 public:
 
 	UFUNCTION(BlueprintPure, Category = "RageInMageAbilitySystemLibrary|WidgetController")
-	static UOverlayWidgetController* GetOverlayWidgetController(UObject* WorldContextObject);
-
-	UFUNCTION(BlueprintPure, Category = "RageInMageAbilitySystemLibrary|WidgetController")
-	static UAttributeMenuWidgetController* GetAttributeMenuWidgetController(UObject* WorldContextObject);
+	static URageInMageWidgetController* GetWidgetController(APlayerController* PlayerController);
+	
 
 	UFUNCTION(BlueprintCallable, Category = "RageInMageAbilitySystemLibrary|CharacterClassDefaults")
-	static void InitializeDefaultAttributes(
-		const UObject* WorldContextObject, ECharacterClass CharacterClass, float Level, UAbilitySystemComponent* ASC);
+	static void InitializeDefaultAttributes(const UObject* WorldContextObject, ECharacterClass CharacterClass, float Level, UAbilitySystemComponent* ASC);
 
 	UFUNCTION(BlueprintCallable, Category = "RageInMageAbilitySystemLibrary|CharacterClassDefaults")
 	static void GiveStartupAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC, ECharacterClass CharacterClass);
@@ -56,7 +56,8 @@ public:
 	static void SetIsResistantHit(FGameplayEffectContextHandle& EffectContextHandle, bool bIsResistantHit);
 
 	UFUNCTION(blueprintCallable, Category = "RageInMageAbilitySystemLibrary|GameplayMechanics")
-	static void GetLivePlayersWithinRadius(const UObject* WorldContextObject, float Radius, TArray<AActor*>& OutOverlappingActors, const TArray<AActor*>& ActorsToIgnore, const FVector& SphereOrigin);
+	static void GetLivePlayersWithinRadius(
+		const UObject* WorldContextObject, float Radius, TArray<AActor*>& OutOverlappingActors, const TArray<AActor*>& ActorsToIgnore, const FVector& SphereOrigin);
 
 	UFUNCTION(BlueprintCallable, Category = "RageInMageAbilitySystemLibrary|GameplayMechanics")
 	static bool IsFriendly(AActor* FirstActor, AActor* SecondActor);
@@ -66,6 +67,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "RageInMageAbilitySystemLibrary|GameplayTags")
 	static FGameplayTagContainer GetOwnedGameplayTags(AActor* Actor);
-	
+
 	static int32 GetXPRewardForClassAndLevel(ECharacterClass CharacterClass, int32 Level, const UObject* WorldContextObject);
+
+	UFUNCTION(BlueprintPure, Category = "RageInMageAbilitySystemLibrary|Player")
+	static int32 GetLocalPlayerIndex(APlayerController* PlayerController);
 };

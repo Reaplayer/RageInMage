@@ -2,19 +2,17 @@
 
 
 #include "UI/WidgetController/AttributeMenuWidgetController.h"
-
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
 #include "AbilitySystem/RageInMageAttributeSet.h"
-#include "Player/MagePlayerState.h"
+#include "Player/RageInMagePlayerState.h"
 #include "AbilitySystem/Data/AttributeInfo.h"
+#include "UI/WidgetController/OverlayWidgetController.h"
 
 void UAttributeMenuWidgetController::BindCallbacksToDependencies()
 {
-	URageInMageAttributeSet* AS = CastChecked<URageInMageAttributeSet>(AttributeSet);
-
 	check(AttributeInfo);
-	
-	for (auto& Pair : AS->TagsToAttributes)
+
+	for (auto& Pair : RageAS->TagsToAttributes)
 	{
 		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(Pair.Value()).AddLambda
 		([this, Pair](const FOnAttributeChangeData& Data)
@@ -23,32 +21,62 @@ void UAttributeMenuWidgetController::BindCallbacksToDependencies()
 		}
 		);
 	}
-	
-	AMagePlayerState* MagePlayerState = CastChecked<AMagePlayerState>(PlayerState);
-	MagePlayerState->OnAttributePointsChangedDelegate.AddLambda([this](int32 Points){ AttributePointsChangedDelegate.Broadcast(Points); });
-	MagePlayerState->OnSpellPointsChangedDelegate.AddLambda([this](int32 Points){ SpellPointsChangedDelegate.Broadcast(Points); });
+
+	RagePlayerState->OnAttributePointsChangedDelegate.AddLambda([this](int32 Points)
+	{
+		AttributePointsChangedDelegate.Broadcast(Points);
+		// Update parent's shared state
+		SetAttributePoints(Points);
+	});
+	RagePlayerState->OnSpellPointsChangedDelegate.AddLambda([this](int32 Points)
+	{
+		SpellPointsChangedDelegate.Broadcast(Points);
+		// Update parent's shared state
+		SetSpellPoints(Points);
+	});
+
+	// Get TabbedMenuWidgetController from RageWidgetController if not already set
+	if (!TabbedMenuWidgetController && RageWidgetController)
+	{
+		TabbedMenuWidgetController = RageWidgetController->GetTabbedMenuWidgetController();
+	}
+
+	if (TabbedMenuWidgetController)
+	{
+		TabbedMenuWidgetController->SetAttributeMenuWidgetController(this);
+		SpellMenuWidgetController = TabbedMenuWidgetController->GetSpellMenuWidgetController();
+	}
+	RageWidgetController->BroadcastStoredBGXPStyle();
 }
 
-void UAttributeMenuWidgetController::BroadcastInitalValues()
+void UAttributeMenuWidgetController::BroadcastInitialValues()
 {
-	URageInMageAttributeSet* AS = CastChecked<URageInMageAttributeSet>(AttributeSet);
-
 	check(AttributeInfo);
 	
-	for (auto& Pair : AS->TagsToAttributes)
+	for (auto& Pair : RageAS->TagsToAttributes)
 	{
 		BroadcastAttributeInfo(Pair.Key, Pair.Value());
 	}
 	
-	AMagePlayerState* MagePlayerState = CastChecked<AMagePlayerState>(PlayerState);
-	AttributePointsChangedDelegate.Broadcast(MagePlayerState->GetAttributePoints());
-	SpellPointsChangedDelegate.Broadcast(MagePlayerState->GetSpellPoints());
+	const int32 CurrentAttributePoints = RagePlayerState->GetAttributePoints();
+	const int32 CurrentSpellPoints = RagePlayerState->GetSpellPoints();
+
+	AttributePointsChangedDelegate.Broadcast(CurrentAttributePoints);
+	SpellPointsChangedDelegate.Broadcast(CurrentSpellPoints);
+
+	// Initialize parent's shared state
+	SetAttributePoints(CurrentAttributePoints);
+	SetSpellPoints(CurrentSpellPoints);
 }
 
 void UAttributeMenuWidgetController::UpgradeAttribute(const FGameplayTag& AttributeTag)
 {
-	URageInMageAbilitySystemComponent* RageInMageAbilitySystemComponent = CastChecked<URageInMageAbilitySystemComponent>(AbilitySystemComponent);
-	RageInMageAbilitySystemComponent->UpgradeAttribute(AttributeTag);
+	RageASC->UpgradeAttribute(AttributeTag);
+}
+
+void UAttributeMenuWidgetController::SpendSpellPoint(const FGameplayTag& AttributeTypeTag)
+{
+	
 }
 
 void UAttributeMenuWidgetController::BroadcastAttributeInfo(const FGameplayTag& AttributeTag,

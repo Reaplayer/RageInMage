@@ -3,12 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UI/WidgetController/MageWidgetController.h"
+#include "RageInMageWidgetController.h"
 #include "OverlayWidgetController.generated.h"
 
 class URageInMageAbilitySystemComponent;
 class UAbilityInfo;
-class UMageUserWidget;
+class URageInMageUserWidget;
 
 struct FRageInMageAbilityInfo;
 USTRUCT(BlueprintType, Blueprintable)
@@ -20,7 +20,7 @@ struct FUIWidgetRow : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FText Message = FText();
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TSubclassOf<UMageUserWidget> MessageWidget;
+	TSubclassOf<URageInMageUserWidget> MessageWidget;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	UTexture2D* MessageImage = nullptr;
 };
@@ -32,21 +32,18 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, float,
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageWidgetRowSignature, FUIWidgetRow, Row);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoSignature, const FRageInMageAbilityInfo&, AbilityInfo);
 
-// Delegate for Visuals
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSetBGXPStyleSignature, FSlateColor, ProgressBarColor, UMaterialInstance*, BackgroundMaterial);
-
 /**
  * UOverlayWidgetController is responsible for managing updates and events related to overlay widgets in the game UI.
  * It inherits from UMageWidgetController and extends its functionality by providing specific callbacks
  * and data bindings for the overlay UI elements.
  */
 UCLASS(BlueprintType, Blueprintable)
-class RAGEINMAGE_API UOverlayWidgetController : public UMageWidgetController
+class RAGEINMAGE_API UOverlayWidgetController : public URageInMageWidgetController
 {
 	GENERATED_BODY()
 
 public:
-	virtual void BroadcastInitalValues() override;
+	virtual void BroadcastInitialValues() override;
 	virtual void BindCallbacksToDependencies() override;
 
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
@@ -66,10 +63,7 @@ public:
 	
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Messages")
 	FAbilityInfoSignature AbilityInfoDelegate;
-	
-	UPROPERTY(BlueprintAssignable, Category = "GAS|Messages")
-	FOnSetBGXPStyleSignature OnSetBGXPStyle;
-	
+
 	UPROPERTY(BlueprintAssignable, Category = "GAS|XP")
 	FOnAttributeChangedSignature OnXPPercentChangedDelegate;
 	
@@ -86,7 +80,7 @@ protected:
 	template<typename T>
 	T* GetDataTableRowByTag(UDataTable* DataTable, const FGameplayTag& Tag);
 	
-	void OnInitialiseStartUpAbilities(URageInMageAbilitySystemComponent* RageInMageAbilitySystemComponent);
+	void OnInitialiseStartUpAbilities(URageInMageAbilitySystemComponent* InRageInMageAbilitySystemComponent);
 	
 	void OnXpChanged(int32 NewXP);
 

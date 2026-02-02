@@ -3,8 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "MageUserWidget.h"
-#include "Blueprint/UserWidget.h"
+#include "RageInMageUserWidget.h"
 #include "LevelUpMessageWidget.generated.h"
 
 class UTextBlock;
@@ -15,7 +14,7 @@ class UHorizontalBox;
  * Letters appear one by one as spinning runes, then transform into readable text
  */
 UCLASS()
-class RAGEINMAGE_API ULevelUpMessageWidget : public UMageUserWidget
+class RAGEINMAGE_API ULevelUpMessageWidget : public URageInMageUserWidget
 {
 	GENERATED_BODY()
 

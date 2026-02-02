@@ -88,9 +88,36 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	/* Mechanics Tags */
 	GameplayTag.Attributes_Mechanics_Heat = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Attributes.Mechanics.Heat"), FString("How Hot/Cold a Character is for determining Fire/Ice Effects."));
+	
+	GameplayTag.Attributes_Mechanics_Momentum = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Attributes.Mechanics.Momentum"), FString("How much Momentum a Character has for determining Movement Effects."));
+	
+	GameplayTag.Attributes_Mechanics_ImmovableMass = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Attributes.Mechanics.ImmovableMass"), FString("How Heavy a Character is for determining Earth Effects."));
 
 	GameplayTag.Attributes_Mechanics_Charge = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Attributes.Mechanics.Charge"), FString("How Charged a Character is for determining Lightning Effects."));
+	
+	GameplayTag.Attributes_Mechanics_Overgrowth = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Attributes.Mechanics.Overgrowth"), FString("How much Overgrowth a Character has for determining Nature Effects."));
+	
+	GameplayTag.Attributes_Mechanics_Crescendo = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Attributes.Mechanics.Crescendo"), FString("How much Crescendo a Character has for determining Sound Effects."));
+	
+	GameplayTag.Attributes_Mechanics_Obscurity = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Attributes.Mechanics.Obscurity"), FString("How much Obscurity a Character has for determining Shadow Effects."));
+	
+	GameplayTag.Attributes_Mechanics_BlackOmen = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Attributes.Mechanics.BlackOmen"), FString("How much Black Omen a Character has for determining Necromancer Effects."));
+	
+	GameplayTag.Attributes_Mechanics_Retribution = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Attributes.Mechanics.Retribution"), FString("How much Retribution a Character has for determining Punishment Effects."));
+	
+	GameplayTag.Attributes_Mechanics_ConstantCirculation = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Attributes.Mechanics.ConstantCirculation"), FString("How much Constant Circulation a Character has for determining Life Effects."));
+	
+	GameplayTag.Attributes_Mechanics_LethalToxins = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Attributes.Mechanics.LethalToxins"), FString("How much Lethal Toxins a Character has for determining Poison Effects."));
 	
 	GameplayTag.Attributes_Mechanics_XP = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Attributes.Mechanics.XP"), FString("How much XP a Character has for determining Leveling up."));
@@ -111,8 +138,8 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	
 	
 	/* Ability Type Tags */	
-	GameplayTag.AbilityType_Basic = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("AbilityType.Basic"), FString("Tag for when Casting a Basic Spell."));
+	GameplayTag.AbilityType_Primary = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("AbilityType.Primary"), FString("Tag for when Casting a Primary Spell."));
 	
 	GameplayTag.AbilityType_Secondary = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("AbilityType.Secondary"), FString("Tag for when Casting a Secondary Spell."));
@@ -128,7 +155,15 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	
 	GameplayTag.AbilityType_Ultimate = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("AbilityType.Ultimate"), FString("Tag for when Casting an Ultimate Spell."));
-		
+	
+	GameplayTag.AbilityType_Passive1 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("AbilityType.Passive1"), FString("Tag for when Activating a Passive Spell."));
+	
+	GameplayTag.AbilityType_Passive2 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("AbilityType.Passive2"), FString("Tag for when Activating a Passive Spell."));
+	
+	GameplayTag.AbilityType_Passive3 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("AbilityType.Passive3"), FString("Tag for when Activating a Passive Spell."));
 	
 	/* Fire Mage Ability Tags */
 	GameplayTag.Ability_Fire_SearingFlame = UGameplayTagsManager::Get().AddNativeGameplayTag

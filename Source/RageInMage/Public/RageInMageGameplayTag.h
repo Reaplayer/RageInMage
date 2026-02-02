@@ -54,7 +54,16 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 
 	/* Mechanics Attributes */
 	FGameplayTag Attributes_Mechanics_Heat;
+	FGameplayTag Attributes_Mechanics_Momentum;
+	FGameplayTag Attributes_Mechanics_ImmovableMass;
 	FGameplayTag Attributes_Mechanics_Charge;
+	FGameplayTag Attributes_Mechanics_Overgrowth;
+	FGameplayTag Attributes_Mechanics_Crescendo;
+	FGameplayTag Attributes_Mechanics_Obscurity;
+	FGameplayTag Attributes_Mechanics_BlackOmen;
+	FGameplayTag Attributes_Mechanics_Retribution;
+	FGameplayTag Attributes_Mechanics_ConstantCirculation;
+	FGameplayTag Attributes_Mechanics_LethalToxins;
 	FGameplayTag Attributes_Mechanics_XP;
 
 
@@ -66,12 +75,15 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	
 	
 	/* Ability Type Tags */
-	FGameplayTag AbilityType_Basic;
+	FGameplayTag AbilityType_Primary;
 	FGameplayTag AbilityType_Secondary;
 	FGameplayTag AbilityType_Movement;
 	FGameplayTag AbilityType_Defensive;
 	FGameplayTag AbilityType_CrowdControl;
 	FGameplayTag AbilityType_Ultimate;
+	FGameplayTag AbilityType_Passive1;
+	FGameplayTag AbilityType_Passive2;
+	FGameplayTag AbilityType_Passive3;
 	
 	/* Fire Mage Ability Tags */
 	FGameplayTag Ability_Fire_SearingFlame;

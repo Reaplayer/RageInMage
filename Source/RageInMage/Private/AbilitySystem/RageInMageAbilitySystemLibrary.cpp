@@ -5,51 +5,30 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "RageInMageAbilitySystemTypes.h"
-#include "Character/MageCharacterBase.h"
+#include "Character/RageInMageCharacterBase.h"
 #include "Game/RageInMageGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/OverlapResult.h"
 #include "Game/RageInMageGameState.h"
-#include "UI/WidgetController/MageWidgetController.h"
-#include "Player/MagePlayerState.h"
-#include "RageInMage/RageInMageGameMode.h"
-#include "UI/HUD/MageHUD.h"
+#include "UI/WidgetController/RageInMageWidgetController.h"
+#include "Player/RageInMagePlayerState.h"
+#include "UI/HUD/RageInMageHUD.h"
 
-UOverlayWidgetController* URageInMageAbilitySystemLibrary::GetOverlayWidgetController(UObject* WorldContextObject)
+URageInMageWidgetController* URageInMageAbilitySystemLibrary::GetWidgetController(APlayerController* PlayerController)
 {
-	if (APlayerController* PC = UGameplayStatics::GetPlayerController(WorldContextObject, 0))
-	{
-		if (AMageHUD* MageHUD = Cast<AMageHUD>(PC->GetHUD()))
+		if (ARageInMageHUD* RageHUD = Cast<ARageInMageHUD>(PlayerController->GetHUD()))
 		{
-			AMagePlayerState* PS = PC->GetPlayerState<AMagePlayerState>();
+			ARageInMagePlayerState* PS = PlayerController->GetPlayerState<ARageInMagePlayerState>();
 			UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
 			UAttributeSet* AS = PS->GetAttributeSet();
-			const FWidgetControllerParams WidgetControllerParams(PC, PS, ASC, AS);
-			return MageHUD->GetOverlayWidgetController(WidgetControllerParams);
+			const FRageInMageWidgetControllerParams WidgetControllerParams(PlayerController, PS, ASC, AS);
+			return RageHUD->GetRageWidgetController(WidgetControllerParams);
 		}
-	}
-	return nullptr;
-}
-
-UAttributeMenuWidgetController* URageInMageAbilitySystemLibrary::GetAttributeMenuWidgetController(
-	UObject* WorldContextObject)
-{
-	if (APlayerController* PC = UGameplayStatics::GetPlayerController(WorldContextObject, 0))
-	{
-		if (AMageHUD* MageHUD = Cast<AMageHUD>(PC->GetHUD()))
-		{
-			AMagePlayerState* PS = PC->GetPlayerState<AMagePlayerState>();
-			UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
-			UAttributeSet* AS = PS->GetAttributeSet();
-			const FWidgetControllerParams WidgetControllerParams(PC, PS, ASC, AS);
-			return MageHUD->GetAttributeMenuWidgetController(WidgetControllerParams);
-		}
-	}
 	return nullptr;
 }
 
 void URageInMageAbilitySystemLibrary::InitializeDefaultAttributes(const UObject* WorldContextObject,
-	ECharacterClass CharacterClass, float Level, UAbilitySystemComponent* ASC)
+                                                                  ECharacterClass CharacterClass, float Level, UAbilitySystemComponent* ASC)
 {
 	// Retrieve the GameState cast to our custom class
 	ARageInMageGameState* GameState = Cast<ARageInMageGameState>(UGameplayStatics::GetGameState(WorldContextObject));
@@ -259,11 +238,30 @@ int32 URageInMageAbilitySystemLibrary::GetXPRewardForClassAndLevel(ECharacterCla
 	// Retrieve the GameState cast to our custom class
 	ARageInMageGameState* GameState = Cast<ARageInMageGameState>(UGameplayStatics::GetGameState(WorldContextObject));
 	if (!GameState || !GameState->CharacterClassInfo) return 0;
-	
+
 	// Retrieve Character Class Info
 	UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
 	if (!CharacterClassInfo) return 0;
 	const FCharacterClassDefaultInfo CharacterClassDefaultInfo = CharacterClassInfo->GetCharacterClassDefaultInfo(CharacterClass);
 	const float XPReward = CharacterClassDefaultInfo.XPReward.GetValueAtLevel(Level);
 	return FMath::RoundToInt(XPReward);
+}
+
+int32 URageInMageAbilitySystemLibrary::GetLocalPlayerIndex(APlayerController* PlayerController)
+{
+	if (!PlayerController)
+	{
+		UE_LOG(LogTemp, Error, TEXT("PlayerController is null"));
+		return -1;
+	}
+	
+
+	ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer();
+	if (!LocalPlayer)
+	{
+		UE_LOG(LogTemp, Error, TEXT("LocalPlayer is null"));
+		return -1;
+	}
+
+	return LocalPlayer->GetControllerId();
 }
