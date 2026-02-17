@@ -14,6 +14,7 @@ struct FInputActionValue;
 class IEnemyInterface;
 class URageInMageConfig;
 class URageInMageAbilitySystemComponent;
+class ARageInMageHUD;
 class USplineComponent;
 
 /**
@@ -30,8 +31,22 @@ public:
 
 	UFUNCTION(Client, Reliable)
 	void ShowDamageNumber(float DamageAmount, ACharacter* TargetCharacter, bool bIsCriticalHit, bool bIsVulnerableHit, bool bIsResistantHit);
+	
+	UFUNCTION(BlueprintPure)
+	ARageInMageHUD* GetRageHUD();
+
+	/**
+	 * Attempt to initialize the overlay UI. Safe to call multiple times;
+	 * will only init once and silently returns if dependencies aren't ready yet.
+	 * Called from both PlayerCharacter::InitPlayerAbilityActorInfo() and
+	 * PlayerController::BeginPlay() to handle all timing scenarios.
+	 */
+	void TryInitOverlay();
 
 protected:
+	UPROPERTY()
+	ARageInMageHUD* RageHUD;
+
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 
@@ -83,4 +98,6 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UDamageTextComponent> DamageTextComponentClass;
+
+	bool bOverlayInitialized = false;
 };

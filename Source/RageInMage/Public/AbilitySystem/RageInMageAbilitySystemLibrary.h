@@ -8,12 +8,17 @@
 #include "Data/CharacterClassInfo.h"
 #include "RageInMageAbilitySystemLibrary.generated.h"
 
+class UConditionInfo;
+class URageInMageWidgetController;
 class UTabbedMenuWidgetController;
 class USpellMenuWidgetController;
 class UAttributeMenuWidgetController;
 struct FGameplayEffectContextHandle;
 class UAbilitySystemComponent;
 class UOverlayWidgetController;
+class USettingsWidgetController;
+class UInventoryWidgetController;
+struct FRageInMageWidgetControllerParams;
 /**
  * 
  */
@@ -23,10 +28,23 @@ class RAGEINMAGE_API URageInMageAbilitySystemLibrary : public UBlueprintFunction
 	GENERATED_BODY()
 
 public:
-
 	UFUNCTION(BlueprintPure, Category = "RageInMageAbilitySystemLibrary|WidgetController")
-	static URageInMageWidgetController* GetWidgetController(APlayerController* PlayerController);
+	static bool MakeGASReferences(APlayerController* PlayerController, FPlayerGASReferences& OutGASRefs, ARageInMageHUD*& OutRageHUD);
 	
+	UFUNCTION(BlueprintCallable, Category = "RageInMageAbilitySystemLibrary|WidgetController")
+	static USpellMenuWidgetController* GetSpellMenuWidgetController(APlayerController* PC);
+	
+	UFUNCTION(BlueprintCallable, Category = "RageInMageAbilitySystemLibrary|WidgetController")
+	static UAttributeMenuWidgetController* GetAttributeMenuWidgetController(APlayerController* PC);
+	
+	UFUNCTION(BlueprintCallable, Category = "RageInMageAbilitySystemLibrary|WidgetController")
+	static UOverlayWidgetController* GetOverlayWidgetController(APlayerController* PC);
+
+	UFUNCTION(BlueprintCallable, Category = "RageInMageAbilitySystemLibrary|WidgetController")
+	static USettingsWidgetController* GetSettingsWidgetController(APlayerController* PC);
+
+	UFUNCTION(BlueprintCallable, Category = "RageInMageAbilitySystemLibrary|WidgetController")
+	static UInventoryWidgetController* GetInventoryWidgetController(APlayerController* PC);
 
 	UFUNCTION(BlueprintCallable, Category = "RageInMageAbilitySystemLibrary|CharacterClassDefaults")
 	static void InitializeDefaultAttributes(const UObject* WorldContextObject, ECharacterClass CharacterClass, float Level, UAbilitySystemComponent* ASC);
@@ -67,6 +85,12 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "RageInMageAbilitySystemLibrary|GameplayTags")
 	static FGameplayTagContainer GetOwnedGameplayTags(AActor* Actor);
+
+	UFUNCTION(BlueprintCallable, Category = "RageInMageAbilitySystemLibrary|Conditions")
+	static UConditionInfo* GetConditionInfo(const UObject* WorldContextObject);
+
+	UFUNCTION(BlueprintCallable, Category = "RageInMageAbilitySystemLibrary|Conditions")
+	static bool ApplyConditionToTarget(UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, const FGameplayTag& ConditionTag, const UObject* WorldContextObject);
 
 	static int32 GetXPRewardForClassAndLevel(ECharacterClass CharacterClass, int32 Level, const UObject* WorldContextObject);
 

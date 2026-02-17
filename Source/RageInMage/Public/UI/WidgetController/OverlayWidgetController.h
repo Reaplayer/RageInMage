@@ -3,24 +3,26 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "RageInMageWidgetController.h"
+#include "RageInMageWidgetControllerBase.h"
 #include "OverlayWidgetController.generated.h"
 
-class URageInMageAbilitySystemComponent;
 class UAbilityInfo;
 class URageInMageUserWidget;
 
-struct FRageInMageAbilityInfo;
 USTRUCT(BlueprintType, Blueprintable)
 struct FUIWidgetRow : public FTableRowBase
 {
 	GENERATED_BODY()
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FGameplayTag MessageTag = FGameplayTag();
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FText Message = FText();
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSubclassOf<URageInMageUserWidget> MessageWidget;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	UTexture2D* MessageImage = nullptr;
 };
@@ -30,7 +32,6 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, float,
 
 // Delegate for Widgets
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageWidgetRowSignature, FUIWidgetRow, Row);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoSignature, const FRageInMageAbilityInfo&, AbilityInfo);
 
 /**
  * UOverlayWidgetController is responsible for managing updates and events related to overlay widgets in the game UI.
@@ -38,7 +39,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoSignature, const FRageIn
  * and data bindings for the overlay UI elements.
  */
 UCLASS(BlueprintType, Blueprintable)
-class RAGEINMAGE_API UOverlayWidgetController : public URageInMageWidgetController
+class RAGEINMAGE_API UOverlayWidgetController : public URageInMageWidgetControllerBase
 {
 	GENERATED_BODY()
 
@@ -60,9 +61,6 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Messages")
 	FMessageWidgetRowSignature MessageWidgetRowDelegate;
-	
-	UPROPERTY(BlueprintAssignable, Category = "GAS|Messages")
-	FAbilityInfoSignature AbilityInfoDelegate;
 
 	UPROPERTY(BlueprintAssignable, Category = "GAS|XP")
 	FOnAttributeChangedSignature OnXPPercentChangedDelegate;
@@ -73,18 +71,14 @@ public:
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WidgetData")
 	TObjectPtr<UDataTable> MessageWidgetDataTable;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WidgetData")
-	TObjectPtr<UAbilityInfo> AbilityInfo;
 
 	template<typename T>
 	T* GetDataTableRowByTag(UDataTable* DataTable, const FGameplayTag& Tag);
 	
 	void OnInitialiseStartUpAbilities(URageInMageAbilitySystemComponent* InRageInMageAbilitySystemComponent);
-	
-	void OnXpChanged(int32 NewXP);
 
 private:
+	void OnXpChanged(int32 NewXP);
 	void InterpXPPercent();
 
 	FTimerHandle XPInterpTimerHandle;

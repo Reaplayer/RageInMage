@@ -9,6 +9,7 @@
 #include "GameplayEffectExtension.h"
 #include "RageInMageGameplayTag.h"
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
+#include "AbilitySystem/Data/ConditionInfo.h"
 #include "Interaction/CombatInterface.h"
 #include "Interaction/PlayerInterface.h"
 #include "Player/RageInMagePlayerController.h"
@@ -16,37 +17,72 @@
 
 URageInMageAttributeSet::URageInMageAttributeSet()
 {
-	// Populate Map of Gameplay Tags to their Attributes
-	const FRageInMageGameplayTag& GameplayTags = FRageInMageGameplayTag::Get();
-	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Agility, GetAgilityAttribute);
-	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Dexterity, GetDexterityAttribute);
-	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Strength, GetStrengthAttribute);
-	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Intelligence, GetIntelligenceAttribute);
-	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Vigor, GetVigorAttribute);
-	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Wit, GetWitAttribute);
-	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Endurance, GetEnduranceAttribute);
-	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_AttackSpeed, GetAttackSpeedAttribute);
-	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MovementSpeed, GetMovementSpeedAttribute);
-	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_CriticalChance, GetCriticalChanceAttribute);
-	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_CriticalDamage, GetCriticalDamageAttribute);
-	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_PhysicalAttack, GetPhysicalAttackAttribute);
-	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_PhysicalDefence, GetPhysicalDefenceAttribute);
-	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_PhysicalDefencePenetration, GetPhysicalDefencePenetrationAttribute);
-	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MagicalDefencePenetration, GetMagicalDefencePenetrationAttribute);
-	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MagicalDefence, GetMagicalDefenceAttribute);
-	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MagicalAttack, GetMagicalAttackAttribute);
-	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MaxHealth, GetMaxHealthAttribute);
-	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MaxMana, GetMaxManaAttribute);
+	
 }
 
 void URageInMageAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Health, COND_None, REPNOTIFY_Always);
+	// Primary Attributes
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Strength, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Dexterity, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Agility, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Intelligence, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Wit, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Vigor, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Endurance, COND_None, REPNOTIFY_Always);
+
+	// Secondary Attributes
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, PhysicalAttack, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, MagicalAttack, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, CriticalChance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, CriticalDamage, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, AttackSpeed, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, MovementSpeed, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, PhysicalDefence, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, MagicalDefence, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, PhysicalDefencePenetration, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, MagicalDefencePenetration, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Mana, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, MaxMana, COND_None, REPNOTIFY_Always);
+
+	// Vital Attributes
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Health, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Mana, COND_None, REPNOTIFY_Always);
+
+	// Resistance Attributes
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Resistance_PhysicalDamage, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Resistance_PhysicalDamage_Slashing, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Resistance_PhysicalDamage_Piercing, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Resistance_PhysicalDamage_Bludgeoning, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Fire, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Cold, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Electric, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Poison, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Acid, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Shadow, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Radiant, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Force, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Psychic, COND_None, REPNOTIFY_Always);
+
+	// Item Specific Attributes
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, PhysicalDefencePenetrationPercentage, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, MagicalDefencePenetrationPercentage, COND_None, REPNOTIFY_Always);
+
+	// Mechanics Attributes
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Heat, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Momentum, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, ImmovableMass, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Charge, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, OverGrowth, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Crescendo, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Obscurity, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, BlackOmen, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Retribution, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, ConstantCirculation, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, LethalToxins, COND_None, REPNOTIFY_Always);
 }
 
 void URageInMageAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
@@ -156,37 +192,52 @@ void URageInMageAttributeSet::PostGameplayEffectExecute(const FGameplayEffectMod
 			ShowFloatingText(Properties, LocalDamage, bCritHit, bVulnerableHit, bResistantHit);
 		}
 	}
-	// Set Heat Mechanic Change
+	// Mechanics Attribute Threshold Checks
+	const FRageInMageGameplayTag& GameplayTags = FRageInMageGameplayTag::Get();
+
 	if (Data.EvaluatedData.Attribute == GetHeatAttribute())
 	{
-		const float LocalHeat = FMath::Clamp(GetHeat() + Data.EvaluatedData.Magnitude, -120.f, 120.f);
-		SetHeat(0.f);
-		if (LocalHeat >= 100.f)
-		{
-			
-		}
-		else if (LocalHeat < 0.f)
-		{
-			if (LocalHeat <= -100.f)
-			{
-				
-			}
-			
-		}
+		HandleMechanicsThreshold(GetHeatAttribute(), GameplayTags.Attributes_Mechanics_Heat, -120.f, 120.f, Data.EvaluatedData.Magnitude, Properties);
 	}
-	// Set Charge Mechanic Change
 	if (Data.EvaluatedData.Attribute == GetChargeAttribute())
 	{
-		const float LocalCharge = FMath::Clamp(GetCharge() + Data.EvaluatedData.Magnitude, 0.f, 120.f);
-		SetCharge(0.f);
-		if (LocalCharge >= 30.f)
-		{
-			if (LocalCharge >= 100.f)
-			{
-				
-			}
-			
-		}
+		HandleMechanicsThreshold(GetChargeAttribute(), GameplayTags.Attributes_Mechanics_Charge, 0.f, 120.f, Data.EvaluatedData.Magnitude, Properties);
+	}
+	if (Data.EvaluatedData.Attribute == GetMomentumAttribute())
+	{
+		HandleMechanicsThreshold(GetMomentumAttribute(), GameplayTags.Attributes_Mechanics_Momentum, 0.f, 120.f, Data.EvaluatedData.Magnitude, Properties);
+	}
+	if (Data.EvaluatedData.Attribute == GetImmovableMassAttribute())
+	{
+		HandleMechanicsThreshold(GetImmovableMassAttribute(), GameplayTags.Attributes_Mechanics_ImmovableMass, 0.f, 120.f, Data.EvaluatedData.Magnitude, Properties);
+	}
+	if (Data.EvaluatedData.Attribute == GetOverGrowthAttribute())
+	{
+		HandleMechanicsThreshold(GetOverGrowthAttribute(), GameplayTags.Attributes_Mechanics_Overgrowth, 0.f, 120.f, Data.EvaluatedData.Magnitude, Properties);
+	}
+	if (Data.EvaluatedData.Attribute == GetCrescendoAttribute())
+	{
+		HandleMechanicsThreshold(GetCrescendoAttribute(), GameplayTags.Attributes_Mechanics_Crescendo, 0.f, 120.f, Data.EvaluatedData.Magnitude, Properties);
+	}
+	if (Data.EvaluatedData.Attribute == GetObscurityAttribute())
+	{
+		HandleMechanicsThreshold(GetObscurityAttribute(), GameplayTags.Attributes_Mechanics_Obscurity, 0.f, 120.f, Data.EvaluatedData.Magnitude, Properties);
+	}
+	if (Data.EvaluatedData.Attribute == GetBlackOmenAttribute())
+	{
+		HandleMechanicsThreshold(GetBlackOmenAttribute(), GameplayTags.Attributes_Mechanics_BlackOmen, 0.f, 120.f, Data.EvaluatedData.Magnitude, Properties);
+	}
+	if (Data.EvaluatedData.Attribute == GetRetributionAttribute())
+	{
+		HandleMechanicsThreshold(GetRetributionAttribute(), GameplayTags.Attributes_Mechanics_Retribution, 0.f, 120.f, Data.EvaluatedData.Magnitude, Properties);
+	}
+	if (Data.EvaluatedData.Attribute == GetConstantCirculationAttribute())
+	{
+		HandleMechanicsThreshold(GetConstantCirculationAttribute(), GameplayTags.Attributes_Mechanics_ConstantCirculation, 0.f, 120.f, Data.EvaluatedData.Magnitude, Properties);
+	}
+	if (Data.EvaluatedData.Attribute == GetLethalToxinsAttribute())
+	{
+		HandleMechanicsThreshold(GetLethalToxinsAttribute(), GameplayTags.Attributes_Mechanics_LethalToxins, 0.f, 120.f, Data.EvaluatedData.Magnitude, Properties);
 	}
 	// Set XP Change
 	if (Data.EvaluatedData.Attribute == GetIncomingXPAttribute())
@@ -236,6 +287,31 @@ void URageInMageAttributeSet::PostAttributeChange(const FGameplayAttribute& Attr
 		SetMana(GetMaxMana());
 		bResetMana = false;
 	}
+}
+
+void URageInMageAttributeSet::InitialiseTagsToAttributes()
+{
+	// Populate Map of Gameplay Tags to their Attributes
+	const FRageInMageGameplayTag& GameplayTags = FRageInMageGameplayTag::Get();
+	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Agility, GetAgilityAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Dexterity, GetDexterityAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Strength, GetStrengthAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Intelligence, GetIntelligenceAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Vigor, GetVigorAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Wit, GetWitAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Endurance, GetEnduranceAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_AttackSpeed, GetAttackSpeedAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MovementSpeed, GetMovementSpeedAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_CriticalChance, GetCriticalChanceAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_CriticalDamage, GetCriticalDamageAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_PhysicalAttack, GetPhysicalAttackAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_PhysicalDefence, GetPhysicalDefenceAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_PhysicalDefencePenetration, GetPhysicalDefencePenetrationAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MagicalDefencePenetration, GetMagicalDefencePenetrationAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MagicalDefence, GetMagicalDefenceAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MagicalAttack, GetMagicalAttackAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MaxHealth, GetMaxHealthAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MaxMana, GetMaxManaAttribute);
 }
 
 
@@ -513,4 +589,59 @@ void URageInMageAttributeSet::OnRep_ConstantCirculation(const FGameplayAttribute
 void URageInMageAttributeSet::OnRep_LethalToxins(const FGameplayAttributeData& OldLethalToxins) const
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, LethalToxins, OldLethalToxins);
+}
+
+void URageInMageAttributeSet::HandleMechanicsThreshold(
+	const FGameplayAttribute& Attribute, const FGameplayTag& MechanicsTag,
+	float MinClamp, float MaxClamp, float Magnitude, const FEffectProperties& Properties)
+{
+	const float CurrentValue = Attribute.GetNumericValue(this);
+	float NewValue = FMath::Clamp(CurrentValue + Magnitude, MinClamp, MaxClamp);
+
+	// Use the property setter to persist accumulated value
+	Attribute.SetNumericValueChecked(NewValue, StaticCast<URageInMageAttributeSet*>(this));
+
+	// Look up condition from ConditionInfo DataAsset
+	UConditionInfo* ConditionInfoData = URageInMageAbilitySystemLibrary::GetConditionInfo(Properties.TargetAvatarActor);
+	if (!ConditionInfoData) return;
+
+	const FRageInMageConditionInfo* CondInfo = ConditionInfoData->FindConditionForMechanicsThreshold(MechanicsTag, NewValue);
+	if (CondInfo)
+	{
+		ApplyConditionFromData(CondInfo, Properties);
+		// Reset meter after condition triggers
+		float ResetValue = 0.f;
+		Attribute.SetNumericValueChecked(ResetValue, StaticCast<URageInMageAttributeSet*>(this));
+	}
+}
+
+void URageInMageAttributeSet::ApplyConditionFromData(const FRageInMageConditionInfo* CondInfo, const FEffectProperties& Properties)
+{
+	if (!CondInfo || !CondInfo->ConditionEffect || !Properties.TargetASC) return;
+
+	// Check if blocked by existing conditions on target
+	FGameplayTagContainer OwnedTags;
+	Properties.TargetASC->GetOwnedGameplayTags(OwnedTags);
+	if (CondInfo->BlockedByConditions.Num() > 0 && OwnedTags.HasAny(CondInfo->BlockedByConditions))
+	{
+		return;
+	}
+
+	// Remove conditions this one overrides
+	if (CondInfo->OverridesConditions.Num() > 0)
+	{
+		Properties.TargetASC->RemoveActiveEffectsWithGrantedTags(CondInfo->OverridesConditions);
+	}
+
+	// Apply the condition GE — use Source ASC as the instigator
+	UAbilitySystemComponent* Instigator = Properties.SourceASC ? Properties.SourceASC : Properties.TargetASC;
+	FGameplayEffectContextHandle ContextHandle = Instigator->MakeEffectContext();
+	ContextHandle.AddSourceObject(Properties.SourceAvatarActor);
+	const FGameplayEffectSpecHandle SpecHandle = Instigator->MakeOutgoingSpec(CondInfo->ConditionEffect, 1, ContextHandle);
+
+	if (SpecHandle.IsValid())
+	{
+		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, CondInfo->ConditionTag, CondInfo->BaseIntensity);
+		Properties.TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+	}
 }

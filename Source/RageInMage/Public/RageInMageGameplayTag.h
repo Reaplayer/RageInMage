@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 
+enum class ECharacterClass : uint8;
+
 /**
  * RageInMageGameplayTag
  *
@@ -15,6 +17,9 @@ struct FRageInMageGameplayTag
 public:
 static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	static void InitializeNativeGameplayTags();
+
+	/** Returns the AbilityType->AbilityTag map for a given character class, or nullptr if the class has no school mapping. */
+	const TMap<FGameplayTag, FGameplayTag>* GetAbilityTypeMapForClass(ECharacterClass CharacterClass) const;
 
 	
 	/* Primary Attributes */
@@ -73,17 +78,23 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Ability_Attack_Ranged;
 	FGameplayTag Ability_Summon;
 	
+	/* Ability Progression Tags */
+	FGameplayTag Ability_Progression_Locked;
+	FGameplayTag Ability_Progression_Unlocked;
+	FGameplayTag Ability_Progression_Unlockable;
+	FGameplayTag Ability_Progression_Upgradable;
+	
 	
 	/* Ability Type Tags */
-	FGameplayTag AbilityType_Primary;
-	FGameplayTag AbilityType_Secondary;
-	FGameplayTag AbilityType_Movement;
-	FGameplayTag AbilityType_Defensive;
-	FGameplayTag AbilityType_CrowdControl;
-	FGameplayTag AbilityType_Ultimate;
-	FGameplayTag AbilityType_Passive1;
-	FGameplayTag AbilityType_Passive2;
-	FGameplayTag AbilityType_Passive3;
+	FGameplayTag Ability_Type_Primary;
+	FGameplayTag Ability_Type_Secondary;
+	FGameplayTag Ability_Type_Movement;
+	FGameplayTag Ability_Type_Defensive;
+	FGameplayTag Ability_Type_CrowdControl;
+	FGameplayTag Ability_Type_Ultimate;
+	FGameplayTag Ability_Type_Passive1;
+	FGameplayTag Ability_Type_Passive2;
+	FGameplayTag Ability_Type_Passive3;
 	
 	/* Fire Mage Ability Tags */
 	FGameplayTag Ability_Fire_SearingFlame;
@@ -177,13 +188,22 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Ability_Holy_AngelicReckoning;
 	
 	
-	/* Life Mage Ability Tags*/
+	/* Life Mage Ability Tags */
 	FGameplayTag Ability_Life_EssenceTap;
 	FGameplayTag Ability_Life_CircleOfLife;
 	FGameplayTag Ability_Life_LuckyEscape;
 	FGameplayTag Ability_Life_Elevate;
 	FGameplayTag Ability_Life_Dispel;
 	FGameplayTag Ability_Life_ImpenetrableBarrier;
+	
+	
+	/* Poison Mage Ability Tags */
+	FGameplayTag Ability_Poison_PoisonMissile;
+	FGameplayTag Ability_Poison_VirulentSmog;
+	FGameplayTag Ability_Poison_MiasmaSlide;
+	FGameplayTag Ability_Poison_MorbidShroud;
+	FGameplayTag Ability_Poison_NeuralAffliction;
+	FGameplayTag Ability_Poison_PlagueDominion;
 	
 	
 	/* Fire Mage Cooldown Tags */
@@ -285,6 +305,29 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Cooldown_Life_ImpenetrableBarrier;
 	
 	
+	/* Poison Mage Cooldown Tags */
+	FGameplayTag Cooldown_Poison_PoisonMissile;
+	FGameplayTag Cooldown_Poison_VirulentSmog;
+	FGameplayTag Cooldown_Poison_MiasmaSlide;
+	FGameplayTag Cooldown_Poison_MorbidShroud;
+	FGameplayTag Cooldown_Poison_NeuralAffliction;
+	FGameplayTag Cooldown_Poison_PlagueDominion;
+	
+	
+	TMap<FGameplayTag, FGameplayTag> AbilityTypeToFireAbilityTag;
+	TMap<FGameplayTag, FGameplayTag> AbilityTypeToWaterAbilityTag;
+	TMap<FGameplayTag, FGameplayTag> AbilityTypeToAirAbilityTag;
+	TMap<FGameplayTag, FGameplayTag> AbilityTypeToEarthAbilityTag;
+	TMap<FGameplayTag, FGameplayTag> AbilityTypeToLightningAbilityTag;
+	TMap<FGameplayTag, FGameplayTag> AbilityTypeToNatureAbilityTag;
+	TMap<FGameplayTag, FGameplayTag> AbilityTypeToSoundAbilityTag;
+	TMap<FGameplayTag, FGameplayTag> AbilityTypeToShadowAbilityTag;
+	TMap<FGameplayTag, FGameplayTag> AbilityTypeToNecromancerAbilityTag;
+	TMap<FGameplayTag, FGameplayTag> AbilityTypeToHolyAbilityTag;
+	TMap<FGameplayTag, FGameplayTag> AbilityTypeToLifeAbilityTag;
+	TMap<FGameplayTag, FGameplayTag> AbilityTypeToPoisonAbilityTag;
+	
+	
 	/* M&K Input Tags */
 	FGameplayTag InputTag_LMB;
 	FGameplayTag InputTag_RMB;
@@ -355,36 +398,39 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 
 	TMap<FGameplayTag, FGameplayTag> DamageTypeToResistance;
 
-	
+	/* Map of Damage Type Tags to Mechanics Attribute Tags */
+	TMap<FGameplayTag, FGameplayTag> DamageTypeToMechanics;
+
+
 	/* Effect Tags */
 	FGameplayTag Effects_HitReaction;
 
 	
-	/* Crowd Control Effect Tags */
-	FGameplayTag Effects_Debuff_Healing;
-	FGameplayTag Effects_Debuff_Burning;
-	FGameplayTag Effects_Debuff_Slowed;
-	FGameplayTag Effects_Debuff_Frozen;
-	FGameplayTag Effects_Debuff_Paralysed;
-	FGameplayTag Effects_Debuff_Stunned;
-	FGameplayTag Effects_Debuff_Rooted;
-	FGameplayTag Effects_Debuff_Pushed;
-	FGameplayTag Effects_Debuff_Invisible;
-	FGameplayTag Effects_Debuff_Airborne;
-	FGameplayTag Effects_Debuff_Untouchable;
-	FGameplayTag Effects_Debuff_Immune;
-	FGameplayTag Effects_Debuff_Petrified;
-	FGameplayTag Effects_Debuff_Reflecting;
-	FGameplayTag Effects_Debuff_Grappled;
-	FGameplayTag Effects_Debuff_Silenced;
-	FGameplayTag Effects_Debuff_SoulBound;
-	FGameplayTag Effects_Debuff_Slammed;
-	FGameplayTag Effects_Debuff_Constricted;
-	FGameplayTag Effects_Debuff_Confused;
-	FGameplayTag Effects_Debuff_Poisoned;
-	FGameplayTag Effects_Debuff_Shocked;
-	FGameplayTag Effects_Debuff_Charged;
-	FGameplayTag Effects_Debuff_OverCharged;
+	/* Condition Tags */
+	FGameplayTag Condition_Healing;
+	FGameplayTag Condition_Burning;
+	FGameplayTag Condition_Slowed;
+	FGameplayTag Condition_Frozen;
+	FGameplayTag Condition_Paralysed;
+	FGameplayTag Condition_Stunned;
+	FGameplayTag Condition_Rooted;
+	FGameplayTag Condition_Pushed;
+	FGameplayTag Condition_Invisible;
+	FGameplayTag Condition_Airborne;
+	FGameplayTag Condition_Untouchable;
+	FGameplayTag Condition_Immune;
+	FGameplayTag Condition_Petrified;
+	FGameplayTag Condition_Reflecting;
+	FGameplayTag Condition_Grappled;
+	FGameplayTag Condition_Silenced;
+	FGameplayTag Condition_SoulBound;
+	FGameplayTag Condition_Slammed;
+	FGameplayTag Condition_Constricted;
+	FGameplayTag Condition_Confused;
+	FGameplayTag Condition_Poisoned;
+	FGameplayTag Condition_Shocked;
+	FGameplayTag Condition_Charged;
+	FGameplayTag Condition_OverCharged;
 
 
 	/* Combat Socket Tags */

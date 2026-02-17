@@ -5,25 +5,78 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "RageInMageAbilitySystemTypes.h"
+#include "AbilitySystem/Data/ConditionInfo.h"
 #include "Character/RageInMageCharacterBase.h"
 #include "Game/RageInMageGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/OverlapResult.h"
 #include "Game/RageInMageGameState.h"
-#include "UI/WidgetController/RageInMageWidgetController.h"
 #include "Player/RageInMagePlayerState.h"
+#include "RageInMage/RageInMageLogChannels.h"
 #include "UI/HUD/RageInMageHUD.h"
+#include "UI/WidgetController/SettingsWidgetController.h"
+#include "UI/WidgetController/InventoryWidgetController.h"
 
-URageInMageWidgetController* URageInMageAbilitySystemLibrary::GetWidgetController(APlayerController* PlayerController)
+bool URageInMageAbilitySystemLibrary::MakeGASReferences(
+	APlayerController* PC, FPlayerGASReferences& OutGASRefs, ARageInMageHUD*& OutRageHUD)
 {
-		if (ARageInMageHUD* RageHUD = Cast<ARageInMageHUD>(PlayerController->GetHUD()))
+	OutRageHUD = Cast<ARageInMageHUD>(PC->GetHUD());
+	if (OutRageHUD)
 		{
-			ARageInMagePlayerState* PS = PlayerController->GetPlayerState<ARageInMagePlayerState>();
+			ARageInMagePlayerState* PS = PC->GetPlayerState<ARageInMagePlayerState>();
 			UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
 			UAttributeSet* AS = PS->GetAttributeSet();
-			const FRageInMageWidgetControllerParams WidgetControllerParams(PlayerController, PS, ASC, AS);
-			return RageHUD->GetRageWidgetController(WidgetControllerParams);
+			OutGASRefs = FPlayerGASReferences(PC, PS, ASC, AS);
+			return true;
 		}
+	return false;
+}
+
+USpellMenuWidgetController* URageInMageAbilitySystemLibrary::GetSpellMenuWidgetController(
+	APlayerController* PC)
+{
+	FPlayerGASReferences GASRefs;
+	ARageInMageHUD* RageHUD = nullptr;
+	if (MakeGASReferences(PC, GASRefs, RageHUD))
+	{
+		return RageHUD->GetSpellMenuWidgetController(PC);
+	}
+	return nullptr;
+}
+
+UAttributeMenuWidgetController* URageInMageAbilitySystemLibrary::GetAttributeMenuWidgetController(
+	APlayerController* PC)
+{
+	FPlayerGASReferences GASRefs;
+	ARageInMageHUD* RageHUD = nullptr;
+	if (MakeGASReferences(PC, GASRefs, RageHUD))
+	{
+		return RageHUD->GetAttributeMenuWidgetController(PC);
+	}
+	return nullptr;
+}
+
+UOverlayWidgetController* URageInMageAbilitySystemLibrary::GetOverlayWidgetController(
+	APlayerController* PC)
+{
+	FPlayerGASReferences GASRefs;
+	ARageInMageHUD* RageHUD = nullptr;
+	if (MakeGASReferences(PC, GASRefs, RageHUD))
+	{
+		return RageHUD->GetOverlayWidgetController(PC);
+	}
+	return nullptr;
+}
+
+USettingsWidgetController* URageInMageAbilitySystemLibrary::GetSettingsWidgetController(
+	APlayerController* PC)
+{
+	FPlayerGASReferences GASRefs;
+	ARageInMageHUD* RageHUD = nullptr;
+	if (MakeGASReferences(PC, GASRefs, RageHUD))
+	{
+		return RageHUD->GetSettingsWidgetController(PC);
+	}
 	return nullptr;
 }
 
@@ -32,7 +85,15 @@ void URageInMageAbilitySystemLibrary::InitializeDefaultAttributes(const UObject*
 {
 	// Retrieve the GameState cast to our custom class
 	ARageInMageGameState* GameState = Cast<ARageInMageGameState>(UGameplayStatics::GetGameState(WorldContextObject));
-	if (!GameState || !GameState->CharacterClassInfo) return;
+	if (!GameState)
+	{
+		UE_LOG(LogRageInMage, Error, TEXT("GameState is null"));
+	}
+	if (!GameState->CharacterClassInfo)
+	{
+		UE_LOG(LogRageInMage, Error, TEXT("CharacterClassInfo is null"));
+		return;
+	}
 
 	// Retrieve Avatar Actor
 	AActor* AvatarActor = ASC->GetAvatarActor();
@@ -95,6 +156,57 @@ UCharacterClassInfo* URageInMageAbilitySystemLibrary::GetCharacterClassInfo(cons
 	}
 
 	return nullptr;
+}
+
+UConditionInfo* URageInMageAbilitySystemLibrary::GetConditionInfo(const UObject* WorldContextObject)
+{
+	UCharacterClassInfo* ClassInfo = GetCharacterClassInfo(WorldContextObject);
+	if (ClassInfo && ClassInfo->ConditionInfo)
+	{
+		return ClassInfo->ConditionInfo;
+	}
+	return nullptr;
+}
+
+bool URageInMageAbilitySystemLibrary::ApplyConditionToTarget(
+	UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC,
+	const FGameplayTag& ConditionTag, const UObject* WorldContextObject)
+{
+	if (!SourceASC || !TargetASC) return false;
+
+	UConditionInfo* ConditionInfoData = GetConditionInfo(WorldContextObject);
+	if (!ConditionInfoData) return false;
+
+	const FRageInMageConditionInfo Info = ConditionInfoData->FindConditionInfoForTag(ConditionTag, true);
+	if (!Info.ConditionTag.IsValid() || !Info.ConditionEffect) return false;
+
+	// Check if blocked by existing conditions on target
+	FGameplayTagContainer OwnedTags;
+	TargetASC->GetOwnedGameplayTags(OwnedTags);
+	if (Info.BlockedByConditions.Num() > 0 && OwnedTags.HasAny(Info.BlockedByConditions))
+	{
+		return false;
+	}
+
+	// Remove conditions this one overrides
+	if (Info.OverridesConditions.Num() > 0)
+	{
+		TargetASC->RemoveActiveEffectsWithGrantedTags(Info.OverridesConditions);
+	}
+
+	// Apply the condition GE
+	FGameplayEffectContextHandle ContextHandle = SourceASC->MakeEffectContext();
+	ContextHandle.AddSourceObject(SourceASC->GetAvatarActor());
+	const FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(Info.ConditionEffect, 1, ContextHandle);
+
+	if (SpecHandle.IsValid())
+	{
+		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, ConditionTag, Info.BaseIntensity);
+		TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		return true;
+	}
+
+	return false;
 }
 
 bool URageInMageAbilitySystemLibrary::IsCriticalHit(const FGameplayEffectContextHandle& EffectContextHandle)
@@ -264,4 +376,16 @@ int32 URageInMageAbilitySystemLibrary::GetLocalPlayerIndex(APlayerController* Pl
 	}
 
 	return LocalPlayer->GetControllerId();
+}
+
+UInventoryWidgetController* URageInMageAbilitySystemLibrary::GetInventoryWidgetController(
+	APlayerController* PC)
+{
+	FPlayerGASReferences GASRefs;
+	ARageInMageHUD* RageHUD = nullptr;
+	if (MakeGASReferences(PC, GASRefs, RageHUD))
+	{
+		return RageHUD->GetInventoryWidgetController(PC);
+	}
+	return nullptr;
 }

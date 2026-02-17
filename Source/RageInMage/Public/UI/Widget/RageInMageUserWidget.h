@@ -10,6 +10,7 @@ class UOverlayWidgetController;
 class UTabbedMenuWidgetController;
 class UAttributeMenuWidgetController;
 class USpellMenuWidgetController;
+class UInventoryWidgetController;
 
 /**
  *
@@ -28,9 +29,6 @@ public:
 
 	// Helper functions to get specific controller types from HUD
 	UFUNCTION(BlueprintCallable, Category = "Widget Controller")
-	UTabbedMenuWidgetController* GetTabbedMenuController();
-
-	UFUNCTION(BlueprintCallable, Category = "Widget Controller")
 	UAttributeMenuWidgetController* GetAttributeMenuController();
 
 	UFUNCTION(BlueprintCallable, Category = "Widget Controller")
@@ -38,6 +36,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Widget Controller")
 	UOverlayWidgetController* GetOverlayController();
+
+	UFUNCTION(BlueprintCallable, Category = "Widget Controller")
+	UInventoryWidgetController* GetInventoryController();
 
 protected:
 	UFUNCTION(BlueprintImplementableEvent)

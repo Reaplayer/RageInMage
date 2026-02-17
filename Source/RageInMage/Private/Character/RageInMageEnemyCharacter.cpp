@@ -151,7 +151,7 @@ void ARageInMageEnemyCharacter::InitPlayerAbilityActorInfo()
 {
 	checkf(AbilitySystemComponent, TEXT("ASC is null on %s. Ensure BP parent is ARageInMageEnemyCharacter and ASC is inherited."), *GetName());
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
-	Cast<URageInMageAbilitySystemComponent>(AbilitySystemComponent)->AbilityActorInfoSet();
+	CastChecked<URageInMageAbilitySystemComponent>(AbilitySystemComponent)->AbilityActorInfoSet();
 	if (HasAuthority())
 	{
 		InitializeDefaultAttributes();

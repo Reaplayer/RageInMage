@@ -5,6 +5,7 @@
 
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
 #include "AbilitySystem/RageInMageAttributeSet.h"
+#include "Inventory/RageInMageInventoryComponent.h"
 #include "Net/UnrealNetwork.h"
 
 ARageInMagePlayerState::ARageInMagePlayerState()
@@ -14,8 +15,17 @@ ARageInMagePlayerState::ARageInMagePlayerState()
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
 	AttributeSet = CreateDefaultSubobject<URageInMageAttributeSet>("AttributeSet");
-	
+
+	// CRITICAL: Register AttributeSet with ASC so GameplayEffects can find it
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->AddAttributeSetSubobject(AttributeSet.Get());
+		UE_LOG(LogTemp, Warning, TEXT("PlayerState Constructor: Registered AttributeSet %p with ASC"), AttributeSet.Get());
+	}
+
 	SetNetUpdateFrequency(100.f);
+
+	InventoryComponent = CreateDefaultSubobject<URageInMageInventoryComponent>("InventoryComponent");
 }
 
 void ARageInMagePlayerState::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const

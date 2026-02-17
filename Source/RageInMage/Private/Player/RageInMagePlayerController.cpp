@@ -12,6 +12,8 @@
 #include "Input/RageInMageEInputComponent.h"
 #include "Interaction/EnemyInterface.h"
 #include "GameFramework/Character.h"
+#include "Player/RageInMagePlayerState.h"
+#include "UI/HUD/RageInMageHUD.h"
 #include "UI/Widget/DamageTextComponent.h"
 
 ARageInMagePlayerController::ARageInMagePlayerController()
@@ -25,6 +27,36 @@ void ARageInMagePlayerController::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 	CursorTrace();
 	AutoRun();
+}
+
+ARageInMageHUD* ARageInMagePlayerController::GetRageHUD()
+{
+	if (!RageHUD)
+	{
+		RageHUD = Cast<ARageInMageHUD>(GetHUD());
+	}
+	return RageHUD;
+}
+
+void ARageInMagePlayerController::TryInitOverlay()
+{
+	if (bOverlayInitialized) return;
+	if (!IsLocalController()) return;
+
+	APawn* LocalPawn = GetPawn();
+	if (!LocalPawn) return;
+
+	ARageInMagePlayerState* RagePS = GetPlayerState<ARageInMagePlayerState>();
+	if (!RagePS) return;
+
+	UAbilitySystemComponent* ASC = RagePS->GetAbilitySystemComponent();
+	if (!ASC) return;
+
+	ARageInMageHUD* HUD = Cast<ARageInMageHUD>(GetHUD());
+	if (!HUD) return;
+
+	HUD->InitOverlay(this, RagePS, ASC, RagePS->GetAttributeSet());
+	bOverlayInitialized = true;
 }
 
 void ARageInMagePlayerController::ShowDamageNumber_Implementation(float DamageAmount, ACharacter* TargetCharacter, bool bIsCriticalHit, bool bIsVulnerableHit, bool bIsResistantHit)
@@ -166,6 +198,10 @@ void ARageInMagePlayerController::BeginPlay()
 	InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 	InputModeData.SetHideCursorDuringCapture(false);
 	SetInputMode(InputModeData);
+
+	// Attempt overlay init — may succeed immediately on listen server,
+	// or may need to wait for OnRep_PlayerState on clients.
+	TryInitOverlay();
 }
 
 void ARageInMagePlayerController::SetupInputComponent()

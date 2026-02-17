@@ -71,7 +71,7 @@ void ULevelUpMessageWidget::PlayMultiLineLevelUpAnimation(const FText& Line1, UH
 	CurrentLetterIndex = 0;
 	CurrentAnimationTime = 0.0f;
 
-	// Set up timer to reveal letters one by one
+	// Set up a timer to reveal letters one by one
 	GetWorld()->GetTimerManager().SetTimer(
 		LetterRevealTimerHandle,
 		this,
@@ -92,7 +92,7 @@ void ULevelUpMessageWidget::RevealNextLetter()
 
 	if (CurrentLetterIndex >= TotalLetters)
 	{
-		// All letters revealed, stop the timer and start transform phase
+		// All letters revealed, stop the timer and start the transform phase
 		GetWorld()->GetTimerManager().ClearTimer(LetterRevealTimerHandle);
 		bIsRevealing = false;
 
@@ -156,24 +156,24 @@ void ULevelUpMessageWidget::RevealNextLetter()
 		LetterWidget->SetText(FText::FromString(RuneChar));
 
 		// Set font size and color
-		FSlateFontInfo FontInfo;
-		if (RuneFont)
+		FSlateFontInfo FontInfo = LetterWidget->GetFont();
+		if (RuneFont && RuneFont->GetCompositeFont())
 		{
 			// Use the custom rune font if provided
 			UE_LOG(LogTemp, Warning, TEXT("Using RuneFont: %s"), *RuneFont->GetName());
-			FontInfo = FSlateFontInfo(RuneFont, FontSize);
+			FontInfo.FontObject = RuneFont;
+			FontInfo.Size = FontSize;
 		}
 		else
 		{
-			// Fallback to default font
+			// Fallback to the default font
 			UE_LOG(LogTemp, Error, TEXT("RuneFont is NULL! Please assign a font in the widget properties!"));
-			FontInfo = LetterWidget->GetFont();
 			FontInfo.Size = FontSize;
 		}
 		LetterWidget->SetFont(FontInfo);
 		LetterWidget->SetColorAndOpacity(TextColor);
 
-		// Add to container with initial spacing
+		// Add to the container with initial spacing
 		UHorizontalBoxSlot* BoxSlot = TargetContainer->AddChildToHorizontalBox(LetterWidget);
 		if (BoxSlot)
 		{
@@ -278,18 +278,21 @@ void ULevelUpMessageWidget::UpdateTransformAnimation(float DeltaTime)
 			AnimData.bHasTransformed = true;
 
 			// Switch from rune font to text font
-			FSlateFontInfo NewFontInfo;
-			if (TextFont)
+			FSlateFontInfo NewFontInfo = AnimData.Widget->GetFont();
+			if (TextFont && TextFont->GetCompositeFont())
 			{
 				// Use the custom text font for readable letters
 				UE_LOG(LogTemp, Warning, TEXT("Switching to TextFont: %s"), *TextFont->GetName());
-				NewFontInfo = FSlateFontInfo(TextFont, FontSize);
+				NewFontInfo.FontObject = TextFont;
+				NewFontInfo.Size = FontSize;
 			}
 			else
 			{
-				// Fallback to default font (Roboto)
+				// Fallback to the default font (Roboto)
 				UE_LOG(LogTemp, Error, TEXT("TextFont is NULL! Using default font."));
-				NewFontInfo = FSlateFontInfo(FName("Roboto"), FontSize);
+				NewFontInfo.FontObject = nullptr;
+				NewFontInfo.TypefaceFontName = FName("Roboto");
+				NewFontInfo.Size = FontSize;
 			}
 			AnimData.Widget->SetFont(NewFontInfo);
 
@@ -297,7 +300,7 @@ void ULevelUpMessageWidget::UpdateTransformAnimation(float DeltaTime)
 			// (since we mapped it to a letter for the rune font)
 			if (AnimData.ActualCharacter >= '0' && AnimData.ActualCharacter <= '9')
 			{
-				// Change from letter (A-J) back to number (0-9)
+				// Change from a letter (A-J) back to a number (0-9)
 				AnimData.Widget->SetText(FText::FromString(FString::Chr(AnimData.ActualCharacter)));
 				UE_LOG(LogTemp, Warning, TEXT("Converting back to number: %c"), AnimData.ActualCharacter);
 			}
@@ -325,7 +328,7 @@ void ULevelUpMessageWidget::UpdateTransformAnimation(float DeltaTime)
 	{
 		bIsTransforming = false;
 
-		// Ensure final state is set correctly
+		// Ensure the final state is set correctly
 		for (FLetterAnimationData& AnimData : LetterAnimationData)
 		{
 			if (!AnimData.Widget) continue;

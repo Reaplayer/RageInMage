@@ -14,7 +14,10 @@ struct FRageInMageAbilityInfo
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FGameplayTag AbilityTag = FGameplayTag();
-	
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FText AbilityName = FText();
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FGameplayTag AbilityCooldownTag = FGameplayTag();
 	
@@ -23,6 +26,9 @@ struct FRageInMageAbilityInfo
 	
 	UPROPERTY(BlueprintReadOnly)
 	FGameplayTag InputTag = FGameplayTag();
+	
+	UPROPERTY(BlueprintReadOnly)
+	FGameplayTag ProgressionTag = FGameplayTag();
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FText AbilityDefinition = FText();

@@ -7,6 +7,7 @@
 #include "Engine/DataAsset.h"
 #include "CharacterClassInfo.generated.h"
 
+class UConditionInfo;
 class UGameplayAbility;
 class UGameplayEffect;
 
@@ -80,7 +81,10 @@ public:
 	TSubclassOf<UGameplayEffect> ResistanceAttributes;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Common Class Defaults")
-		TArray<TSubclassOf<UGameplayAbility>> CommonAbilities; 
-	
+		TArray<TSubclassOf<UGameplayAbility>> CommonAbilities;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Condition Defaults")
+	TObjectPtr<UConditionInfo> ConditionInfo;
+
 	FCharacterClassDefaultInfo GetCharacterClassDefaultInfo(ECharacterClass CharacterClass);
 };

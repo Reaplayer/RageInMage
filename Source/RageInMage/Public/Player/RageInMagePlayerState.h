@@ -10,6 +10,7 @@
 class ULevelUpInfo;
 class UAbilitySystemComponent;
 class UAttributeSet;
+class URageInMageInventoryComponent;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerStatChanged, int32 NewStat);
 
@@ -25,6 +26,9 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UAttributeSet* GetAttributeSet() const { return AttributeSet; };
+
+	UFUNCTION(BlueprintPure, Category = "Inventory")
+	URageInMageInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WidgetData")
 	TObjectPtr<ULevelUpInfo> LevelUpInfo;
@@ -63,6 +67,9 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UAttributeSet> AttributeSet;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
+	TObjectPtr<URageInMageInventoryComponent> InventoryComponent;
 
 private:
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_Level)

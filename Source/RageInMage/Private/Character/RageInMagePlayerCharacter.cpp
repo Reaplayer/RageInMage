@@ -3,7 +3,6 @@
 
 #include "Character/RageInMagePlayerCharacter.h"
 
-#include "AbilitySystemComponent.h"
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
 #include "AbilitySystem/Data/LevelUpInfo.h"
 #include "NiagaraComponent.h"
@@ -39,9 +38,8 @@ ARageInMagePlayerCharacter::ARageInMagePlayerCharacter()
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
-	AbilitySystemComponent = CreateDefaultSubobject<URageInMageAbilitySystemComponent>("RageInMageAbilitySystemComponent");
-	AbilitySystemComponent->SetIsReplicated(true);
-	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+	// NOTE: Do NOT create an ASC here. The authoritative ASC lives on PlayerState.
+	// InitPlayerAbilityActorInfo() assigns it from PlayerState at runtime.
 }
 
 void ARageInMagePlayerCharacter::PossessedBy(AController* NewController)
@@ -61,6 +59,12 @@ void ARageInMagePlayerCharacter::PossessedBy(AController* NewController)
 void ARageInMagePlayerCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
+
+	// Cache PlayerState for clients (PossessedBy only runs on the server)
+	if (!RagePlayerState)
+	{
+		RagePlayerState = GetPlayerState<ARageInMagePlayerState>();
+	}
 
 	// Init Ability actor info for the client
 	InitPlayerAbilityActorInfo();
@@ -153,18 +157,21 @@ int32 ARageInMagePlayerCharacter::GetSpellPoints_Implementation() const
 void ARageInMagePlayerCharacter::InitPlayerAbilityActorInfo()
 {
 	check(RagePlayerState);
-	RagePlayerState->GetAbilitySystemComponent()->InitAbilityActorInfo(RagePlayerState, this);
 	AbilitySystemComponent = RagePlayerState->GetAbilitySystemComponent();
+	AbilitySystemComponent->InitAbilityActorInfo(RagePlayerState, this);
+	
+	// Wire up the effect-applied callback so UI gets notified of gameplay effects
+	CastChecked<URageInMageAbilitySystemComponent>(AbilitySystemComponent)->AbilityActorInfoSet();
+	
 	AttributeSet = RagePlayerState->GetAttributeSet();
-
-	ARageInMagePlayerController* MagePlayerController = Cast<ARageInMagePlayerController>(GetController());
-	if (MagePlayerController)
-	{
-		ARageInMageHUD* RageHUD = Cast<ARageInMageHUD>(MagePlayerController->GetHUD());
-		if (RageHUD)
-		{
-			RageHUD->InitOverlay(MagePlayerController, RagePlayerState, AbilitySystemComponent, AttributeSet);
-		}
-	}
 	InitializeDefaultAttributes();
+	CastChecked<URageInMageAttributeSet>(AttributeSet)->InitialiseTagsToAttributes();
+
+	// Try to initialize the overlay UI. TryInitOverlay is safe to call repeatedly
+	// and handles all cases: server, listen-server, and client (where PC/HUD may not
+	// be available yet during OnRep_PlayerState).
+	if (ARageInMagePlayerController* MagePlayerController = Cast<ARageInMagePlayerController>(GetController()))
+	{
+		MagePlayerController->TryInitOverlay();
+	}
 }

@@ -60,6 +60,7 @@ public:
 	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
 
 	TMap<FGameplayTag, TStaticFuncPtr<FGameplayAttribute()>> TagsToAttributes;
+	void InitialiseTagsToAttributes();
 
 	
 	/* Primary Attributes */
@@ -204,37 +205,37 @@ public:
 
 
 	/* Mechanics Attributes */
-	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Heat, Category = "Mechanics Attributes")
 	FGameplayAttributeData Heat;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Heat);
-	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Momentum, Category = "Mechanics Attributes")
 	FGameplayAttributeData Momentum;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Momentum);
-	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ImmovableMass, Category = "Mechanics Attributes")
 	FGameplayAttributeData ImmovableMass;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, ImmovableMass);
-	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Charge, Category = "Mechanics Attributes")
 	FGameplayAttributeData Charge;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Charge);
-	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_OverGrowth, Category = "Mechanics Attributes")
 	FGameplayAttributeData OverGrowth;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, OverGrowth);
-	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Crescendo, Category = "Mechanics Attributes")
 	FGameplayAttributeData Crescendo;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Crescendo);
-	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Obscurity, Category = "Mechanics Attributes")
 	FGameplayAttributeData Obscurity;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Obscurity);
-	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_BlackOmen, Category = "Mechanics Attributes")
 	FGameplayAttributeData BlackOmen;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, BlackOmen);
-	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Retribution, Category = "Mechanics Attributes")
 	FGameplayAttributeData Retribution;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Retribution);
-	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ConstantCirculation, Category = "Mechanics Attributes")
 	FGameplayAttributeData ConstantCirculation;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, ConstantCirculation);
-	UPROPERTY(BlueprintReadOnly, Category = "Mechanics Attributes")
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_LethalToxins, Category = "Mechanics Attributes")
 	FGameplayAttributeData LethalToxins;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, LethalToxins);
 	
@@ -364,7 +365,10 @@ private:
 	void SetEffectProperties(const FGameplayEffectModCallbackData& Data, FEffectProperties& Properties) const;
 	void ShowFloatingText(const FEffectProperties& Properties, float Damage, bool bIsCriticalHit, bool bIsVulnerableHit, bool bIsResistantHit) const;
 	void SendXPEvent(const FEffectProperties& Properties) const;
-	
+
+	void HandleMechanicsThreshold(const FGameplayAttribute& Attribute, const FGameplayTag& MechanicsTag, float MinClamp, float MaxClamp, float Magnitude, const FEffectProperties& Properties);
+	void ApplyConditionFromData(const struct FRageInMageConditionInfo* CondInfo, const FEffectProperties& Properties);
+
 	bool bResetHealth = false;
 	bool bResetMana = false;
 };

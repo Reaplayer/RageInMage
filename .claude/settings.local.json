@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__unreal-editor__read_asset",
+      "Bash(\"C:/Program Files/Epic Games/UE_5.6/Engine/Build/BatchFiles/Build.bat\" RageInMageEditor Win64 Development \"C:/Users/reapw/Documents/UnrealProjects/RageInMage5.6/RageInMage.uproject\" -waitmutex)",
+      "mcp__unreal-editor__find_node",
+      "mcp__unreal-editor__edit_graph",
+      "mcp__unreal-editor__read_logs",
+      "mcp__unreal-editor__execute_python",
+      "mcp__unreal-editor__edit_blueprint",
+      "Bash(ls:*)"
+    ]
+  }
+}

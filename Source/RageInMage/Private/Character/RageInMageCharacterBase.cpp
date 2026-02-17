@@ -7,6 +7,7 @@
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "RageInMage/RageInMageLogChannels.h"
 
 ARageInMageCharacterBase::ARageInMageCharacterBase()
 {
@@ -203,19 +204,56 @@ void ARageInMageCharacterBase::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> Ga
 {
 	check (IsValid(GetAbilitySystemComponent()));
 	check(GameplayEffectClass);
-	FGameplayEffectContextHandle ContextHandle = GetAbilitySystemComponent()->MakeEffectContext();
+
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
+
+	// Debug: Check if AttributeSet is registered
+	const UAttributeSet* AS = ASC->GetAttributeSet(URageInMageAttributeSet::StaticClass());
+	UE_LOG(LogTemp, Warning, TEXT("ApplyEffectToSelf: ASC has AttributeSet? %s (Pointer: %p)"),
+		AS ? TEXT("YES") : TEXT("NO - WILL FAIL!"), AS);
+
+	FGameplayEffectContextHandle ContextHandle = ASC->MakeEffectContext();
 	ContextHandle.AddSourceObject(this);
-	const FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponent()->MakeOutgoingSpec(GameplayEffectClass, Level, ContextHandle);
-	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), GetAbilitySystemComponent());
+	const FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(GameplayEffectClass, Level, ContextHandle);
+
+	UE_LOG(LogTemp, Warning, TEXT("ApplyEffectToSelf: Applying GE %s at Level %f"),
+		*GameplayEffectClass->GetName(), Level);
+
+	FActiveGameplayEffectHandle Handle = ASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), ASC);
+
+	UE_LOG(LogTemp, Warning, TEXT("ApplyEffectToSelf: GE applied? %s"),
+		Handle.IsValid() ? TEXT("YES") : TEXT("NO - FAILED!"));
 }
 
 void ARageInMageCharacterBase::InitializeDefaultAttributes() const
 {
+	UE_LOG(LogTemp, Warning, TEXT("=== InitializeDefaultAttributes START ==="));
+
 	ApplyEffectToSelf(DefaultPrimaryAttributes, 1);
 	ApplyEffectToSelf(DefaultSecondaryAttributes, 1);
 	ApplyEffectToSelf(DefaultVitalAttributes, 1);
 	ApplyEffectToSelf(DefaultResistanceAttributes, 1);
 	ApplyEffectToSelf(DefaultItemSpecificAttributes, 1);
+
+	// Debug: Check attribute values after application
+	const URageInMageAttributeSet* AS = Cast<URageInMageAttributeSet>(GetAbilitySystemComponent()->GetAttributeSet(URageInMageAttributeSet::StaticClass()));
+	if (AS)
+	{
+		UE_LOG(LogRageInMage, Warning, TEXT("Post-Init Attribute Values:"));
+		UE_LOG(LogRageInMage, Warning, TEXT("  Strength: %f"), AS->GetStrength());
+		UE_LOG(LogRageInMage, Warning, TEXT("  Dexterity: %f"), AS->GetDexterity());
+		UE_LOG(LogRageInMage, Warning, TEXT("  Vigor: %f"), AS->GetVigor());
+		UE_LOG(LogRageInMage, Warning, TEXT("  Intelligence: %f"), AS->GetIntelligence());	
+		UE_LOG(LogRageInMage, Warning, TEXT("  Endurance: %f"), AS->GetEndurance());
+		UE_LOG(LogRageInMage, Warning, TEXT("  Wit: %f"), AS->GetWit());
+		UE_LOG(LogRageInMage, Warning, TEXT("  Agility: %f"), AS->GetAgility());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("CRITICAL: No AttributeSet found after applying effects!"));
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("=== InitializeDefaultAttributes END ==="));
 }
 
 void ARageInMageCharacterBase::AddCharacterAbilities()
@@ -224,7 +262,7 @@ void ARageInMageCharacterBase::AddCharacterAbilities()
 	if (!HasAuthority()) return;
 
 	MageASC->AddCharacterPassiveAbilities(StartupPassiveAbilities);
-	MageASC->AddCharacterAbilities(StartupAbilities);
+	MageASC->AddCharacterAbilities(StartupAbilities, CharacterClass);
 }
 
 void ARageInMageCharacterBase::Dissolve()

@@ -1,132 +1,60 @@
-// Copyright Krymson Reaplays
+// Copyright Reaplays
 
 #include "UI/WidgetController/SpellMenuWidgetController.h"
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
+#include "AbilitySystem/Data/AbilityInfo.h"
 #include "Player/RageInMagePlayerState.h"
-#include "RageInMageGameplayTag.h"
-#include "UI/HUD/RageInMageHUD.h"
 
 void USpellMenuWidgetController::BroadcastInitialValues()
 {
-	if (RagePlayerState)
-	{
-		const int32 Points = RagePlayerState->GetSpellPoints();
-		SpellPointsChanged.Broadcast(Points);
-		CurrentSpellPoints = Points;
+	ARageInMagePlayerState* PS = GetRagePS();
+	check(PS);
+	
+	BroadcastAbilityInfo();	
+	URageInMageAbilitySystemComponent* ASC = GetRageASC();
+	check(ASC);
 
-		// Update parent's shared state
-		SetSpellPoints(Points);
+	if (ASC->bStartupAbilitiesGiven)
+	{
+		BroadcastAllAbilities();
 	}
+	SpellPointsChangedDelegate.Broadcast(PS->GetSpellPoints());
 }
 
 void USpellMenuWidgetController::BindCallbacksToDependencies()
 {
-	//if (RageASC)
+	URageInMageAbilitySystemComponent* ASC = GetRageASC();
+	check(ASC);
+	check(AbilityInfo);
+
+	// Wait for abilities to be granted if not already
+	if (!ASC->bStartupAbilitiesGiven)
 	{
-		//RageInMageASC->AbilityEquipped.AddUObject(this, &USpellMenuWidgetController::OnAbilityEquipped);
+		ASC->AbilitiesGivenDelegate.AddUObject(this, &USpellMenuWidgetController::BroadcastAllAbilities);
 	}
-
-
-	if (RagePlayerState)
-	{
-		RagePlayerState->OnSpellPointsChangedDelegate.AddLambda([this](int32 Points)
-		{
-			SpellPointsChanged.Broadcast(Points);
-			CurrentSpellPoints = Points;
-
-			// Update parent's shared state so AttributeMenu knows about it
-			SetSpellPoints(Points);
-		});
-	}
-
-	// Get TabbedMenuWidgetController from RageWidgetController if not already set
-	if (!TabbedMenuWidgetController && RageWidgetController)
-	{
-		TabbedMenuWidgetController = RageWidgetController->GetTabbedMenuWidgetController();
-	}
-
-	if (TabbedMenuWidgetController)
-	{
-		TabbedMenuWidgetController->SetSpellMenuWidgetController(this);
-		AttributeMenuWidgetController = TabbedMenuWidgetController->GetAttributeMenuWidgetController();
-	}
-	RageWidgetController->BroadcastStoredBGXPStyle();
 }
 
-void USpellMenuWidgetController::SpellGlobeSelected(const FGameplayTag& AbilityTag)
+void USpellMenuWidgetController::SpendSpellPoint(const FGameplayTag& AbilityTag)
 {
-	if (bWaitingForEquipSelection)
-	{
-		if (RageASC)
-		{
-			//const FGameplayTag SelectedAbilityType = RageInMageASC->GetAbilityTypeTagFromSpec(RageInMageASC->GetSpecFromAbilityTag(AbilityTag));
-			//StopWaitingForEquipDelegate.Broadcast(SelectedAbilityType);
-			bWaitingForEquipSelection = false;
-		}
-	}
+	URageInMageAbilitySystemComponent* ASC = GetRageASC();
+	check(ASC);
 
-	SelectedAbility = AbilityTag;
-
-	// Check if we can spend points on this ability
-	const bool bCanSpendPoints = CurrentSpellPoints > 0;
-	SpellGlobeSelectedDelegate.Broadcast(bCanSpendPoints);
+	ASC->SpendSpellPoint(AbilityTag);
 }
 
-void USpellMenuWidgetController::SpendPointButtonPressed()
+void USpellMenuWidgetController::BroadcastAllAbilities()
 {
-	if (RageASC)
+	URageInMageAbilitySystemComponent* ASC = GetRageASC();
+	if (!ASC || !ASC->bStartupAbilitiesGiven) return;
+
+	FForEachAbilitySpec BroadcastDelegate;
+	BroadcastDelegate.BindLambda([this, ASC](const FGameplayAbilitySpec& AbilitySpec)
 	{
-		//RageInMageASC->ServerSpendSpellPoint(SelectedAbility);
-	}
+		FRageInMageAbilityInfo Info = AbilityInfo->FindAbilityInfoForTag(ASC->GetAbilityTagFromSpec(AbilitySpec));
+		Info.InputTag = ASC->GetInputTagFromSpec(AbilitySpec);
+		Info.AbilityTypeTag = ASC->GetAbilityTypeTagFromSpec(AbilitySpec);
+		AbilityInfoDelegate.Broadcast(Info);
+	});
+
+	ASC->ForEachAbilitySpec(BroadcastDelegate);
 }
-
-void USpellMenuWidgetController::EquipButtonPressed()
-{
-	if (RageASC)
-	{
-		//const FGameplayTag AbilityType = RageInMageASC->GetAbilityTypeTagFromSpec(RageInMageASC->GetSpecFromAbilityTag(SelectedAbility));
-
-		//WaitForEquipDelegate.Broadcast(AbilityType);
-		bWaitingForEquipSelection = true;
-	}
-}
-
-void USpellMenuWidgetController::SpellGlobeDeselect()
-{
-	if (bWaitingForEquipSelection)
-	{
-		if (RageASC)
-		{
-			//const FGameplayTag SelectedAbilityType = RageInMageASC->GetAbilityTagFromSpec(RageInMageASC->GetSpecFromAbilityTag(SelectedAbility));
-			//StopWaitingForEquipDelegate.Broadcast(SelectedAbilityType);
-			bWaitingForEquipSelection = false;
-		}
-	}
-
-	SelectedAbility = FGameplayTag();
-	SpellGlobeSelectedDelegate.Broadcast(false);
-}
-
-void USpellMenuWidgetController::SpellRowGlobePressed(const FGameplayTag& SlotTag, const FGameplayTag& AbilityType)
-{
-	if (!bWaitingForEquipSelection) return;
-
-	if (RageASC)
-	{
-		//RageInMageASC->ServerEquipAbility(SelectedAbility, SlotTag);
-	}
-
-	StopWaitingForEquipDelegate.Broadcast(AbilityType);
-	bWaitingForEquipSelection = false;
-}
-
-void USpellMenuWidgetController::OnAbilityEquipped(const FGameplayTag& AbilityTag, const FGameplayTag& StatusTag,
-	const FGameplayTag& Slot, const FGameplayTag& PreviousSlot)
-{
-	// Notify parent controller so other tabs can react
-	NotifySpellEquipped(AbilityTag, Slot);
-
-	// Broadcast to this controller's widgets
-	SpellGlobeReassignedDelegate.Broadcast(AbilityTag);
-}
-

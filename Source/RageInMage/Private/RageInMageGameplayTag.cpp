@@ -2,6 +2,7 @@
 
 
 #include "RageInMageGameplayTag.h"
+#include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "GameplayTagsManager.h"
 
 FRageInMageGameplayTag FRageInMageGameplayTag::GameplayTag;
@@ -57,10 +58,12 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	(FName("Attributes.Secondary.MagicalDefence"), FString("Decreases the amount of magical damage you take."));
 	
 	GameplayTag.Attributes_Secondary_PhysicalDefencePenetration = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Attributes.Secondary.PhysicalDefencePenetration"), FString("Decreases the amount of Physical Armour your target has against your physical attacks."));
+	(FName("Attributes.Secondary.PhysicalDefencePenetration"), FString(
+		"Decreases the amount of Physical Armour your target has against your physical attacks."));
 	
 	GameplayTag.Attributes_Secondary_MagicalDefencePenetration = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Attributes.Secondary.MagicalDefencePenetration"), FString("Decreases the amount of Magical Armour your target has against your magical attacks."));
+	(FName("Attributes.Secondary.MagicalDefencePenetration"), FString(
+		"Decreases the amount of Magical Armour your target has against your magical attacks."));
 	
 	GameplayTag.Attributes_Secondary_MaxHealth = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Attributes.Secondary.MaxHealth"), FString("Maximum amount of damage you can take before death."));
@@ -79,10 +82,12 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	
 	/* Item Attribute Tags */
 	GameplayTag.Attributes_Item_PhysicalDefencePenetrationPercentage = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Attributes.Item.PhysicalDefencePenetrationPercentage"), FString("Decreases the amount of Physical Armour your target has against your physical attacks."));
+	(FName("Attributes.Item.PhysicalDefencePenetrationPercentage"), FString(
+		"Decreases the amount of Physical Armour your target has against your physical attacks."));
 	
 	GameplayTag.Attributes_Item_MagicalDefencePenetrationPercentage = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Attributes.Item.MagicalDefencePenetrationPercentage"), FString("Decreases the amount of Magical Armour your target has against your magical attacks."));
+	(FName("Attributes.Item.MagicalDefencePenetrationPercentage"), FString(
+		"Decreases the amount of Magical Armour your target has against your magical attacks."));
 
 
 	/* Mechanics Tags */
@@ -137,33 +142,43 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	(FName("Ability.Summon"), FString("Tag for when Summoning."));
 	
 	
+	/* Ability Progression Tags */
+	GameplayTag.Ability_Progression_Locked = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Progression.Locked"), FString("Tag for when an Ability is Locked."));
+	GameplayTag.Ability_Progression_Unlocked = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Progression.Unlocked"), FString("Tag for when an Ability is Unlocked."));
+	GameplayTag.Ability_Progression_Unlockable = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Progression.Unlockable"), FString("Tag for when an Ability is Unlockable."));
+	GameplayTag.Ability_Progression_Upgradable = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Progression.Upgradable"), FString("Tag for when an Ability is Upgradable."));
+	
 	/* Ability Type Tags */	
-	GameplayTag.AbilityType_Primary = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("AbilityType.Primary"), FString("Tag for when Casting a Primary Spell."));
+	GameplayTag.Ability_Type_Primary = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Type.Primary"), FString("Tag for when Activating a Primary Spell."));
 	
-	GameplayTag.AbilityType_Secondary = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("AbilityType.Secondary"), FString("Tag for when Casting a Secondary Spell."));
+	GameplayTag.Ability_Type_Secondary = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Type.Secondary"), FString("Tag for when Activating a Secondary Spell."));
 	
-	GameplayTag.AbilityType_Movement = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("AbilityType.Movement"), FString("Tag for when Casting a Movement Spell."));
+	GameplayTag.Ability_Type_Movement = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Type.Movement"), FString("Tag for when Activating a Movement Spell."));
 	
-	GameplayTag.AbilityType_Defensive = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("AbilityType.Defensive"), FString("Tag for when Casting a Defensive Spell."));
+	GameplayTag.Ability_Type_Defensive = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Type.Defensive"), FString("Tag for when Activating a Defensive Spell."));
 	
-	GameplayTag.AbilityType_CrowdControl = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("AbilityType.CrowdControl"), FString("Tag for when Casting a Crowd Control Spell."));
+	GameplayTag.Ability_Type_CrowdControl = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Type.CrowdControl"), FString("Tag for when Activating a Crowd Control Spell."));
 	
-	GameplayTag.AbilityType_Ultimate = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("AbilityType.Ultimate"), FString("Tag for when Casting an Ultimate Spell."));
+	GameplayTag.Ability_Type_Ultimate = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Type.Ultimate"), FString("Tag for when Activating an Ultimate Spell."));
 	
-	GameplayTag.AbilityType_Passive1 = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("AbilityType.Passive1"), FString("Tag for when Activating a Passive Spell."));
+	GameplayTag.Ability_Type_Passive1 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Type.Passive1"), FString("Tag for when Activating a Passive Spell."));
 	
-	GameplayTag.AbilityType_Passive2 = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("AbilityType.Passive2"), FString("Tag for when Activating a Passive Spell."));
+	GameplayTag.Ability_Type_Passive2 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Type.Passive2"), FString("Tag for when Activating a Passive Spell."));
 	
-	GameplayTag.AbilityType_Passive3 = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("AbilityType.Passive3"), FString("Tag for when Activating a Passive Spell."));
+	GameplayTag.Ability_Type_Passive3 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Type.Passive3"), FString("Tag for when Activating a Passive Spell."));
 	
 	/* Fire Mage Ability Tags */
 	GameplayTag.Ability_Fire_SearingFlame = UGameplayTagsManager::Get().AddNativeGameplayTag
@@ -391,6 +406,26 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	(FName("Ability.Life.ImpenetrableBarrier"), FString("Tag for when casting Impenetrable Barrier."));
 	
 	
+	/* Poison Mage Ability Tags */
+	GameplayTag.Ability_Poison_PoisonMissile = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Poison.PoisonMissile"), FString("Ability Tag for Poison Missile."));
+	
+	GameplayTag.Ability_Poison_VirulentSmog = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Poison.VirulentSmog"), FString("Ability Tag for Virulent Smog."));
+	
+	GameplayTag.Ability_Poison_MiasmaSlide = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Poison.MiasmaSlide"), FString("Ability Tag for Miasma Slide."));
+	
+	GameplayTag.Ability_Poison_MorbidShroud = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Poison.MorbidShroud"), FString("Ability Tag for Morbid Shroud."));
+	
+	GameplayTag.Ability_Poison_NeuralAffliction = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Poison.NeuralAffliction"), FString("Ability Tag for Neural Affliction."));
+	
+	GameplayTag.Ability_Poison_PlagueDominion = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Poison.PlagueDominion"), FString("Ability Tag for Plague Dominion."));
+	
+	
 	/* Fire Mage Cooldown Tags */
 	GameplayTag.Cooldown_Fire_SearingFlame = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Cooldown.Fire.SearingFlame"), FString("Tag for when Searing Flame on Cooldown."));
@@ -611,6 +646,113 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	(FName("Cooldown.Life.ImpenetrableBarrier"), FString("Cooldown Tag for Impenetrable Barrier."));
 	
 	
+	/* Poison Mage Cooldown Tags */
+	GameplayTag.Cooldown_Poison_PoisonMissile = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Poison.PoisonMissile"), FString("Cooldown Tag for Poison Missile."));
+	
+	GameplayTag.Cooldown_Poison_VirulentSmog = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Poison.VirulentSmog"), FString("Cooldown Tag for Virulent Smog."));
+	
+	GameplayTag.Cooldown_Poison_MiasmaSlide = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Poison.MiasmaSlide"), FString("Cooldown Tag for Miasma Slide."));
+	
+	GameplayTag.Cooldown_Poison_MorbidShroud = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Poison.MorbidShroud"), FString("Cooldown Tag for Morbid Shroud."));
+	
+	GameplayTag.Cooldown_Poison_NeuralAffliction = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Poison.NeuralAffliction"), FString("Cooldown Tag for Neural Affliction."));
+	
+	GameplayTag.Cooldown_Poison_PlagueDominion = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Poison.PlagueDominion"), FString("Cooldown Tag for Plague Dominion."));
+	
+	
+	/* Map of Ability Type to Ability Tag */
+	/* Fire */
+	GameplayTag.AbilityTypeToFireAbilityTag.Add(GameplayTag.Ability_Type_Primary, GameplayTag.Ability_Fire_SearingFlame);
+	GameplayTag.AbilityTypeToFireAbilityTag.Add(GameplayTag.Ability_Type_Secondary, GameplayTag.Ability_Fire_ChanneledFire);
+	GameplayTag.AbilityTypeToFireAbilityTag.Add(GameplayTag.Ability_Type_Movement, GameplayTag.Ability_Fire_IgnitionLeap);
+	GameplayTag.AbilityTypeToFireAbilityTag.Add(GameplayTag.Ability_Type_Defensive, GameplayTag.Ability_Fire_RisingFlameWave);
+	GameplayTag.AbilityTypeToFireAbilityTag.Add(GameplayTag.Ability_Type_CrowdControl, GameplayTag.Ability_Fire_BlazingFlame);
+	GameplayTag.AbilityTypeToFireAbilityTag.Add(GameplayTag.Ability_Type_Ultimate, GameplayTag.Ability_Fire_FallOfTheScorchingSun);
+	/* Water */
+	GameplayTag.AbilityTypeToWaterAbilityTag.Add(GameplayTag.Ability_Type_Primary, GameplayTag.Ability_Water_SimpleIce);
+	GameplayTag.AbilityTypeToWaterAbilityTag.Add(GameplayTag.Ability_Type_Secondary, GameplayTag.Ability_Water_SwirlingYoyo);
+	GameplayTag.AbilityTypeToWaterAbilityTag.Add(GameplayTag.Ability_Type_Movement, GameplayTag.Ability_Water_RidingTide);
+	GameplayTag.AbilityTypeToWaterAbilityTag.Add(GameplayTag.Ability_Type_Defensive, GameplayTag.Ability_Water_SoothingBubble);
+	GameplayTag.AbilityTypeToWaterAbilityTag.Add(GameplayTag.Ability_Type_CrowdControl, GameplayTag.Ability_Water_DropRippleBlast);
+	GameplayTag.AbilityTypeToWaterAbilityTag.Add(GameplayTag.Ability_Type_Ultimate, GameplayTag.Ability_Water_TearsDoFall);
+	/* Air */
+	GameplayTag.AbilityTypeToAirAbilityTag.Add(GameplayTag.Ability_Type_Primary, GameplayTag.Ability_Air_SwiftGust);
+	GameplayTag.AbilityTypeToAirAbilityTag.Add(GameplayTag.Ability_Type_Secondary, GameplayTag.Ability_Air_CatapultLaunch);
+	GameplayTag.AbilityTypeToAirAbilityTag.Add(GameplayTag.Ability_Type_Movement, GameplayTag.Ability_Air_CleanWindDash);
+	GameplayTag.AbilityTypeToAirAbilityTag.Add(GameplayTag.Ability_Type_Defensive, GameplayTag.Ability_Air_MountainVortex);
+	GameplayTag.AbilityTypeToAirAbilityTag.Add(GameplayTag.Ability_Type_CrowdControl, GameplayTag.Ability_Air_BlueSkyWhirlwind);
+	GameplayTag.AbilityTypeToAirAbilityTag.Add(GameplayTag.Ability_Type_Ultimate, GameplayTag.Ability_Air_DanceOfTheWindDragon);
+	/* Earth */
+	GameplayTag.AbilityTypeToEarthAbilityTag.Add(GameplayTag.Ability_Type_Primary, GameplayTag.Ability_Earth_SlingRock);
+	GameplayTag.AbilityTypeToEarthAbilityTag.Add(GameplayTag.Ability_Type_Secondary, GameplayTag.Ability_Earth_JewelFistShatter);
+	GameplayTag.AbilityTypeToEarthAbilityTag.Add(GameplayTag.Ability_Type_Movement, GameplayTag.Ability_Earth_ChargingBull);
+	GameplayTag.AbilityTypeToEarthAbilityTag.Add(GameplayTag.Ability_Type_Defensive, GameplayTag.Ability_Earth_RockSolid);
+	GameplayTag.AbilityTypeToEarthAbilityTag.Add(GameplayTag.Ability_Type_CrowdControl, GameplayTag.Ability_Earth_GemJail);
+	GameplayTag.AbilityTypeToEarthAbilityTag.Add(GameplayTag.Ability_Type_Ultimate, GameplayTag.Ability_Earth_TheBoulder);
+	/* Lightning */
+	GameplayTag.AbilityTypeToLightningAbilityTag.Add(GameplayTag.Ability_Type_Primary, GameplayTag.Ability_Lightning_LightningFlash);
+	GameplayTag.AbilityTypeToLightningAbilityTag.Add(GameplayTag.Ability_Type_Secondary, GameplayTag.Ability_Lightning_SparkingSphere);
+	GameplayTag.AbilityTypeToLightningAbilityTag.Add(GameplayTag.Ability_Type_Movement, GameplayTag.Ability_Lightning_ZipNZap);
+	GameplayTag.AbilityTypeToLightningAbilityTag.Add(GameplayTag.Ability_Type_Defensive, GameplayTag.Ability_Lightning_StaticMegaSurge);
+	GameplayTag.AbilityTypeToLightningAbilityTag.Add(GameplayTag.Ability_Type_CrowdControl, GameplayTag.Ability_Lightning_FlashAndAwe);
+	GameplayTag.AbilityTypeToLightningAbilityTag.Add(GameplayTag.Ability_Type_Ultimate, GameplayTag.Ability_Lightning_CeaselessWrath);
+	/* Nature */
+	GameplayTag.AbilityTypeToNatureAbilityTag.Add(GameplayTag.Ability_Type_Primary, GameplayTag.Ability_Nature_ThornSpread);
+	GameplayTag.AbilityTypeToNatureAbilityTag.Add(GameplayTag.Ability_Type_Secondary, GameplayTag.Ability_Nature_VenusFlyTrap);
+	GameplayTag.AbilityTypeToNatureAbilityTag.Add(GameplayTag.Ability_Type_Movement, GameplayTag.Ability_Nature_CreepingVines);
+	GameplayTag.AbilityTypeToNatureAbilityTag.Add(GameplayTag.Ability_Type_Defensive, GameplayTag.Ability_Nature_SepalSurprise);
+	GameplayTag.AbilityTypeToNatureAbilityTag.Add(GameplayTag.Ability_Type_CrowdControl, GameplayTag.Ability_Nature_LassoOfThorns);
+	GameplayTag.AbilityTypeToNatureAbilityTag.Add(GameplayTag.Ability_Type_Ultimate, GameplayTag.Ability_Nature_NaturesSpikyGrasp);
+	/* Sound */
+	GameplayTag.AbilityTypeToSoundAbilityTag.Add(GameplayTag.Ability_Type_Primary, GameplayTag.Ability_Sound_Pleasc);
+	GameplayTag.AbilityTypeToSoundAbilityTag.Add(GameplayTag.Ability_Type_Secondary, GameplayTag.Ability_Sound_GunAnail);
+	GameplayTag.AbilityTypeToSoundAbilityTag.Add(GameplayTag.Ability_Type_Movement, GameplayTag.Ability_Sound_DeanAite);
+	GameplayTag.AbilityTypeToSoundAbilityTag.Add(GameplayTag.Ability_Type_Defensive, GameplayTag.Ability_Sound_AmMall);
+	GameplayTag.AbilityTypeToSoundAbilityTag.Add(GameplayTag.Ability_Type_CrowdControl, GameplayTag.Ability_Sound_GunGhluasad);
+	GameplayTag.AbilityTypeToSoundAbilityTag.Add(GameplayTag.Ability_Type_Ultimate, GameplayTag.Ability_Sound_TollahdFainne);
+	/* Shadow */
+	GameplayTag.AbilityTypeToShadowAbilityTag.Add(GameplayTag.Ability_Type_Primary, GameplayTag.Ability_Shadow_DustBomb);
+	GameplayTag.AbilityTypeToShadowAbilityTag.Add(GameplayTag.Ability_Type_Secondary, GameplayTag.Ability_Shadow_JokersFacade);
+	GameplayTag.AbilityTypeToShadowAbilityTag.Add(GameplayTag.Ability_Type_Movement, GameplayTag.Ability_Shadow_SmokeScreenShuffle);
+	GameplayTag.AbilityTypeToShadowAbilityTag.Add(GameplayTag.Ability_Type_Defensive, GameplayTag.Ability_Shadow_ShadowGuide);
+	GameplayTag.AbilityTypeToShadowAbilityTag.Add(GameplayTag.Ability_Type_CrowdControl, GameplayTag.Ability_Shadow_SteamRush);
+	GameplayTag.AbilityTypeToShadowAbilityTag.Add(GameplayTag.Ability_Type_Ultimate, GameplayTag.Ability_Shadow_HiddenShadowTechnique);
+	/* Necromancer */
+	GameplayTag.AbilityTypeToNecromancerAbilityTag.Add(GameplayTag.Ability_Type_Primary, GameplayTag.Ability_Necromancer_BubbleTrouble);
+	GameplayTag.AbilityTypeToNecromancerAbilityTag.Add(GameplayTag.Ability_Type_Secondary, GameplayTag.Ability_Necromancer_BitsNBones);
+	GameplayTag.AbilityTypeToNecromancerAbilityTag.Add(GameplayTag.Ability_Type_Movement, GameplayTag.Ability_Necromancer_OldSkeller);
+	GameplayTag.AbilityTypeToNecromancerAbilityTag.Add(GameplayTag.Ability_Type_Defensive, GameplayTag.Ability_Necromancer_LivingBlockade);
+	GameplayTag.AbilityTypeToNecromancerAbilityTag.Add(GameplayTag.Ability_Type_CrowdControl, GameplayTag.Ability_Necromancer_WrithingGrasp);
+	GameplayTag.AbilityTypeToNecromancerAbilityTag.Add(GameplayTag.Ability_Type_Ultimate, GameplayTag.Ability_Necromancer_RiseOfTheBlackCurse);
+	/* Holy */
+	GameplayTag.AbilityTypeToHolyAbilityTag.Add(GameplayTag.Ability_Type_Primary, GameplayTag.Ability_Holy_BeamingBlade);
+	GameplayTag.AbilityTypeToHolyAbilityTag.Add(GameplayTag.Ability_Type_Secondary, GameplayTag.Ability_Holy_SacredSmite);
+	GameplayTag.AbilityTypeToHolyAbilityTag.Add(GameplayTag.Ability_Type_Movement, GameplayTag.Ability_Holy_RadiantAscent);
+	GameplayTag.AbilityTypeToHolyAbilityTag.Add(GameplayTag.Ability_Type_Defensive, GameplayTag.Ability_Holy_DivineSanctuary);
+	GameplayTag.AbilityTypeToHolyAbilityTag.Add(GameplayTag.Ability_Type_CrowdControl, GameplayTag.Ability_Holy_ChainsOfAtonement);
+	GameplayTag.AbilityTypeToHolyAbilityTag.Add(GameplayTag.Ability_Type_Ultimate, GameplayTag.Ability_Holy_AngelicReckoning);
+	/* Life */
+	GameplayTag.AbilityTypeToLifeAbilityTag.Add(GameplayTag.Ability_Type_Primary, GameplayTag.Ability_Life_EssenceTap);
+	GameplayTag.AbilityTypeToLifeAbilityTag.Add(GameplayTag.Ability_Type_Secondary, GameplayTag.Ability_Life_CircleOfLife);
+	GameplayTag.AbilityTypeToLifeAbilityTag.Add(GameplayTag.Ability_Type_Movement, GameplayTag.Ability_Life_LuckyEscape);
+	GameplayTag.AbilityTypeToLifeAbilityTag.Add(GameplayTag.Ability_Type_Defensive, GameplayTag.Ability_Life_Elevate);
+	GameplayTag.AbilityTypeToLifeAbilityTag.Add(GameplayTag.Ability_Type_CrowdControl, GameplayTag.Ability_Life_Dispel);
+	GameplayTag.AbilityTypeToLifeAbilityTag.Add(GameplayTag.Ability_Type_Ultimate, GameplayTag.Ability_Life_ImpenetrableBarrier);
+	/* Poison */
+	GameplayTag.AbilityTypeToPoisonAbilityTag.Add(GameplayTag.Ability_Type_Primary, GameplayTag.Ability_Poison_PoisonMissile);
+	GameplayTag.AbilityTypeToPoisonAbilityTag.Add(GameplayTag.Ability_Type_Secondary, GameplayTag.Ability_Poison_VirulentSmog);
+	GameplayTag.AbilityTypeToPoisonAbilityTag.Add(GameplayTag.Ability_Type_Movement, GameplayTag.Ability_Poison_MiasmaSlide);
+	GameplayTag.AbilityTypeToPoisonAbilityTag.Add(GameplayTag.Ability_Type_Defensive, GameplayTag.Ability_Poison_MorbidShroud);
+	GameplayTag.AbilityTypeToPoisonAbilityTag.Add(GameplayTag.Ability_Type_CrowdControl, GameplayTag.Ability_Poison_NeuralAffliction);
+	GameplayTag.AbilityTypeToPoisonAbilityTag.Add(GameplayTag.Ability_Type_Ultimate, GameplayTag.Ability_Poison_PlagueDominion);
+	
+	
 	/* M&K Input Tags */
 	GameplayTag.InputTag_LMB = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("InputTag.LMB"), FString("Input Tag for Left Mouse Button."));
@@ -805,85 +947,97 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_MagicalDamage_Radiant, GameplayTag.Resistance_MagicalDamage_Radiant);
 	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_MagicalDamage_Force, GameplayTag.Resistance_MagicalDamage_Force);
 	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_MagicalDamage_Psychic , GameplayTag.Resistance_MagicalDamage_Psychic);
-	
-	
+
+
+	/* Map of Damage Type Tags to Mechanics Attribute Tags */
+	GameplayTag.DamageTypeToMechanics.Add(GameplayTag.DamageType_MagicalDamage_Fire, GameplayTag.Attributes_Mechanics_Heat);
+	GameplayTag.DamageTypeToMechanics.Add(GameplayTag.DamageType_MagicalDamage_Cold, GameplayTag.Attributes_Mechanics_Heat);
+	GameplayTag.DamageTypeToMechanics.Add(GameplayTag.DamageType_MagicalDamage_Electric, GameplayTag.Attributes_Mechanics_Charge);
+	GameplayTag.DamageTypeToMechanics.Add(GameplayTag.DamageType_MagicalDamage_Poison, GameplayTag.Attributes_Mechanics_LethalToxins);
+	GameplayTag.DamageTypeToMechanics.Add(GameplayTag.DamageType_MagicalDamage_Force, GameplayTag.Attributes_Mechanics_Momentum);
+	GameplayTag.DamageTypeToMechanics.Add(GameplayTag.DamageType_MagicalDamage_Shadow, GameplayTag.Attributes_Mechanics_Obscurity);
+	GameplayTag.DamageTypeToMechanics.Add(GameplayTag.DamageType_MagicalDamage_Radiant, GameplayTag.Attributes_Mechanics_Retribution);
+	GameplayTag.DamageTypeToMechanics.Add(GameplayTag.DamageType_MagicalDamage_Acid, GameplayTag.Attributes_Mechanics_BlackOmen);
+	GameplayTag.DamageTypeToMechanics.Add(GameplayTag.DamageType_MagicalDamage_Psychic, GameplayTag.Attributes_Mechanics_Crescendo);
+
+
 	/* Effect Tags */
 	GameplayTag.Effects_HitReaction = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Effects.HitReaction"), FString("Tag for when Hit Reacting."));
 
 	
 	/* Debuff Effect Tags */
-	GameplayTag.Effects_Debuff_Airborne = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Airborne"), FString("Tag for when not touching the ground."));
+	GameplayTag.Condition_Airborne = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Airborne"), FString("Tag for when not touching the ground."));
 	
-	GameplayTag.Effects_Debuff_Burning = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Burning"), FString("Tag for when Burning, doing Damage Over Time."));
+	GameplayTag.Condition_Burning = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Burning"), FString("Tag for when Burning, doing Damage Over Time."));
 	
-	GameplayTag.Effects_Debuff_Poisoned = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Poisoned"), FString("Tag for when Poisoned, doing Damage Over Time."));
+	GameplayTag.Condition_Poisoned = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Poisoned"), FString("Tag for when Poisoned, doing Damage Over Time."));
 	
-	GameplayTag.Effects_Debuff_Healing = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Healing"), FString("Tag for when Healing, increasing Health Over Time."));
+	GameplayTag.Condition_Healing = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Healing"), FString("Tag for when Healing, increasing Health Over Time."));
 	
-	GameplayTag.Effects_Debuff_Slowed = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Slowed"), FString("Tag for when Slowed, Slows Movement Speed."));
+	GameplayTag.Condition_Slowed = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Slowed"), FString("Tag for when Slowed, Slows Movement Speed."));
 	
-	GameplayTag.Effects_Debuff_Rooted = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Rooted"), FString("Tag for when Rooted, unable to Move."));
+	GameplayTag.Condition_Rooted = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Rooted"), FString("Tag for when Rooted, unable to Move."));
 	
-	GameplayTag.Effects_Debuff_Grappled = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Grappled"), FString("Tag for when Grappled, unable to Move or make any Action but can Struggle free."));
+	GameplayTag.Condition_Grappled = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Grappled"), FString("Tag for when Grappled, unable to Move or make any Action but can Struggle free."));
 	
-	GameplayTag.Effects_Debuff_Petrified = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Petrified"), FString("Tag for when Petrified, unable to Move or make any Action but can Struggle free."));
+	GameplayTag.Condition_Petrified = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Petrified"), FString("Tag for when Petrified, unable to Move or make any Action but can Struggle free."));
 	
-	GameplayTag.Effects_Debuff_Constricted = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Constricted"), FString("Tag for when Constricted, unable to Move or make any Action."));
+	GameplayTag.Condition_Constricted = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Constricted"), FString("Tag for when Constricted, unable to Move or make any Action."));
 	
-	GameplayTag.Effects_Debuff_Frozen = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Frozen"), FString("Tag for when Frozen, unable to Move or make any Action."));
+	GameplayTag.Condition_Frozen = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Frozen"), FString("Tag for when Frozen, unable to Move or make any Action."));
 	
-	GameplayTag.Effects_Debuff_Stunned = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Stunned"), FString("Tag for when Stunned, unable to Move or make any Action."));
+	GameplayTag.Condition_Stunned = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Stunned"), FString("Tag for when Stunned, unable to Move or make any Action."));
 	
-	GameplayTag.Effects_Debuff_Paralysed = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Paralysed"), FString("Tag for when Paralysed, unable to Move or make any Action."));
+	GameplayTag.Condition_Paralysed = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Paralysed"), FString("Tag for when Paralysed, unable to Move or make any Action."));
 	
-	GameplayTag.Effects_Debuff_Pushed = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Pushed"), FString("Tag for when Pushed, Moved by Force."));
+	GameplayTag.Condition_Pushed = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Pushed"), FString("Tag for when Pushed, Moved by Force."));
 	
-	GameplayTag.Effects_Debuff_Slammed = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Slammed"), FString("Tag for when Slammed, Hit another Actor or Wall with Force."));
+	GameplayTag.Condition_Slammed = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Slammed"), FString("Tag for when Slammed, Hit another Actor or Wall with Force."));
 	
-	GameplayTag.Effects_Debuff_Confused = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Confused"), FString("Tag for when Confused, Inverting Player's Controls."));
+	GameplayTag.Condition_Confused = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Confused"), FString("Tag for when Confused, Inverting Player's Controls."));
 	
-	GameplayTag.Effects_Debuff_Reflecting = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Reflecting"), FString("Tag for when Reflecting, sends Projectiles back the way they came from."));
+	GameplayTag.Condition_Reflecting = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Reflecting"), FString("Tag for when Reflecting, sends Projectiles back the way they came from."));
 	
-	GameplayTag.Effects_Debuff_SoulBound = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.SoulBound"), FString("Tag for when SoulBound, Tethered to the Soul by the Lich."));
+	GameplayTag.Condition_SoulBound = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.SoulBound"), FString("Tag for when SoulBound, Tethered to the Soul by the Lich."));
 	
-	GameplayTag.Effects_Debuff_Invisible = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Invisible"), FString("Tag for when Invisible, can not be seen."));
+	GameplayTag.Condition_Invisible = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Invisible"), FString("Tag for when Invisible, can not be seen."));
 	
-	GameplayTag.Effects_Debuff_Silenced = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Silenced"), FString("Tag for when Silenced, can not use Abilities."));
+	GameplayTag.Condition_Silenced = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Silenced"), FString("Tag for when Silenced, can not use Abilities."));
 	
-	GameplayTag.Effects_Debuff_Untouchable = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Untouchable"), FString("Tag for when Untouchable, can not be Damaged by Abilities."));
+	GameplayTag.Condition_Untouchable = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Untouchable"), FString("Tag for when Untouchable, can not be Damaged by Abilities."));
 	
-	GameplayTag.Effects_Debuff_Immune = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Immune"), FString("Tag for when Immune, can not be Damaged by certain Type(s)."));
+	GameplayTag.Condition_Immune = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Immune"), FString("Tag for when Immune, can not be Damaged by certain Type(s)."));
 
-	GameplayTag.Effects_Debuff_Shocked = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Shocked"), FString("Tag for when Shocked, unable to Move or make any Action."));
+	GameplayTag.Condition_Shocked = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Shocked"), FString("Tag for when Shocked, unable to Move or make any Action."));
 
-	GameplayTag.Effects_Debuff_Charged = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.Charged"), FString("Tag for when Charged, able for Electric Spells to potentially chain to you."));
+	GameplayTag.Condition_Charged = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Charged"), FString("Tag for when Charged, able for Electric Spells to potentially chain to you."));
 
-	GameplayTag.Effects_Debuff_OverCharged = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Effects.Debuff.OverCharged"), FString("Tag for when OverCharged, able for Electric Spells to chain from you."));
+	GameplayTag.Condition_OverCharged = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.OverCharged"), FString("Tag for when OverCharged, able for Electric Spells to chain from you."));
 
 
 	/* Combat Socket Tags */
@@ -965,4 +1119,25 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	
 	GameplayTag.Team_Cyan = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Team.Cyan"), FString("Tag for Cyan Team"));
+}
+
+const TMap<FGameplayTag, FGameplayTag>* FRageInMageGameplayTag::GetAbilityTypeMapForClass(
+	ECharacterClass CharacterClass) const
+{
+	switch (CharacterClass)
+	{
+	case ECharacterClass::FireMage:       return &AbilityTypeToFireAbilityTag;
+	case ECharacterClass::WaterMage:      return &AbilityTypeToWaterAbilityTag;
+	case ECharacterClass::AirMage:        return &AbilityTypeToAirAbilityTag;
+	case ECharacterClass::EarthMage:      return &AbilityTypeToEarthAbilityTag;
+	case ECharacterClass::LightningMage:  return &AbilityTypeToLightningAbilityTag;
+	case ECharacterClass::NatureMage:     return &AbilityTypeToNatureAbilityTag;
+	case ECharacterClass::SoundMage:      return &AbilityTypeToSoundAbilityTag;
+	case ECharacterClass::ShadowMage:     return &AbilityTypeToShadowAbilityTag;
+	case ECharacterClass::Necromancer:    return &AbilityTypeToNecromancerAbilityTag;
+	case ECharacterClass::HolyMage:       return &AbilityTypeToHolyAbilityTag;
+	case ECharacterClass::LifeMage:       return &AbilityTypeToLifeAbilityTag;
+	case ECharacterClass::PoisonMage:     return &AbilityTypeToPoisonAbilityTag;
+	default:                              return nullptr;
+	}
 }
