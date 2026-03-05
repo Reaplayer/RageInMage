@@ -5,6 +5,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/Abilities/RageInMageGameplayAbility.h"
+#include "AbilitySystem/RageInMageAttributeSet.h"
 #include "GameFramework/PlayerState.h"
 #include "Interaction/PlayerInterface.h"
 #include "Inventory/RageInMageInventoryComponent.h"
@@ -367,4 +368,68 @@ void URageInMageAbilitySystemComponent::ClientEffectApplied_Implementation(UAbil
 	EffectSpec.GetAllAssetTags(TagContainer);
 
 	EffectAssetTags.Broadcast(TagContainer);
+}
+
+void URageInMageAbilitySystemComponent::StartHeatDecay()
+{
+	if (bHeatDecayActive) return;
+	bHeatDecayActive = true;
+
+	if (const AActor* LocalAvatarActor = GetAvatarActor())
+	{
+		if (UWorld* World = LocalAvatarActor->GetWorld())
+		{
+			// Tick every 0.2 seconds -> 1 point per tick at 5/sec rate
+			World->GetTimerManager().SetTimer(
+				HeatDecayTimerHandle,
+				this,
+				&URageInMageAbilitySystemComponent::TickHeatDecay,
+				0.2f,
+				true
+			);
+		}
+	}
+}
+
+void URageInMageAbilitySystemComponent::StopHeatDecay()
+{
+	if (!bHeatDecayActive) return;
+	bHeatDecayActive = false;
+
+	if (const AActor* LocalAvatarActor = GetAvatarActor())
+	{
+		if (UWorld* World = LocalAvatarActor->GetWorld())
+		{
+			World->GetTimerManager().ClearTimer(HeatDecayTimerHandle);
+		}
+	}
+}
+
+void URageInMageAbilitySystemComponent::TickHeatDecay()
+{
+	const URageInMageAttributeSet* AS = GetSet<URageInMageAttributeSet>();
+	if (!AS) return;
+
+	const float CurrentHeat = AS->GetHeat();
+	if (FMath::IsNearlyZero(CurrentHeat, 0.5f))
+	{
+		// Close enough to 0, snap to 0 and stop
+		const_cast<URageInMageAttributeSet*>(AS)->SetHeat(0.f);
+		StopHeatDecay();
+		return;
+	}
+
+	// Decay: HeatDecayRate per second, tick every 0.2s = Rate * 0.2 per tick
+	const float DecayAmount = HeatDecayRate * 0.2f;
+	float NewHeat;
+	if (CurrentHeat > 0.f)
+	{
+		NewHeat = FMath::Max(CurrentHeat - DecayAmount, 0.f);
+	}
+	else
+	{
+		NewHeat = FMath::Min(CurrentHeat + DecayAmount, 0.f);
+	}
+
+	const_cast<URageInMageAttributeSet*>(AS)->SetHeat(NewHeat);
 }

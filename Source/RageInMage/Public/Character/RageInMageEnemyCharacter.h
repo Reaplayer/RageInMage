@@ -34,6 +34,8 @@ public:
 	virtual void Die() override;
 	//** End Combat Interface */
 
+	virtual void SetSummonCount_Implementation(int32 NewSummonCount) override;
+
 	UPROPERTY(BlueprintAssignable)
 	FOnAttributeChangedSignature OnHealthChanged;
 

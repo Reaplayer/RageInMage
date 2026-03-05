@@ -98,6 +98,15 @@ void ARageInMageEnemyCharacter::Die()
 	}
 }
 
+void ARageInMageEnemyCharacter::SetSummonCount_Implementation(int32 NewSummonCount)
+{
+	Super::SetSummonCount_Implementation(NewSummonCount);
+	if (HasAuthority())
+	{
+		AIController->GetBlackboardComponent()->SetValueAsInt(FName("SummonCount"), SummonCount);
+	}
+}
+
 void ARageInMageEnemyCharacter::HitReactionTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
 {
 	bHitReacting = NewCount > 0;

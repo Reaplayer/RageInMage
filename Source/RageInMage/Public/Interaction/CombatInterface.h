@@ -103,4 +103,6 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void RegisterSpawnedMinion(AActor* Minion);
+
+	virtual FOnDeathSignature& GetOnDeathDelegate() = 0;
 };

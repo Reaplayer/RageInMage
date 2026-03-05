@@ -96,4 +96,27 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "RageInMageAbilitySystemLibrary|Player")
 	static int32 GetLocalPlayerIndex(APlayerController* PlayerController);
+
+	// ── Aim Prediction Utilities ──
+
+	/** Calculate projectile arc trajectory points for visualization.
+	 *  ArcParam: 0.0 = straight up, 0.5 = standard arc, 1.0 = near-flat. */
+	UFUNCTION(BlueprintCallable, Category = "RageInMageAbilitySystemLibrary|Prediction")
+	static TArray<FVector> CalculateProjectileArcPoints(
+		const UObject* WorldContextObject,
+		const FVector& LaunchLocation,
+		const FVector& TargetLocation,
+		float ArcParam = 0.5f,
+		int32 NumPoints = 30);
+
+	/** Snap a world position to ground level via downward line trace. */
+	UFUNCTION(BlueprintPure, Category = "RageInMageAbilitySystemLibrary|Prediction")
+	static FVector SnapToGround(const UObject* WorldContextObject,
+		const FVector& Location, float TraceDistance = 500.f);
+
+	/** Calculate arc parameter from aim distance (near = flat, far = lobbed).
+	 *  MinArc = arc for close range (e.g. 0.8 = flat), MaxArc = arc for max range (e.g. 0.4 = lobbed). */
+	UFUNCTION(BlueprintPure, Category = "RageInMageAbilitySystemLibrary|Prediction")
+	static float GetArcFromDistance(float Distance, float MaxRange,
+		float MinArc = 0.8f, float MaxArc = 0.4f);
 };

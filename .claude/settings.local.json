@@ -8,7 +8,19 @@
       "mcp__unreal-editor__read_logs",
       "mcp__unreal-editor__execute_python",
       "mcp__unreal-editor__edit_blueprint",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(xargs:*)",
+      "Bash(grep:*)",
+      "mcp__unreal-editor__get_project_info",
+      "mcp__unreal-editor__edit_niagara",
+      "mcp__unreal-editor__edit_enhanced_input",
+      "Bash(wc:*)",
+      "Bash(test:*)",
+      "mcp__unreal-editor__screenshot_viewport",
+      "Bash(dir:*)",
+      "Bash(powershell:*)",
+      "Bash(findstr:*)",
+      "Bash(\"C:/Program Files/Epic Games/UE_5.6/Engine/Binaries/Win64/UnrealEditor-Cmd.exe\" \"C:/Users/reapw/Documents/UnrealProjects/RageInMage5.6/RageInMage.uproject\" -run=DumpAssetProperties -asset=\"/Game/Blueprints/AbilitySystem/Player/Abilities/Fire/SearingFlame/GE_Cooldown_SearingFlame\" -stdout)"
     ]
   }
 }

@@ -46,10 +46,16 @@ public:
 	virtual void SetSummonCount_Implementation(int32 NewSummonCount) override;
 	virtual int32 GetMaxSummonCount_Implementation() override;
 	virtual void SetMaxSummonCount_Implementation(int32 NewMaxSummonCount) override;
+	virtual void RegisterSpawnedMinion_Implementation(AActor* Minion) override;
 	/* End Combat Interface */
 
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MulticastHandleDeath();
+
+	virtual FOnDeathSignature& GetOnDeathDelegate() override { return OnDeathDelegate; }
+
+	UFUNCTION()
+	void OnMinionDeath(AActor* DeadActor);
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	TArray<FTaggedMontage> AttackMontages;

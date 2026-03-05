@@ -26,7 +26,8 @@ void ARageInMagePlayerController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	CursorTrace();
-	AutoRun();
+	UpdateAimDirection();
+	RotatePawnToFaceAim(DeltaSeconds);
 }
 
 ARageInMageHUD* ARageInMagePlayerController::GetRageHUD()
@@ -73,20 +74,7 @@ void ARageInMagePlayerController::ShowDamageNumber_Implementation(float DamageAm
 
 void ARageInMagePlayerController::AutoRun()
 {
-	if (!bAutoRunning) return;
-	if (APawn* ControlledPawn = GetPawn())
-	{
-		const FVector LocationOnSpline = Spline->FindLocationClosestToWorldLocation(
-			ControlledPawn->GetActorLocation(), ESplineCoordinateSpace::World);
-		const FVector Direction = Spline->FindDirectionClosestToWorldLocation(LocationOnSpline, ESplineCoordinateSpace::World);
-		ControlledPawn->AddMovementInput(Direction);
-
-		const float DistanceToDestination = (LocationOnSpline - CachedDestination).Length();
-		if (DistanceToDestination <= AutoRunAcceptanceRadius)
-		{
-			bAutoRunning = false;
-		}
-	}
+	// Click-to-move disabled — movement is WASD/thumbstick only
 }
 
 void ARageInMagePlayerController::CursorTrace()
@@ -105,68 +93,17 @@ void ARageInMagePlayerController::CursorTrace()
 
 void ARageInMagePlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 {
-	if (InputTag.MatchesTagExact(FRageInMageGameplayTag::Get().InputTag_LMB))
-	{
-		bTargeting = ThisActor ? true : false;
-		bAutoRunning = false;
-	}
+	// No special handling — all inputs (including LMB) are forwarded to ASC via Held/Released
 }
 
 void ARageInMagePlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 {
-	if (!InputTag.MatchesTagExact(FRageInMageGameplayTag::Get().InputTag_LMB))
-	{
-		if (GetASC()) GetASC()->AbilityInputTagReleased(InputTag);
-		return;
-	}
-	if (!bTargeting || !bShiftKeyDown)
-	{
-		if (const APawn* ControlledPawn = GetPawn())
-		{
-			if (FollowTime <= ShortPressThreshold && ControlledPawn)
-			{
-				if (UNavigationPath* NavPath = UNavigationSystemV1::FindPathToLocationSynchronously(
-					this, ControlledPawn->GetActorLocation(), CachedDestination))
-				{
-					Spline->ClearSplinePoints();
-					for (const FVector& PointLoc : NavPath->PathPoints)
-					{
-						Spline->AddSplinePoint(PointLoc, ESplineCoordinateSpace::World);
-					}
-					if (NavPath->PathPoints.Num() > 0)
-					{
-						CachedDestination = NavPath->PathPoints[NavPath->PathPoints.Num() - 1];
-						bAutoRunning = true;
-					}
-				}
-			}
-	}
-		FollowTime = 0.f;
-		bTargeting = false;
-	}
+	if (GetASC()) GetASC()->AbilityInputTagReleased(InputTag);
 }
 
 void ARageInMagePlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 {
-	if (!InputTag.MatchesTagExact(FRageInMageGameplayTag::Get().InputTag_LMB))
-	{
-		if (GetASC()) GetASC()->AbilityInputTagHeld(InputTag);
-		return;
-	}
-	if (bTargeting || bShiftKeyDown)
-	{
-		if (GetASC()) GetASC()->AbilityInputTagHeld(InputTag);
-	}
-	else
-	{
-		FollowTime += GetWorld()->GetDeltaSeconds();
-		if (CursorTraceHit.bBlockingHit) CachedDestination = CursorTraceHit.ImpactPoint;
-		if (APawn* ControlledPawn = GetPawn())
-		{
-			const FVector WorldDirection = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal();
-			ControlledPawn->AddMovementInput(WorldDirection);
-		}
-	}
+	if (GetASC()) GetASC()->AbilityInputTagHeld(InputTag);
 }
 
 URageInMageAbilitySystemComponent* ARageInMagePlayerController::GetASC()
@@ -213,6 +150,10 @@ void ARageInMagePlayerController::SetupInputComponent()
 	MageEInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ARageInMagePlayerController::Move);
 	MageEInputComponent->BindAction(ShiftAction, ETriggerEvent::Started, this, &ARageInMagePlayerController::ShiftPressed);
 	MageEInputComponent->BindAction(ShiftAction, ETriggerEvent::Completed, this, &ARageInMagePlayerController::ShiftReleased);
+	if (LookAction)
+	{
+		MageEInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ARageInMagePlayerController::Look);
+	}
 	MageEInputComponent->BindAbilityActions(InputConfig, this, &ThisClass::AbilityInputTagPressed, &ThisClass::AbilityInputTagReleased, &ThisClass::AbilityInputTagHeld);
 }
 
@@ -230,4 +171,67 @@ void ARageInMagePlayerController::Move(const FInputActionValue& InputActionValue
 		ControlledPawn->AddMovementInput(ForwardDirection, InputAxisVector.Y);
 		ControlledPawn->AddMovementInput(RightDirection, InputAxisVector.X);
 	}
+}
+
+void ARageInMagePlayerController::Look(const FInputActionValue& InputActionValue)
+{
+	GamepadAimInput = InputActionValue.Get<FVector2D>();
+	if (GamepadAimInput.SizeSquared() > 0.04f) // Past dead zone
+	{
+		bUsingGamepad = true;
+	}
+}
+
+void ARageInMagePlayerController::UpdateAimDirection()
+{
+	if (bUsingGamepad)
+	{
+		// Project right stick direction from character onto ground plane
+		if (APawn* ControlledPawn = GetPawn())
+		{
+			if (GamepadAimInput.SizeSquared() > 0.04f)
+			{
+				// Use camera-relative directions (same as movement)
+				const FRotator CamYaw(0.f, GetControlRotation().Yaw, 0.f);
+				const FVector Forward = FRotationMatrix(CamYaw).GetUnitAxis(EAxis::X);
+				const FVector Right = FRotationMatrix(CamYaw).GetUnitAxis(EAxis::Y);
+
+				const FVector AimDirection = (Forward * GamepadAimInput.Y + Right * GamepadAimInput.X).GetSafeNormal();
+				const float StickMagnitude = FMath::Min(GamepadAimInput.Size(), 1.f);
+				CurrentAimWorldPosition = ControlledPawn->GetActorLocation() + AimDirection * AimProjectionDistance * StickMagnitude;
+			}
+		}
+	}
+	else
+	{
+		// Mouse path: detect cursor movement and use cursor hit
+		if (CursorTraceHit.bBlockingHit)
+		{
+			const FVector NewCursorPos = CursorTraceHit.ImpactPoint;
+			if (!NewCursorPos.Equals(LastCursorPosition, 1.f))
+			{
+				bUsingGamepad = false;
+			}
+			LastCursorPosition = NewCursorPos;
+			CurrentAimWorldPosition = NewCursorPos;
+		}
+	}
+}
+
+void ARageInMagePlayerController::RotatePawnToFaceAim(float DeltaSeconds)
+{
+	APawn* ControlledPawn = GetPawn();
+	if (!ControlledPawn) return;
+	if (CurrentAimWorldPosition.IsZero()) return;
+
+	const FVector PawnLocation = ControlledPawn->GetActorLocation();
+	const FVector ToAim = CurrentAimWorldPosition - PawnLocation;
+
+	// Only rotate if there's meaningful distance between pawn and aim point
+	if (ToAim.SizeSquared2D() < 100.f) return;
+
+	const FRotator TargetRotation(0.f, ToAim.Rotation().Yaw, 0.f);
+	const FRotator CurrentRotation = ControlledPawn->GetActorRotation();
+	const FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaSeconds, AimRotationInterpSpeed);
+	ControlledPawn->SetActorRotation(NewRotation);
 }

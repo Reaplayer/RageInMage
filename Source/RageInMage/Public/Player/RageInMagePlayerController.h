@@ -43,6 +43,10 @@ public:
 	 */
 	void TryInitOverlay();
 
+	/** Current world-space aim position (cursor or right-stick projected onto ground). */
+	UFUNCTION(BlueprintPure, Category = "Aim")
+	FVector GetCurrentAimWorldPosition() const { return CurrentAimWorldPosition; }
+
 protected:
 	UPROPERTY()
 	ARageInMageHUD* RageHUD;
@@ -57,12 +61,29 @@ private:
 	TObjectPtr<UInputAction> MoveAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> ShiftAction;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> LookAction;
 
 	void ShiftPressed() {bShiftKeyDown = true;}
 	void ShiftReleased()  {bShiftKeyDown = false;}
 	bool bShiftKeyDown = false;
 
 	void Move(const FInputActionValue& InputActionValue);
+	void Look(const FInputActionValue& InputActionValue);
+
+	// ── Aim direction ──
+	void UpdateAimDirection();
+	void RotatePawnToFaceAim(float DeltaSeconds);
+	FVector CurrentAimWorldPosition = FVector::ZeroVector;
+	FVector LastCursorPosition = FVector::ZeroVector;
+	FVector2D GamepadAimInput = FVector2D::ZeroVector;
+	bool bUsingGamepad = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Aim")
+	float AimProjectionDistance = 1500.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Aim")
+	float AimRotationInterpSpeed = 15.f;
 
 	void CursorTrace();
 	IEnemyInterface* LastActor;

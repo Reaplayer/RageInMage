@@ -60,6 +60,9 @@ struct FRageInMageConditionInfo
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	float MechanicsThreshold = 100.f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	bool bResetMechanicsOnTrigger = true;
+
 	/* Effect */
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
@@ -121,6 +124,11 @@ class RAGEINMAGE_API UConditionInfo : public UDataAsset
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Condition Info")
 	TArray<FRageInMageConditionInfo> ConditionInfos;
+
+	/** Maps heat stage number (-3 to -1, 1 to 3) to a Blueprint GE class.
+	 *  Stages ±4 (Ignited/Frozen) remain in the ConditionInfo threshold system. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Heat Stages")
+	TMap<int32, TSubclassOf<UGameplayEffect>> HeatStageEffects;
 
 	FRageInMageConditionInfo FindConditionInfoForTag(const FGameplayTag& ConditionTag, bool bLogNotFound = false) const;
 

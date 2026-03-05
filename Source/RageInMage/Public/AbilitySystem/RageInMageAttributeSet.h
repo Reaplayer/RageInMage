@@ -238,7 +238,7 @@ public:
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_LethalToxins, Category = "Mechanics Attributes")
 	FGameplayAttributeData LethalToxins;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, LethalToxins);
-	
+
 
 	
 	/* Primary Attributes */
@@ -368,6 +368,20 @@ private:
 
 	void HandleMechanicsThreshold(const FGameplayAttribute& Attribute, const FGameplayTag& MechanicsTag, float MinClamp, float MaxClamp, float Magnitude, const FEffectProperties& Properties);
 	void ApplyConditionFromData(const struct FRageInMageConditionInfo* CondInfo, const FEffectProperties& Properties);
+
+	void HandleHeatChange(float OldHeat, float NewHeat, const FEffectProperties& Properties);
+	int32 GetHeatStage(float HeatValue) const;
+	FGameplayTag GetHeatStageTag(int32 Stage) const;
+	void ApplyHeatStageEffect(int32 NewStage, const FEffectProperties& Properties);
+	void RemoveHeatStageEffect(int32 OldStage, const FEffectProperties& Properties);
+
+	// Helpers for decay-driven stage changes (no FEffectProperties available)
+	void ApplyHeatStageGE(int32 Stage);
+	void RemoveHeatStageGE(int32 Stage);
+	void ApplyShatterDamage();
+
+	bool bFireThaw = false;
+	bool bHeatStageHandledByGEPath = false;
 
 	bool bResetHealth = false;
 	bool bResetMana = false;

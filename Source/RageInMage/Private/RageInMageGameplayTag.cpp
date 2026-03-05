@@ -961,6 +961,36 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.DamageTypeToMechanics.Add(GameplayTag.DamageType_MagicalDamage_Psychic, GameplayTag.Attributes_Mechanics_Crescendo);
 
 
+	/* Heat Stage Tags */
+	GameplayTag.HeatStage_Cold1 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("HeatStage.Cold1"), FString("Heat -25 to -49: 10% Movement Slow."));
+
+	GameplayTag.HeatStage_Cold2 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("HeatStage.Cold2"), FString("Heat -50 to -74: 20% Movement Slow."));
+
+	GameplayTag.HeatStage_Cold3 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("HeatStage.Cold3"), FString("Heat -75 to -99: 30% Movement Slow."));
+
+	GameplayTag.HeatStage_Frozen = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("HeatStage.Frozen"), FString("Heat -100 or lower: Frozen, unable to Move or make any Action."));
+
+	GameplayTag.HeatStage_Hot1 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("HeatStage.Hot1"), FString("Heat 25 to 49: 10% increased Fire Damage taken."));
+
+	GameplayTag.HeatStage_Hot2 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("HeatStage.Hot2"), FString("Heat 50 to 74: 20% increased Fire Damage taken."));
+
+	GameplayTag.HeatStage_Hot3 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("HeatStage.Hot3"), FString("Heat 75 to 99: 30% increased Fire Damage taken."));
+
+	GameplayTag.HeatStage_Ignited = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("HeatStage.Ignited"), FString("Heat 100 or higher: Burning DoT and 40% increased Fire Damage taken."));
+
+	/* Gameplay Cue Tags */
+	GameplayTag.GameplayCue_Heat_Glow = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("GameplayCue.Heat.Glow"), FString("Gameplay Cue for Heat glow visual effect on character."));
+
+
 	/* Effect Tags */
 	GameplayTag.Effects_HitReaction = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Effects.HitReaction"), FString("Tag for when Hit Reacting."));

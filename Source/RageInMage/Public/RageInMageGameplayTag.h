@@ -406,6 +406,19 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Effects_HitReaction;
 
 	
+	/* Heat Stage Tags */
+	FGameplayTag HeatStage_Cold1;
+	FGameplayTag HeatStage_Cold2;
+	FGameplayTag HeatStage_Cold3;
+	FGameplayTag HeatStage_Frozen;
+	FGameplayTag HeatStage_Hot1;
+	FGameplayTag HeatStage_Hot2;
+	FGameplayTag HeatStage_Hot3;
+	FGameplayTag HeatStage_Ignited;
+
+	/* Gameplay Cue Tags */
+	FGameplayTag GameplayCue_Heat_Glow;
+
 	/* Condition Tags */
 	FGameplayTag Condition_Healing;
 	FGameplayTag Condition_Burning;

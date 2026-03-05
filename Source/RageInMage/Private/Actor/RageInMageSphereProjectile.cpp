@@ -7,10 +7,27 @@
 #include "AbilitySystemComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
+#include "Actor/RageInMageFireZone.h"
 #include "Components/AudioComponent.h"
 #include "Components/SphereComponent.h"
+#include "GameFramework/Character.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+
+namespace
+{
+	void ApplyKnockbackToActor(AActor* Target, const FVector& Origin, float Strength, float UpwardForce)
+	{
+		if (Strength <= 0.f || !Target) return;
+		if (ACharacter* TargetChar = Cast<ACharacter>(Target))
+		{
+			FVector PushDir = (Target->GetActorLocation() - Origin).GetSafeNormal();
+			PushDir.Z = FMath::Clamp(UpwardForce, 0.f, 1.f);
+			PushDir.Normalize();
+			TargetChar->LaunchCharacter(PushDir * Strength, true, true);
+		}
+	}
+}
 
 
 ARageInMageSphereProjectile::ARageInMageSphereProjectile()
@@ -51,6 +68,34 @@ void ARageInMageSphereProjectile::Destroyed()
 	Super::Destroyed();
 }
 
+void ARageInMageSphereProjectile::ApplyAoEDamage(const FVector& ImpactLocation)
+{
+	if (!DamageEffectSpecHandle.IsValid() || !DamageEffectSpecHandle.Data.IsValid()) return;
+
+	TArray<AActor*> OverlappingActors;
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(GetInstigator());
+
+	URageInMageAbilitySystemLibrary::GetLivePlayersWithinRadius(
+		this, AoERadius, OverlappingActors, ActorsToIgnore, ImpactLocation);
+
+	for (AActor* Target : OverlappingActors)
+	{
+		if (URageInMageAbilitySystemLibrary::IsBothEnemy(GetInstigator(), Target)) continue;
+
+		if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Target))
+		{
+			TargetASC->ApplyGameplayEffectSpecToSelf(*DamageEffectSpecHandle.Data.Get());
+		}
+		ApplyKnockbackToActor(Target, ImpactLocation, KnockbackStrength, KnockbackUpwardForce);
+	}
+
+	if (AoEExplosionEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, AoEExplosionEffect, ImpactLocation, FRotator::ZeroRotator);
+	}
+}
+
 void ARageInMageSphereProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                                   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -66,14 +111,43 @@ void ARageInMageSphereProjectile::OnSphereOverlap(UPrimitiveComponent* Overlappe
 
 	if (HasAuthority())
 	{
-		if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor))
+		if (AoERadius > 0.f)
 		{
-			// Add null check for DamageEffectSpecHandle
-			if (DamageEffectSpecHandle.IsValid() && DamageEffectSpecHandle.Data.IsValid())
+			ApplyAoEDamage(GetActorLocation());
+		}
+		else
+		{
+			if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor))
 			{
-				TargetASC->ApplyGameplayEffectSpecToSelf(*DamageEffectSpecHandle.Data.Get());
+				if (DamageEffectSpecHandle.IsValid() && DamageEffectSpecHandle.Data.IsValid())
+				{
+					TargetASC->ApplyGameplayEffectSpecToSelf(*DamageEffectSpecHandle.Data.Get());
+				}
+			}
+			ApplyKnockbackToActor(OtherActor, GetActorLocation(), KnockbackStrength, KnockbackUpwardForce);
+		}
+		// Spawn fire zone at impact location if configured
+		if (FireZoneClass)
+		{
+			FTransform ZoneTransform;
+			ZoneTransform.SetLocation(GetActorLocation());
+
+			ARageInMageFireZone* FireZone = GetWorld()->SpawnActorDeferred<ARageInMageFireZone>(
+				FireZoneClass, ZoneTransform,
+				GetOwner(),
+				GetInstigator(),
+				ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+
+			if (FireZone)
+			{
+				FireZone->DamageEffectSpecHandle = FireZoneDamageEffectSpecHandle;
+				FireZone->ZoneRadius = FireZoneRadius;
+				FireZone->ZoneDuration = FireZoneDuration;
+				FireZone->DamageTickInterval = FireZoneTickInterval;
+				FireZone->FinishSpawning(ZoneTransform);
 			}
 		}
+
 		Destroy();
 	}
 	else

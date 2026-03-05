@@ -5,6 +5,7 @@
 
 #include "RageInMageGameplayTag.h"
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
+#include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "RageInMage/RageInMageLogChannels.h"
@@ -196,6 +197,20 @@ void ARageInMageCharacterBase::SetMaxSummonCount_Implementation(int32 NewMaxSumm
 	MaxSummonCount = NewMaxSummonCount;
 }
 
+void ARageInMageCharacterBase::RegisterSpawnedMinion_Implementation(AActor* Minion)
+{
+	SetSummonCount(GetSummonCount() + 1);
+	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(Minion))
+	{
+		CombatInterface->GetOnDeathDelegate().AddDynamic(this, &ARageInMageCharacterBase::OnMinionDeath);
+	}
+}
+
+void ARageInMageCharacterBase::OnMinionDeath(AActor* DeadActor)
+{
+	SetSummonCount(GetSummonCount() - 1);
+}
+
 void ARageInMageCharacterBase::InitPlayerAbilityActorInfo()
 {
 }
@@ -258,11 +273,28 @@ void ARageInMageCharacterBase::InitializeDefaultAttributes() const
 
 void ARageInMageCharacterBase::AddCharacterAbilities()
 {
-	URageInMageAbilitySystemComponent* MageASC = CastChecked<URageInMageAbilitySystemComponent>(AbilitySystemComponent);
+	URageInMageAbilitySystemComponent* RageASC = CastChecked<URageInMageAbilitySystemComponent>(AbilitySystemComponent);
 	if (!HasAuthority()) return;
 
-	MageASC->AddCharacterPassiveAbilities(StartupPassiveAbilities);
-	MageASC->AddCharacterAbilities(StartupAbilities, CharacterClass);
+	RageASC->AddCharacterPassiveAbilities(StartupPassiveAbilities);
+
+	// Build the full ability list: CharacterClassInfo abilities (class-specific + common) + Blueprint overrides
+	TArray<TSubclassOf<UGameplayAbility>> AllAbilities;
+
+	if (UCharacterClassInfo* ClassInfo = URageInMageAbilitySystemLibrary::GetCharacterClassInfo(this))
+	{
+		// Add class-specific abilities from the data asset (e.g. Fire Mage gets 6 fire spells)
+		const FCharacterClassDefaultInfo& ClassDefaults = ClassInfo->GetCharacterClassDefaultInfo(CharacterClass);
+		AllAbilities.Append(ClassDefaults.StartupAbilities);
+
+		// Add common abilities shared by all characters
+		AllAbilities.Append(ClassInfo->CommonAbilities);
+	}
+
+	// Append any additional abilities set directly on the Blueprint (for testing/overrides)
+	AllAbilities.Append(StartupAbilities);
+
+	RageASC->AddCharacterAbilities(AllAbilities, CharacterClass);
 }
 
 void ARageInMageCharacterBase::Dissolve()

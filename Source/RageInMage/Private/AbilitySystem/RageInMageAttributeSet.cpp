@@ -8,8 +8,10 @@
 #include "Net/UnrealNetwork.h"
 #include "GameplayEffectExtension.h"
 #include "RageInMageGameplayTag.h"
+#include "AbilitySystem/RageInMageAbilitySystemComponent.h"
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
 #include "AbilitySystem/Data/ConditionInfo.h"
+#include "GameplayCueInterface.h"
 #include "Interaction/CombatInterface.h"
 #include "Interaction/PlayerInterface.h"
 #include "Player/RageInMagePlayerController.h"
@@ -197,7 +199,10 @@ void URageInMageAttributeSet::PostGameplayEffectExecute(const FGameplayEffectMod
 
 	if (Data.EvaluatedData.Attribute == GetHeatAttribute())
 	{
-		HandleMechanicsThreshold(GetHeatAttribute(), GameplayTags.Attributes_Mechanics_Heat, -120.f, 120.f, Data.EvaluatedData.Magnitude, Properties);
+		const float OldHeat = GetHeat() - Data.EvaluatedData.Magnitude;
+		const float NewHeat = FMath::Clamp(GetHeat(), -120.f, 120.f);
+		SetHeat(NewHeat);
+		HandleHeatChange(OldHeat, NewHeat, Properties);
 	}
 	if (Data.EvaluatedData.Attribute == GetChargeAttribute())
 	{
@@ -286,6 +291,72 @@ void URageInMageAttributeSet::PostAttributeChange(const FGameplayAttribute& Attr
 	{
 		SetMana(GetMaxMana());
 		bResetMana = false;
+	}
+
+	// Heat: manage decay timer and stage GEs on any Heat change (including decay ticks)
+	if (Attribute == GetHeatAttribute())
+	{
+		URageInMageAbilitySystemComponent* ASC = Cast<URageInMageAbilitySystemComponent>(GetOwningAbilitySystemComponent());
+		if (ASC)
+		{
+			// Start or stop Heat decay timer
+			if (!FMath::IsNearlyZero(NewValue, 0.5f))
+			{
+				ASC->StartHeatDecay();
+			}
+			else
+			{
+				ASC->StopHeatDecay();
+			}
+
+			// Handle stage changes for the decay path only
+			// GE-driven changes are handled in HandleHeatChange (which sets bHeatStageHandledByGEPath)
+			const int32 OldStage = GetHeatStage(OldValue);
+			const int32 NewStage = GetHeatStage(NewValue);
+			if (OldStage != NewStage && !bHeatStageHandledByGEPath)
+			{
+				// Remove old intermediate stage GE
+				if (FMath::Abs(OldStage) >= 1 && FMath::Abs(OldStage) <= 3)
+				{
+					RemoveHeatStageGE(OldStage);
+				}
+
+				// Exiting Frozen (stage -4) via decay = natural thaw = SHATTER
+				if (OldStage == -4 && !bFireThaw)
+				{
+					const FRageInMageGameplayTag& Tags = FRageInMageGameplayTag::Get();
+					FGameplayTagContainer FrozenTag;
+					FrozenTag.AddTag(Tags.Condition_Frozen);
+					ASC->RemoveActiveEffectsWithGrantedTags(FrozenTag);
+					FGameplayTagContainer FrozenStageTag;
+					FrozenStageTag.AddTag(Tags.HeatStage_Frozen);
+					ASC->RemoveActiveEffectsWithGrantedTags(FrozenStageTag);
+
+					ApplyShatterDamage();
+				}
+
+				if (OldStage == -4)
+				{
+					bFireThaw = false;
+				}
+
+				// Apply new intermediate stage GE
+				if (FMath::Abs(NewStage) >= 1 && FMath::Abs(NewStage) <= 3)
+				{
+					ApplyHeatStageGE(NewStage);
+				}
+			}
+			bHeatStageHandledByGEPath = false;
+
+			// Update Gameplay Cue for the Heat glow
+			const FRageInMageGameplayTag& Tags = FRageInMageGameplayTag::Get();
+			FGameplayCueParameters CueParams;
+			CueParams.RawMagnitude = FMath::Clamp(NewValue / 120.f, -1.f, 1.f);
+			if (FMath::Abs(NewValue) > 0.f)
+			{
+				ASC->ExecuteGameplayCue(Tags.GameplayCue_Heat_Glow, CueParams);
+			}
+		}
 	}
 }
 
@@ -609,9 +680,11 @@ void URageInMageAttributeSet::HandleMechanicsThreshold(
 	if (CondInfo)
 	{
 		ApplyConditionFromData(CondInfo, Properties);
-		// Reset meter after condition triggers
-		float ResetValue = 0.f;
-		Attribute.SetNumericValueChecked(ResetValue, StaticCast<URageInMageAttributeSet*>(this));
+		if (CondInfo->bResetMechanicsOnTrigger)
+		{
+			float ResetValue = 0.f;
+			Attribute.SetNumericValueChecked(ResetValue, StaticCast<URageInMageAttributeSet*>(this));
+		}
 	}
 }
 
@@ -644,4 +717,248 @@ void URageInMageAttributeSet::ApplyConditionFromData(const FRageInMageConditionI
 		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, CondInfo->ConditionTag, CondInfo->BaseIntensity);
 		Properties.TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 	}
+}
+
+int32 URageInMageAttributeSet::GetHeatStage(float HeatValue) const
+{
+	// Positive heat stages (fire)
+	if (HeatValue >= 100.f) return 4;   // Ignited
+	if (HeatValue >= 75.f) return 3;    // Hot 3
+	if (HeatValue >= 50.f) return 2;    // Hot 2
+	if (HeatValue >= 25.f) return 1;    // Hot 1
+	// Negative heat stages (cold)
+	if (HeatValue <= -100.f) return -4; // Frozen
+	if (HeatValue <= -75.f) return -3;  // Cold 3
+	if (HeatValue <= -50.f) return -2;  // Cold 2
+	if (HeatValue <= -25.f) return -1;  // Cold 1
+	return 0; // Neutral
+}
+
+FGameplayTag URageInMageAttributeSet::GetHeatStageTag(int32 Stage) const
+{
+	const FRageInMageGameplayTag& Tags = FRageInMageGameplayTag::Get();
+	switch (Stage)
+	{
+	case -4: return Tags.HeatStage_Frozen;
+	case -3: return Tags.HeatStage_Cold3;
+	case -2: return Tags.HeatStage_Cold2;
+	case -1: return Tags.HeatStage_Cold1;
+	case 1:  return Tags.HeatStage_Hot1;
+	case 2:  return Tags.HeatStage_Hot2;
+	case 3:  return Tags.HeatStage_Hot3;
+	case 4:  return Tags.HeatStage_Ignited;
+	default: return FGameplayTag();
+	}
+}
+
+void URageInMageAttributeSet::RemoveHeatStageEffect(int32 OldStage, const FEffectProperties& Properties)
+{
+	if (OldStage == 0 || !Properties.TargetASC) return;
+
+	const FGameplayTag OldTag = GetHeatStageTag(OldStage);
+	if (OldTag.IsValid())
+	{
+		FGameplayTagContainer TagContainer;
+		TagContainer.AddTag(OldTag);
+		Properties.TargetASC->RemoveActiveEffectsWithGrantedTags(TagContainer);
+	}
+}
+
+void URageInMageAttributeSet::ApplyHeatStageEffect(int32 NewStage, const FEffectProperties& Properties)
+{
+	if (NewStage == 0 || !Properties.TargetASC) return;
+
+	UConditionInfo* ConditionInfoData = URageInMageAbilitySystemLibrary::GetConditionInfo(Properties.TargetAvatarActor);
+	if (!ConditionInfoData) return;
+
+	// For stages ±1 to ±3: apply from HeatStageEffects TMap on ConditionInfo
+	if (FMath::Abs(NewStage) >= 1 && FMath::Abs(NewStage) <= 3)
+	{
+		const TSubclassOf<UGameplayEffect>* GEClass = ConditionInfoData->HeatStageEffects.Find(NewStage);
+		if (GEClass && *GEClass)
+		{
+			UAbilitySystemComponent* Instigator = Properties.SourceASC ? Properties.SourceASC : Properties.TargetASC;
+			FGameplayEffectContextHandle Context = Instigator->MakeEffectContext();
+			Context.AddSourceObject(Properties.SourceAvatarActor ? Properties.SourceAvatarActor : Properties.TargetAvatarActor);
+			const FGameplayEffectSpecHandle Spec = Instigator->MakeOutgoingSpec(*GEClass, 1, Context);
+			if (Spec.IsValid())
+			{
+				Properties.TargetASC->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
+			}
+		}
+	}
+	// For stages ±4 (Ignited/Frozen), use the ConditionInfo threshold system
+	else if (FMath::Abs(NewStage) == 4)
+	{
+		const FRageInMageGameplayTag& Tags = FRageInMageGameplayTag::Get();
+		const FRageInMageConditionInfo* CondInfo = ConditionInfoData->FindConditionForMechanicsThreshold(
+			Tags.Attributes_Mechanics_Heat, NewStage > 0 ? 100.f : -100.f);
+		if (CondInfo)
+		{
+			ApplyConditionFromData(CondInfo, Properties);
+		}
+	}
+}
+
+void URageInMageAttributeSet::ApplyHeatStageGE(int32 Stage)
+{
+	if (Stage == 0 || FMath::Abs(Stage) == 4) return;
+
+	UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
+	if (!ASC) return;
+
+	UConditionInfo* ConditionInfoData = URageInMageAbilitySystemLibrary::GetConditionInfo(ASC->GetAvatarActor());
+	if (!ConditionInfoData) return;
+
+	const TSubclassOf<UGameplayEffect>* GEClass = ConditionInfoData->HeatStageEffects.Find(Stage);
+	if (!GEClass || !*GEClass) return;
+
+	FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
+	Context.AddSourceObject(ASC->GetAvatarActor());
+	const FGameplayEffectSpecHandle Spec = ASC->MakeOutgoingSpec(*GEClass, 1, Context);
+	if (Spec.IsValid())
+	{
+		ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
+	}
+}
+
+void URageInMageAttributeSet::RemoveHeatStageGE(int32 Stage)
+{
+	if (Stage == 0 || FMath::Abs(Stage) == 4) return;
+
+	UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
+	if (!ASC) return;
+
+	const FGameplayTag StageTag = GetHeatStageTag(Stage);
+	if (StageTag.IsValid())
+	{
+		FGameplayTagContainer TagContainer;
+		TagContainer.AddTag(StageTag);
+		ASC->RemoveActiveEffectsWithGrantedTags(TagContainer);
+	}
+}
+
+void URageInMageAttributeSet::ApplyShatterDamage()
+{
+	UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
+	if (!ASC) return;
+
+	const float MaxHP = GetMaxHealth();
+	const float BonusDamage = MaxHP * 0.2f;
+	const float CurrentHealth = GetHealth();
+	const float ResultHealth = FMath::Max(CurrentHealth - BonusDamage, 0.f);
+	SetHealth(ResultHealth);
+
+	// Show floating damage text
+	if (AActor* AvatarActor = ASC->GetAvatarActor())
+	{
+		FEffectProperties ShatterProps;
+		ShatterProps.TargetASC = ASC;
+		ShatterProps.TargetAvatarActor = AvatarActor;
+		ShatterProps.TargetCharacter = Cast<ACharacter>(AvatarActor);
+		if (ShatterProps.TargetCharacter)
+		{
+			ShatterProps.TargetController = ShatterProps.TargetCharacter->GetController();
+		}
+		// SourceCharacter left nullptr so ShowFloatingText's Source != Target check passes
+		ShatterProps.SourceASC = ASC;
+		ShatterProps.SourceAvatarActor = AvatarActor;
+		ShatterProps.SourceController = ShatterProps.TargetController;
+
+		ShowFloatingText(ShatterProps, BonusDamage, false, false, false);
+	}
+
+	if (ResultHealth <= 0.f)
+	{
+		if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(ASC->GetAvatarActor()))
+		{
+			CombatInterface->Die();
+		}
+	}
+}
+
+void URageInMageAttributeSet::HandleHeatChange(float OldHeat, float NewHeat, const FEffectProperties& Properties)
+{
+	if (!Properties.TargetASC) return;
+
+	bHeatStageHandledByGEPath = true;
+
+	const FRageInMageGameplayTag& Tags = FRageInMageGameplayTag::Get();
+	const int32 OldStage = GetHeatStage(OldHeat);
+	const int32 NewStage = GetHeatStage(NewHeat);
+	const bool bHeatIncreased = NewHeat > OldHeat;
+	const bool bHeatDecreased = NewHeat < OldHeat;
+
+	// --- Thaw/Extinguish Logic ---
+	FGameplayTagContainer OwnedTags;
+	Properties.TargetASC->GetOwnedGameplayTags(OwnedTags);
+
+	// Fire hit on Frozen target -> Gentle thaw (no shatter damage)
+	if (bHeatIncreased && OwnedTags.HasTagExact(Tags.Condition_Frozen))
+	{
+		bFireThaw = true;
+
+		FGameplayTagContainer FrozenTag;
+		FrozenTag.AddTag(Tags.Condition_Frozen);
+		Properties.TargetASC->RemoveActiveEffectsWithGrantedTags(FrozenTag);
+
+		// Also remove the Frozen stage tag
+		FGameplayTagContainer FrozenStageTag;
+		FrozenStageTag.AddTag(Tags.HeatStage_Frozen);
+		Properties.TargetASC->RemoveActiveEffectsWithGrantedTags(FrozenStageTag);
+		Properties.TargetASC->RemoveLooseGameplayTag(Tags.HeatStage_Frozen);
+	}
+
+	// Ice hit on Burning target -> Extinguish (remove Burning immediately)
+	if (bHeatDecreased && OwnedTags.HasTagExact(Tags.Condition_Burning))
+	{
+		FGameplayTagContainer BurningTag;
+		BurningTag.AddTag(Tags.Condition_Burning);
+		Properties.TargetASC->RemoveActiveEffectsWithGrantedTags(BurningTag);
+
+		// Also remove the Ignited stage tag
+		FGameplayTagContainer IgnitedStageTag;
+		IgnitedStageTag.AddTag(Tags.HeatStage_Ignited);
+		Properties.TargetASC->RemoveActiveEffectsWithGrantedTags(IgnitedStageTag);
+		Properties.TargetASC->RemoveLooseGameplayTag(Tags.HeatStage_Ignited);
+	}
+
+	// --- Stage Change ---
+	if (OldStage != NewStage)
+	{
+		RemoveHeatStageEffect(OldStage, Properties);
+		ApplyHeatStageEffect(NewStage, Properties);
+
+		// --- Bonus Damage on Ignite ONLY ---
+		// Frozen shatter damage is handled on natural thaw in PostAttributeChange
+		if (NewStage == 4 && OldStage < 4)
+		{
+			if (Properties.SourceASC && Properties.TargetASC)
+			{
+				const float MaxHP = GetMaxHealth();
+				const float BonusDamage = MaxHP * 0.2f;
+
+				const float CurrentHealth = GetHealth();
+				const float ResultHealth = FMath::Max(CurrentHealth - BonusDamage, 0.f);
+				SetHealth(ResultHealth);
+
+				ShowFloatingText(Properties, BonusDamage, false, false, false);
+
+				if (ResultHealth <= 0.f)
+				{
+					if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(Properties.TargetAvatarActor))
+					{
+						CombatInterface->Die();
+					}
+				}
+			}
+		}
+
+		// Reset bFireThaw after leaving stage -4
+		if (OldStage == -4)
+		{
+			bFireThaw = false;
+		}
+	}
+
 }

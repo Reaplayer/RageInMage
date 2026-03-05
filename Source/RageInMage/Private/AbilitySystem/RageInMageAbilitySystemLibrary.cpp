@@ -389,3 +389,86 @@ UInventoryWidgetController* URageInMageAbilitySystemLibrary::GetInventoryWidgetC
 	}
 	return nullptr;
 }
+
+// ──────────────────────────────────────────
+// Aim Prediction Utilities
+// ──────────────────────────────────────────
+
+TArray<FVector> URageInMageAbilitySystemLibrary::CalculateProjectileArcPoints(
+	const UObject* WorldContextObject,
+	const FVector& LaunchLocation,
+	const FVector& TargetLocation,
+	float ArcParam,
+	int32 NumPoints)
+{
+	TArray<FVector> Points;
+
+	FVector LaunchVelocity;
+	const bool bHaveSolution = UGameplayStatics::SuggestProjectileVelocity_CustomArc(
+		WorldContextObject, LaunchVelocity, LaunchLocation, TargetLocation, 0, ArcParam);
+
+	if (!bHaveSolution)
+	{
+		Points.Add(LaunchLocation);
+		Points.Add(TargetLocation);
+		return Points;
+	}
+
+	const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
+	if (!World)
+	{
+		Points.Add(LaunchLocation);
+		Points.Add(TargetLocation);
+		return Points;
+	}
+
+	const float GravityZ = World->GetGravityZ();
+
+	// Estimate flight time from horizontal distance and speed
+	const FVector HorizontalVelocity(LaunchVelocity.X, LaunchVelocity.Y, 0.f);
+	const float HorizontalSpeed = HorizontalVelocity.Size();
+	const float HorizontalDist = FVector::Dist2D(LaunchLocation, TargetLocation);
+	const float EstimatedFlightTime = (HorizontalSpeed > KINDA_SMALL_NUMBER)
+		? HorizontalDist / HorizontalSpeed : 1.0f;
+
+	NumPoints = FMath::Max(NumPoints, 2);
+	const float TimeStep = EstimatedFlightTime / (NumPoints - 1);
+
+	for (int32 i = 0; i < NumPoints; ++i)
+	{
+		const float T = TimeStep * i;
+		// P(t) = P0 + V*t + 0.5*g*t^2
+		FVector Point = LaunchLocation + LaunchVelocity * T + FVector(0.f, 0.f, 0.5f * GravityZ * T * T);
+		Points.Add(Point);
+	}
+
+	return Points;
+}
+
+FVector URageInMageAbilitySystemLibrary::SnapToGround(
+	const UObject* WorldContextObject,
+	const FVector& Location,
+	float TraceDistance)
+{
+	const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
+	if (!World) return Location;
+
+	FHitResult GroundHit;
+	const FVector TraceStart = Location + FVector(0.f, 0.f, TraceDistance);
+	const FVector TraceEnd = Location - FVector(0.f, 0.f, TraceDistance);
+
+	if (World->LineTraceSingleByChannel(GroundHit, TraceStart, TraceEnd, ECC_Visibility))
+	{
+		return GroundHit.ImpactPoint;
+	}
+
+	return Location;
+}
+
+float URageInMageAbilitySystemLibrary::GetArcFromDistance(
+	float Distance, float MaxRange, float MinArc, float MaxArc)
+{
+	if (MaxRange <= 0.f) return (MinArc + MaxArc) * 0.5f;
+	const float Alpha = FMath::Clamp(Distance / MaxRange, 0.f, 1.f);
+	return FMath::Lerp(MinArc, MaxArc, Alpha);
+}

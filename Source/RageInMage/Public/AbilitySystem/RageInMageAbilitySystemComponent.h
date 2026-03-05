@@ -81,8 +81,14 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerInventoryUseItem(const FGuid& ItemID);
 
+	void StartHeatDecay();
+	void StopHeatDecay();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Mechanics|Heat")
+	float HeatDecayRate = 5.f;
+
 protected:
-	
+
 	virtual void OnRep_ActivateAbilities() override;
 	
 	UFUNCTION(Client, Reliable)
@@ -91,4 +97,9 @@ protected:
 
 	UFUNCTION()
 	void OnAbilitiesGiven(URageInMageAbilitySystemComponent* RageInMageAbilitySystemComponent);
+
+private:
+	FTimerHandle HeatDecayTimerHandle;
+	void TickHeatDecay();
+	bool bHeatDecayActive = false;
 };

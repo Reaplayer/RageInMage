@@ -270,6 +270,11 @@ void URageInMageProjectileSpell::SpawnProjectile(FVector& ProjectileTargetLocati
 			UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, Pair.Key, ScaledDamage);
 		}
 		Projectile->DamageEffectSpecHandle = SpecHandle;
+
+		// Pass knockback from ability to projectile
+		Projectile->KnockbackStrength = KnockbackStrength.GetValueAtLevel(GetAbilityLevel());
+		Projectile->KnockbackUpwardForce = KnockbackUpwardForce;
+
 		Projectile->FinishSpawning(SpawnTransform);
 	}
 }
