@@ -51,7 +51,7 @@ public:
 	float BaseWalkSpeed = 100.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
-	float LifeSpan = 5.f;
+	float DeathSpan = 5.f;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Combat")
 	TObjectPtr<AActor> CombatTarget;

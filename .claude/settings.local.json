@@ -20,7 +20,9 @@
       "Bash(dir:*)",
       "Bash(powershell:*)",
       "Bash(findstr:*)",
-      "Bash(\"C:/Program Files/Epic Games/UE_5.6/Engine/Binaries/Win64/UnrealEditor-Cmd.exe\" \"C:/Users/reapw/Documents/UnrealProjects/RageInMage5.6/RageInMage.uproject\" -run=DumpAssetProperties -asset=\"/Game/Blueprints/AbilitySystem/Player/Abilities/Fire/SearingFlame/GE_Cooldown_SearingFlame\" -stdout)"
+      "Bash(\"C:/Program Files/Epic Games/UE_5.6/Engine/Binaries/Win64/UnrealEditor-Cmd.exe\" \"C:/Users/reapw/Documents/UnrealProjects/RageInMage5.6/RageInMage.uproject\" -run=DumpAssetProperties -asset=\"/Game/Blueprints/AbilitySystem/Player/Abilities/Fire/SearingFlame/GE_Cooldown_SearingFlame\" -stdout)",
+      "mcp__unreal-editor__screenshot_asset",
+      "WebFetch(domain:maxroll.gg)"
     ]
   }
 }

@@ -8,7 +8,7 @@
 #include "RageInMageSphereProjectile.generated.h"
 
 
-class ARageInMageFireZone;
+class ARageInMageZone;
 class UNiagaraSystem;
 class USphereComponent;
 class UProjectileMovementComponent;
@@ -17,8 +17,8 @@ UCLASS()
 class RAGEINMAGE_API ARageInMageSphereProjectile : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	ARageInMageSphereProjectile();
 
 	UPROPERTY(VisibleAnywhere)
@@ -41,21 +41,57 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Knockback")
 	float KnockbackUpwardForce = 0.3f;
 
-	/* Fire Zone - spawned on impact if FireZoneClass is set (used by charged fireball, meteor, etc.) */
-	UPROPERTY(BlueprintReadWrite, Category = "FireZone")
-	TSubclassOf<ARageInMageFireZone> FireZoneClass;
+	/* Zone - spawned on impact if ZoneClass is set (used by charged fireball, meteor, etc.) */
+	UPROPERTY(BlueprintReadWrite, Category = "Zone")
+	TSubclassOf<ARageInMageZone> ZoneClass;
 
-	UPROPERTY(BlueprintReadWrite, Category = "FireZone")
-	FGameplayEffectSpecHandle FireZoneDamageEffectSpecHandle;
+	UPROPERTY(BlueprintReadWrite, Category = "Zone")
+	FGameplayEffectSpecHandle ZoneDamageEffectSpecHandle;
 
-	UPROPERTY(BlueprintReadWrite, Category = "FireZone")
-	float FireZoneRadius = 0.f;
+	UPROPERTY(BlueprintReadWrite, Category = "Zone")
+	float ZoneRadius = 0.f;
 
-	UPROPERTY(BlueprintReadWrite, Category = "FireZone")
-	float FireZoneDuration = 0.f;
+	UPROPERTY(BlueprintReadWrite, Category = "Zone")
+	float ZoneDuration = 0.f;
 
-	UPROPERTY(BlueprintReadWrite, Category = "FireZone")
-	float FireZoneTickInterval = 1.f;
+	UPROPERTY(BlueprintReadWrite, Category = "Zone")
+	float ZoneTickInterval = 1.f;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Zone|VFX")
+	TObjectPtr<UNiagaraSystem> ZoneEffect;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Zone|SFX")
+	TObjectPtr<USoundBase> ZoneLoopSound;
+
+	/** Single-target impact VFX. Set on BP or overridden by ability at spawn time. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Impact")
+	TObjectPtr<UNiagaraSystem> ImpactEffect;
+
+	/** Single-target impact sound. Set on BP or overridden by ability at spawn time. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Impact")
+	TObjectPtr<USoundBase> ImpactSound;
+
+	/** Charge percent at the time this projectile was fired (0-1). Used to scale VFX. */
+	UPROPERTY(BlueprintReadWrite, Category = "Charge")
+	float ChargePercent = 1.f;
+
+	// ── Impact Decal (scorch mark) ──
+
+	/** Decal material to spawn at the ground impact point (e.g. burn/scorch mark). If null, no decal is spawned. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Impact|Decal")
+	TObjectPtr<UMaterialInterface> ImpactDecalMaterial;
+
+	/** Size of the impact decal in each axis (X=forward, Y=right, Z=projection depth). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Impact|Decal")
+	FVector ImpactDecalSize = FVector(128.f, 128.f, 128.f);
+
+	/** Seconds to wait before the decal begins fading. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Impact|Decal")
+	float ImpactDecalFadeDelay = 3.f;
+
+	/** Duration of the fade-out after the delay. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Impact|Decal")
+	float ImpactDecalFadeDuration = 2.f;
 
 protected:
 	virtual void BeginPlay() override;
@@ -73,12 +109,6 @@ private:
 	float LifeSpan = 15.f;
 
 	bool bHit = false;
-
-	UPROPERTY(EditAnywhere)
-	TObjectPtr<UNiagaraSystem> ImpactEffect;
-
-	UPROPERTY(EditAnywhere)
-	TObjectPtr<USoundBase> ImpactSound;
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<USoundBase> LoopingSound;

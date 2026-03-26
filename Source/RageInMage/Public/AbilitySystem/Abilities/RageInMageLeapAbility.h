@@ -22,7 +22,25 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Leap")
 	void ApplyLandingExplosion();
 
+	/** Calculate the launch velocity needed to land exactly at the target location using a parabolic arc.
+	 *  LeapHeight controls the peak height of the arc. */
+	UFUNCTION(BlueprintCallable, Category = "Leap")
+	FVector CalculateLaunchVelocityToTarget(const FVector& TargetLocation) const;
+
+	/** Calculate preview points along the leap arc for visualization.
+	 *  Uses the same physics as CalculateLaunchVelocityToTarget. */
+	UFUNCTION(BlueprintCallable, Category = "Leap")
+	TArray<FVector> GetLeapArcPreviewPoints(const FVector& TargetLocation, int32 NumPoints = 30) const;
+
 protected:
+	/** Horizontal speed multiplier applied to the leap direction. Scales with ability level. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Leap")
+	FScalableFloat LeapSpeed;
+
+	/** Upward launch velocity for the leap arc. Scales with ability level. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Leap")
+	FScalableFloat LeapHeight;
+
 	/** Radius of the AoE explosion on landing. Scales with ability level. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Leap|Explosion")
 	FScalableFloat ExplosionRadius;

@@ -19,18 +19,18 @@ class RAGEINMAGE_API URageInMageWallAbility : public URageInMageDamageGameplayAb
 	GENERATED_BODY()
 
 public:
-	/** Spawn the wall in front of the caster. Called from Blueprint. */
+	/** Spawn the wall at the given location, facing from caster toward the target. Called from Blueprint. */
 	UFUNCTION(BlueprintCallable, Category = "Wall")
-	void SpawnWall();
+	void SpawnWallAtLocation(const FVector& TargetLocation);
+
+	/** Draw a debug box at the aim location matching the wall's collision extents. Call each aim tick. */
+	UFUNCTION(BlueprintCallable, Category = "Wall|Debug")
+	void DrawDebugWallPreview(const FVector& Location, const FRotator& Rotation);
 
 protected:
 	/** The fire wall class to spawn. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Wall")
 	TSubclassOf<ARageInMageFireWall> FireWallClass;
-
-	/** How far in front of the caster the wall spawns. */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Wall")
-	float SpawnDistanceInFront = 200.f;
 
 	/** How long the wall lasts. Scales with ability level. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Wall")
@@ -43,4 +43,8 @@ protected:
 	/** Whether this wall destroys enemy projectiles on contact. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Wall")
 	bool bWallDestroysProjectiles = true;
+
+	/** Whether this wall also destroys friendly (own) projectiles. If false, friendly projectiles pass through. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Wall")
+	bool bWallDestroysFriendlyProjectiles = false;
 };

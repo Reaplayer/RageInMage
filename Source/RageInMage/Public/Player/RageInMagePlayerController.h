@@ -7,6 +7,7 @@
 #include "GameFramework/PlayerController.h"
 #include "RageInMagePlayerController.generated.h"
 
+struct FRageInMageKeyBinding;
 class UDamageTextComponent;
 class UInputAction;
 class UInputMappingContext;
@@ -46,6 +47,21 @@ public:
 	/** Current world-space aim position (cursor or right-stick projected onto ground). */
 	UFUNCTION(BlueprintPure, Category = "Aim")
 	FVector GetCurrentAimWorldPosition() const { return CurrentAimWorldPosition; }
+
+	/**
+	 * Apply custom keybindings by cloning the default IMC and modifying key mappings.
+	 * Creates a runtime IMC clone on first call, modifies it with custom bindings.
+	 * Supports chord bindings via UInputTriggerChordAction.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	void ApplyCustomKeybindings(const TMap<FGameplayTag, FRageInMageKeyBinding>& CustomBindings);
+
+	/** Reset keybindings to defaults by restoring the original MageContext. */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	void ResetKeybindingsToDefault();
+
+	/** Load saved keybindings and apply them. Called during BeginPlay. */
+	void LoadAndApplyKeybindings();
 
 protected:
 	UPROPERTY()
@@ -121,4 +137,12 @@ private:
 	TSubclassOf<UDamageTextComponent> DamageTextComponentClass;
 
 	bool bOverlayInitialized = false;
+
+	// ── IMC Remapping ──
+
+	/** Runtime clone of MageContext used for custom keybindings (null if using defaults). */
+	UPROPERTY()
+	TObjectPtr<UInputMappingContext> RuntimeMageContext;
+
+	bool bUsingRuntimeContext = false;
 };

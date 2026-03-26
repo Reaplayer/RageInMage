@@ -5,10 +5,13 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
-#include "Actor/RageInMageFireZone.h"
+#include "Actor/RageInMageFireWall.h"
+#include "Actor/RageInMageZone.h"
 #include "Components/AudioComponent.h"
+#include "Components/DecalComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/ProjectileMovementComponent.h"
@@ -50,14 +53,33 @@ ARageInMageSphereProjectile::ARageInMageSphereProjectile()
 void ARageInMageSphereProjectile::BeginPlay()
 {
 	Super::BeginPlay();
+
 	Sphere->IgnoreActorWhenMoving(GetInstigator(),true);
 	SetLifeSpan(LifeSpan);
 	Sphere->OnComponentBeginOverlap.AddDynamic(this, &ARageInMageSphereProjectile::OnSphereOverlap);
 	LoopingSoundComponent = UGameplayStatics::SpawnSoundAttached(LoopingSound, GetRootComponent());
+
+	// Pass projectile speed to any Niagara components that have a ProjectileSpeed user param
+	const float Speed = ProjectileMovement ? ProjectileMovement->Velocity.Size() : 0.f;
+	if (Speed > 0.f)
+	{
+		TArray<UNiagaraComponent*> NiagaraComponents;
+		GetComponents<UNiagaraComponent>(NiagaraComponents);
+		for (UNiagaraComponent* NiagaraComp : NiagaraComponents)
+		{
+			NiagaraComp->SetVariableFloat(FName("ProjectileSpeed"), Speed);
+		}
+	}
 }
 
 void ARageInMageSphereProjectile::Destroyed()
 {
+	UE_LOG(LogTemp, Warning, TEXT("PROJECTILE [%s] DESTROYED: bHit=[%s] Location=[%s] Instigator=[%s]"),
+		*GetName(),
+		bHit ? TEXT("TRUE") : TEXT("FALSE"),
+		*GetActorLocation().ToString(),
+		GetInstigator() ? *GetInstigator()->GetName() : TEXT("NULL"));
+
 	if (!bHit && !HasAuthority())
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation(), FRotator::ZeroRotator);
@@ -92,15 +114,51 @@ void ARageInMageSphereProjectile::ApplyAoEDamage(const FVector& ImpactLocation)
 
 	if (AoEExplosionEffect)
 	{
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, AoEExplosionEffect, ImpactLocation, FRotator::ZeroRotator);
+		UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			this, AoEExplosionEffect, ImpactLocation,
+			FRotator::ZeroRotator, FVector(1.f), /*bAutoDestroy=*/true,
+			/*bAutoActivate=*/false);
+		if (NiagaraComp)
+		{
+			NiagaraComp->SetVariableFloat(FName("ExplosionRadius"), AoERadius);
+			NiagaraComp->Activate();
+		}
 	}
 }
 
 void ARageInMageSphereProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                                   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!DamageEffectSpecHandle.IsValid() || OtherActor == GetInstigator()) return;
-	if (URageInMageAbilitySystemLibrary::IsBothEnemy(GetInstigator(), OtherActor)) return;
+	UE_LOG(LogTemp, Warning, TEXT("PROJECTILE [%s] OVERLAP: OtherActor=[%s] OtherComp=[%s] Class=[%s] CollisionChannel=[%d]"),
+		*GetName(),
+		OtherActor ? *OtherActor->GetName() : TEXT("NULL"),
+		OtherComp ? *OtherComp->GetName() : TEXT("NULL"),
+		OtherActor ? *OtherActor->GetClass()->GetName() : TEXT("NULL"),
+		OtherComp ? (int32)OtherComp->GetCollisionObjectType() : -1);
+
+	// Ignore fire walls — the wall's own overlap logic decides whether to destroy this projectile
+	if (Cast<ARageInMageFireWall>(OtherActor))
+	{
+		return;
+	}
+	if (!DamageEffectSpecHandle.IsValid() || OtherActor == GetInstigator())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PROJECTILE [%s] OVERLAP SKIPPED: DamageSpecValid=[%s] IsInstigator=[%s]"),
+			*GetName(),
+			DamageEffectSpecHandle.IsValid() ? TEXT("TRUE") : TEXT("FALSE"),
+			(OtherActor == GetInstigator()) ? TEXT("TRUE") : TEXT("FALSE"));
+		return;
+	}
+	if (URageInMageAbilitySystemLibrary::IsBothEnemy(GetInstigator(), OtherActor))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PROJECTILE [%s] OVERLAP SKIPPED: IsBothEnemy (friendly) with [%s]"),
+			*GetName(), *OtherActor->GetName());
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("PROJECTILE [%s] OVERLAP PROCEEDING TO HIT: OtherActor=[%s]"),
+		*GetName(), *OtherActor->GetName());
+
 	if (!bHit)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation(), FRotator::ZeroRotator);
@@ -126,25 +184,52 @@ void ARageInMageSphereProjectile::OnSphereOverlap(UPrimitiveComponent* Overlappe
 			}
 			ApplyKnockbackToActor(OtherActor, GetActorLocation(), KnockbackStrength, KnockbackUpwardForce);
 		}
-		// Spawn fire zone at impact location if configured
-		if (FireZoneClass)
+		// Trace down to find the ground below impact (used by zone + decal)
+		FVector GroundLocation = GetActorLocation();
+		{
+			FHitResult GroundHit;
+			const FVector TraceStart = GroundLocation;
+			const FVector TraceEnd = GroundLocation - FVector(0.f, 0.f, 1000.f);
+			if (GetWorld()->LineTraceSingleByChannel(GroundHit, TraceStart, TraceEnd, ECC_Visibility))
+			{
+				GroundLocation = GroundHit.ImpactPoint;
+			}
+		}
+
+		// Spawn zone at ground level
+		if (ZoneClass)
 		{
 			FTransform ZoneTransform;
-			ZoneTransform.SetLocation(GetActorLocation());
+			ZoneTransform.SetLocation(GroundLocation);
 
-			ARageInMageFireZone* FireZone = GetWorld()->SpawnActorDeferred<ARageInMageFireZone>(
-				FireZoneClass, ZoneTransform,
+			ARageInMageZone* Zone = GetWorld()->SpawnActorDeferred<ARageInMageZone>(
+				ZoneClass, ZoneTransform,
 				GetOwner(),
 				GetInstigator(),
 				ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 
-			if (FireZone)
+			if (Zone)
 			{
-				FireZone->DamageEffectSpecHandle = FireZoneDamageEffectSpecHandle;
-				FireZone->ZoneRadius = FireZoneRadius;
-				FireZone->ZoneDuration = FireZoneDuration;
-				FireZone->DamageTickInterval = FireZoneTickInterval;
-				FireZone->FinishSpawning(ZoneTransform);
+				Zone->DamageEffectSpecHandle = ZoneDamageEffectSpecHandle;
+				Zone->ZoneRadius = ZoneRadius;
+				Zone->ZoneDuration = ZoneDuration;
+				Zone->DamageTickInterval = ZoneTickInterval;
+				if (ZoneEffect) Zone->ZoneEffect = ZoneEffect;
+				if (ZoneLoopSound) Zone->ZoneLoopSound = ZoneLoopSound;
+				Zone->FinishSpawning(ZoneTransform);
+			}
+		}
+
+		// Spawn impact scorch decal at ground level
+		if (ImpactDecalMaterial)
+		{
+			UDecalComponent* Decal = UGameplayStatics::SpawnDecalAtLocation(
+				this, ImpactDecalMaterial, ImpactDecalSize,
+				GroundLocation, FRotator(-90.f, FMath::RandRange(0.f, 360.f), 0.f));
+			if (Decal)
+			{
+				Decal->SetFadeScreenSize(0.f);
+				Decal->SetFadeOut(ImpactDecalFadeDelay, ImpactDecalFadeDuration);
 			}
 		}
 

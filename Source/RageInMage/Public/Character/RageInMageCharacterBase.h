@@ -31,6 +31,13 @@ public:
 	UAttributeSet* GetAttributeSet() const { return AttributeSet; };
 	URageInMageAttributeSet* GetRageInMageAttributeSet() const;
 
+	/** Accessors for combat socket components/names (used by abilities to attach VFX). */
+	USkeletalMeshComponent* GetWeapon() const { return Weapon; }
+	FName GetWeaponTipSocketName() const { return WeaponTipSocketName; }
+	FName GetLeftHandSocketName() const { return LeftHandSocketName; }
+	FName GetRightHandSocketName() const { return RightHandSocketName; }
+	FName GetTailSocketName() const { return TailSocketName; }
+
 	/* Combat Interface */
 	virtual UAnimMontage* GetHitReactionMontage_Implementation() override;
 	virtual void Die() override;

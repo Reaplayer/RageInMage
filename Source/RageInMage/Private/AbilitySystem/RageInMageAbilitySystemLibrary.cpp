@@ -229,9 +229,9 @@ bool URageInMageAbilitySystemLibrary::IsVulnerableHit(const FGameplayEffectConte
 
 bool URageInMageAbilitySystemLibrary::IsResistantHit(const FGameplayEffectContextHandle& EffectContextHandle)
 {
-	if (const FRageInMageGameplayEffectContext* RInMEffectContext = static_cast<const FRageInMageGameplayEffectContext*>(EffectContextHandle.Get()))
+	if (const FRageInMageGameplayEffectContext* RageEffectContext = static_cast<const FRageInMageGameplayEffectContext*>(EffectContextHandle.Get()))
 	{
-		return RInMEffectContext->IsResistantHit();
+		return RageEffectContext->IsResistantHit();
 	}
 	return false;
 }
@@ -239,26 +239,26 @@ bool URageInMageAbilitySystemLibrary::IsResistantHit(const FGameplayEffectContex
 void URageInMageAbilitySystemLibrary::SetIsCriticalHit(FGameplayEffectContextHandle& EffectContextHandle,
                                                        bool bInIsCritHit)
 {
-	if (FRageInMageGameplayEffectContext* RInMEffectContext = static_cast<FRageInMageGameplayEffectContext*>(EffectContextHandle.Get()))
+	if (FRageInMageGameplayEffectContext* RageEffectContext = static_cast<FRageInMageGameplayEffectContext*>(EffectContextHandle.Get()))
 	{
-		RInMEffectContext->SetIsCriticalHit(bInIsCritHit);
+		RageEffectContext->SetIsCriticalHit(bInIsCritHit);
 	}
 }
 
 void URageInMageAbilitySystemLibrary::SetIsVulnerableHit(FGameplayEffectContextHandle& EffectContextHandle,
 	bool bInIsVulnerableHit)
 {
-	if (FRageInMageGameplayEffectContext* RInMEffectContext = static_cast<FRageInMageGameplayEffectContext*>(EffectContextHandle.Get()))
+	if (FRageInMageGameplayEffectContext* RageEffectContext = static_cast<FRageInMageGameplayEffectContext*>(EffectContextHandle.Get()))
 	{
-		RInMEffectContext->SetIsVulnerableHit(bInIsVulnerableHit);
+		RageEffectContext->SetIsVulnerableHit(bInIsVulnerableHit);
 	}
 }
 
 void URageInMageAbilitySystemLibrary::SetIsResistantHit(FGameplayEffectContextHandle& EffectContextHandle, bool bIsResistantHit)
 {
-	if (FRageInMageGameplayEffectContext* RInMEffectContext = static_cast<FRageInMageGameplayEffectContext*>(EffectContextHandle.Get()))
+	if (FRageInMageGameplayEffectContext* RageEffectContext = static_cast<FRageInMageGameplayEffectContext*>(EffectContextHandle.Get()))
 	{
-		RInMEffectContext->SetIsResistantHit(bIsResistantHit);
+		RageEffectContext->SetIsResistantHit(bIsResistantHit);
 	}
 }
 

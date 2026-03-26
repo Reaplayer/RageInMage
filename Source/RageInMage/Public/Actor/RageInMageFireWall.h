@@ -45,6 +45,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FireWall")
 	bool bDestroyProjectiles = true;
 
+	/** Whether this wall also destroys friendly (own) projectiles. If false, friendly projectiles pass through. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FireWall")
+	bool bDestroyFriendlyProjectiles = false;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;

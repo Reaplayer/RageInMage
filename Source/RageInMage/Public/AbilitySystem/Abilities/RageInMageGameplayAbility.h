@@ -65,6 +65,11 @@ public:
 		meta = (EditCondition = "AimIndicatorShape == EAimIndicatorShape::Line || AimIndicatorShape == EAimIndicatorShape::Box", EditConditionHides))
 	float AimIndicatorWidth = 0.f;
 
+	/** How far forward (along the aim direction) to offset the indicator decal from the caster.
+	 *  Useful for Line indicators so the decal doesn't overlap the character. 0 = centered on caster. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Aim|Prediction")
+	float IndicatorForwardOffset = 0.f;
+
 	/** Maximum range of this spell from the caster. 0 = unlimited. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Aim|Prediction")
 	float MaxSpellRange = 0.f;

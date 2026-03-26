@@ -6,7 +6,7 @@
 #include "AbilitySystem/Abilities/RageInMageDamageGameplayAbility.h"
 #include "RageInMageMeteorAbility.generated.h"
 
-class ARageInMageFireZone;
+class ARageInMageZone;
 class UNiagaraSystem;
 
 /**
@@ -24,6 +24,9 @@ public:
 	void BeginMeteorRain(const FVector& TargetCenter);
 
 protected:
+	/** Toggle debug visualization of all spell radii and trajectories. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Meteor|Debug")
+	bool bShowDebug = false;
 	/** Number of meteors to spawn. Scales with ability level. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Meteor")
 	FScalableFloat MeteorCount;
@@ -48,9 +51,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Meteor")
 	float FireZoneTickInterval = 1.f;
 
-	/** Fire zone class to spawn on meteor impact. */
+	/** Zone class to spawn on meteor impact (FireZone, PoisonZone, etc.). */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Meteor")
-	TSubclassOf<ARageInMageFireZone> FireZoneClass;
+	TSubclassOf<ARageInMageZone> ZoneClass;
 
 	/** Separate damage GE for fire zone DoT (optional; if null, uses DamageEffectClass). */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Meteor|FireZone")
@@ -59,6 +62,14 @@ protected:
 	/** Separate damage tags for fire zone DoT (optional; if empty, uses main DamageTypeTags). */
 	UPROPERTY(EditDefaultsOnly, Category = "Meteor|FireZone")
 	TMap<FGameplayTag, FScalableFloat> FireZoneDamageTypeTags;
+
+	/** How high above the impact point the meteor VFX spawns before falling down. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Meteor|VFX")
+	float MeteorSpawnHeight = 2000.f;
+
+	/** Travel speed of the meteor (units/sec). Combined with distance to determine travel time. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Meteor|VFX")
+	float MeteorSpeed = 4000.f;
 
 	/** Effect to play at each meteor impact. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Meteor|VFX")
@@ -71,9 +82,21 @@ protected:
 private:
 	void SpawnNextMeteor();
 	void SpawnMeteorAtLocation(const FVector& ImpactLocation);
+	void OnMeteorImpactComplete();
 	FGameplayEffectSpecHandle MakeDamageSpec() const;
+	FGameplayEffectSpecHandle MakeFireZoneDamageSpec() const;
+
+	/** Pick a random enemy from TargetableEnemies whose location is within the rain area.
+	 *  Removes the chosen enemy (and any out-of-range enemies encountered) from the array.
+	 *  Returns nullptr if no valid target remains. */
+	AActor* PickAndConsumeRandomTarget();
 
 	FVector MeteorRainCenter;
 	int32 MeteorsRemaining = 0;
+	int32 MeteorsPendingImpact = 0;
 	FTimerHandle MeteorStaggerTimerHandle;
+
+	/** Enemies found at cast time that haven't been targeted yet. One meteor per enemy max. */
+	UPROPERTY()
+	TArray<TObjectPtr<AActor>> TargetableEnemies;
 };

@@ -48,6 +48,8 @@ void ARageInMageEnemyCharacter::PossessedBy(AController* NewController)
 	AIController->GetBlackboardComponent()->SetValueAsBool(FName("IsDead"), bIsDead);
 	AIController->GetBlackboardComponent()->SetValueAsInt(FName("SummonCount"), SummonCount);
 	AIController->GetBlackboardComponent()->SetValueAsInt(FName("MaxSummonCount"), MaxSummonCount);
+	UE_LOG(LogTemp, Warning, TEXT("[SUMMON] %s::PossessedBy — BB init: SummonCount=%d, MaxSummonCount=%d"),
+		*GetName(), SummonCount, MaxSummonCount);
 	if (bRangedAttacker)
 	{
 		AIController->GetBlackboardComponent()->SetValueAsBool(FName("RangedAttacker"), true);
@@ -89,21 +91,28 @@ int32 ARageInMageEnemyCharacter::GetCharacterLevel_Implementation()
 
 void ARageInMageEnemyCharacter::Die()
 {
-	SetLifeSpan(LifeSpan);
-	Super::Die();
+	UE_LOG(LogTemp, Warning, TEXT("[SUMMON] %s::Die() called — bIsDead=%s, SummonCount=%d, MaxSummonCount=%d, OnDeathDelegate bound=%s"),
+		*GetName(), bIsDead ? TEXT("true") : TEXT("false"), SummonCount, MaxSummonCount,
+		OnDeathDelegate.IsBound() ? TEXT("YES") : TEXT("NO"));
 	bIsDead = true;
-	if (HasAuthority())
+	if (HasAuthority() && AIController)
 	{
 		AIController->GetBlackboardComponent()->SetValueAsBool(FName("IsDead"), bIsDead);
 	}
+	Super::Die();
+	SetLifeSpan(DeathSpan);
 }
 
 void ARageInMageEnemyCharacter::SetSummonCount_Implementation(int32 NewSummonCount)
 {
+	const int32 OldCount = SummonCount;
 	Super::SetSummonCount_Implementation(NewSummonCount);
-	if (HasAuthority())
+	if (HasAuthority() && AIController)
 	{
+		const int32 BBOldValue = AIController->GetBlackboardComponent()->GetValueAsInt(FName("SummonCount"));
 		AIController->GetBlackboardComponent()->SetValueAsInt(FName("SummonCount"), SummonCount);
+		UE_LOG(LogTemp, Warning, TEXT("[SUMMON] %s::SetSummonCount — member: %d->%d, Blackboard: %d->%d"),
+			*GetName(), OldCount, SummonCount, BBOldValue, SummonCount);
 	}
 }
 
@@ -113,6 +122,7 @@ void ARageInMageEnemyCharacter::HitReactionTagChanged(const FGameplayTag Callbac
 	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0.f : BaseWalkSpeed + GetRageInMageAttributeSet()->GetMovementSpeed();
 	if (HasAuthority())
 	{
+		if (AIController == nullptr) return;
 		AIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);
 	}
 }

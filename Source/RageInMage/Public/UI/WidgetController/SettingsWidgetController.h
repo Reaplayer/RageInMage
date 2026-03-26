@@ -7,17 +7,22 @@
 #include "SettingsWidgetController.generated.h"
 
 class URageInMageSettingsSaveGame;
-class USoundMix;
-class USoundClass;
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVolumeChangedSignature, float, NewValue);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSensitivityChangedSignature, float, NewValue);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUIScaleChangedSignature, float, NewValue);
+class UAudioSettingsWidgetController;
+class UGeneralSettingsWidgetController;
+class UControlsWidgetController;
+class URageInMageConfig;
+class UInputMappingContext;
 
 /**
- * Controls the settings UI (audio volumes, sensitivity, UI scale).
- * All operations are local-only — no server RPCs.
- * Extends URageInMageWidgetControllerBase directly (not TabbedMenuWidgetController).
+ * Parent tab-manager for the Settings menu.
+ * Owns the SaveGame object and provides access to child controllers:
+ *   - Audio (volumes)
+ *   - General (sensitivity, UI scale)
+ *   - Controls (keybinding remapping with chord support)
+ *
+ * Children access SaveGame via GetCurrentSettings() and never reference each other.
+ * Extends URageInMageWidgetControllerBase directly (not TabbedMenuWidgetController)
+ * because settings are local-only with no GAS dependency.
  */
 UCLASS(Blueprintable)
 class RAGEINMAGE_API USettingsWidgetController : public URageInMageWidgetControllerBase
@@ -25,96 +30,67 @@ class RAGEINMAGE_API USettingsWidgetController : public URageInMageWidgetControl
 	GENERATED_BODY()
 
 public:
-	// Volume change delegates
-	UPROPERTY(BlueprintAssignable, Category = "Settings|Audio")
-	FOnVolumeChangedSignature OnMasterVolumeChanged;
-
-	UPROPERTY(BlueprintAssignable, Category = "Settings|Audio")
-	FOnVolumeChangedSignature OnMusicVolumeChanged;
-
-	UPROPERTY(BlueprintAssignable, Category = "Settings|Audio")
-	FOnVolumeChangedSignature OnSFXVolumeChanged;
-
-	UPROPERTY(BlueprintAssignable, Category = "Settings|Audio")
-	FOnVolumeChangedSignature OnVoiceVolumeChanged;
-
-	// Input/UI delegates
-	UPROPERTY(BlueprintAssignable, Category = "Settings|Input")
-	FOnSensitivityChangedSignature OnMouseSensitivityChanged;
-
-	UPROPERTY(BlueprintAssignable, Category = "Settings|UI")
-	FOnUIScaleChangedSignature OnUIScaleChanged;
-
 	virtual void BindCallbacksToDependencies() override;
 	virtual void BroadcastInitialValues() override;
 
-	// Audio setters
-	UFUNCTION(BlueprintCallable, Category = "Settings|Audio")
-	void SetMasterVolume(float Value);
+	// ── Child controller accessors ──
 
-	UFUNCTION(BlueprintCallable, Category = "Settings|Audio")
-	void SetMusicVolume(float Value);
+	UFUNCTION(BlueprintCallable, Category = "Settings")
+	UAudioSettingsWidgetController* GetAudioSettingsController();
 
-	UFUNCTION(BlueprintCallable, Category = "Settings|Audio")
-	void SetSFXVolume(float Value);
+	UFUNCTION(BlueprintCallable, Category = "Settings")
+	UGeneralSettingsWidgetController* GetGeneralSettingsController();
 
-	UFUNCTION(BlueprintCallable, Category = "Settings|Audio")
-	void SetVoiceVolume(float Value);
+	UFUNCTION(BlueprintCallable, Category = "Settings")
+	UControlsWidgetController* GetControlsController();
 
-	// Audio getters
-	UFUNCTION(BlueprintPure, Category = "Settings|Audio")
-	float GetMasterVolume() const;
+	// ── SaveGame management ──
 
-	UFUNCTION(BlueprintPure, Category = "Settings|Audio")
-	float GetMusicVolume() const;
+	/** Get the current in-memory settings (lazy-loads from disk if needed). */
+	UFUNCTION(BlueprintCallable, Category = "Settings")
+	URageInMageSettingsSaveGame* GetCurrentSettings();
 
-	UFUNCTION(BlueprintPure, Category = "Settings|Audio")
-	float GetSFXVolume() const;
-
-	UFUNCTION(BlueprintPure, Category = "Settings|Audio")
-	float GetVoiceVolume() const;
-
-	// Input settings
-	UFUNCTION(BlueprintCallable, Category = "Settings|Input")
-	void SetMouseSensitivity(float Value);
-
-	UFUNCTION(BlueprintPure, Category = "Settings|Input")
-	float GetMouseSensitivity() const;
-
-	// UI settings
-	UFUNCTION(BlueprintCallable, Category = "Settings|UI")
-	void SetUIScale(float Value);
-
-	UFUNCTION(BlueprintPure, Category = "Settings|UI")
-	float GetUIScale() const;
-
-	// Persistence
+	/** Save current settings to disk. */
 	UFUNCTION(BlueprintCallable, Category = "Settings")
 	void ApplySettings();
 
+	/** Reload settings from disk and re-broadcast to all children. */
 	UFUNCTION(BlueprintCallable, Category = "Settings")
 	void RevertSettings();
 
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
-	TObjectPtr<USoundMix> SettingsSoundMix;
+	// ── Child controller classes (set in Blueprint) ──
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
-	TObjectPtr<USoundClass> MasterSoundClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Widget Controllers")
+	TSubclassOf<UAudioSettingsWidgetController> AudioSettingsControllerClass;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
-	TObjectPtr<USoundClass> MusicSoundClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Widget Controllers")
+	TSubclassOf<UGeneralSettingsWidgetController> GeneralSettingsControllerClass;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
-	TObjectPtr<USoundClass> SFXSoundClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Widget Controllers")
+	TSubclassOf<UControlsWidgetController> ControlsControllerClass;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
-	TObjectPtr<USoundClass> VoiceSoundClass;
+	// ── Input references for controls tab ──
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<URageInMageConfig> InputConfig;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputMappingContext> DefaultMageContext;
 
 private:
-	void ApplyVolumeToSoundClass(USoundClass* SoundClass, float Volume);
 	void LoadSettings();
+	void CreateChildControllers();
 
 	UPROPERTY()
 	TObjectPtr<URageInMageSettingsSaveGame> CurrentSettings;
+
+	UPROPERTY()
+	TObjectPtr<UAudioSettingsWidgetController> AudioSettingsController;
+
+	UPROPERTY()
+	TObjectPtr<UGeneralSettingsWidgetController> GeneralSettingsController;
+
+	UPROPERTY()
+	TObjectPtr<UControlsWidgetController> ControlsController;
 };

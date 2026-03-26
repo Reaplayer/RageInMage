@@ -9,10 +9,16 @@
 #include "NavigationSystem.h"
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
 #include "Components/SplineComponent.h"
+#include "Game/RageInMageSettingsSaveGame.h"
+#include "Input/RageInMageConfig.h"
 #include "Input/RageInMageEInputComponent.h"
+#include "InputAction.h"
+#include "InputMappingContext.h"
+#include "InputTriggers.h"
 #include "Interaction/EnemyInterface.h"
 #include "GameFramework/Character.h"
 #include "Player/RageInMagePlayerState.h"
+#include "RageInMage/RageInMageLogChannels.h"
 #include "UI/HUD/RageInMageHUD.h"
 #include "UI/Widget/DamageTextComponent.h"
 
@@ -128,6 +134,9 @@ void ARageInMagePlayerController::BeginPlay()
 		Subsystem->AddMappingContext(MageContext, 0);
 	}
 
+	// Apply any saved custom keybindings
+	LoadAndApplyKeybindings();
+
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Default;
 
@@ -234,4 +243,140 @@ void ARageInMagePlayerController::RotatePawnToFaceAim(float DeltaSeconds)
 	const FRotator CurrentRotation = ControlledPawn->GetActorRotation();
 	const FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaSeconds, AimRotationInterpSpeed);
 	ControlledPawn->SetActorRotation(NewRotation);
+}
+
+// ── IMC Remapping ──
+
+void ARageInMagePlayerController::ApplyCustomKeybindings(const TMap<FGameplayTag, FRageInMageKeyBinding>& CustomBindings)
+{
+	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
+	if (!Subsystem || !MageContext || !InputConfig) return;
+
+	// If no custom bindings, revert to defaults
+	if (CustomBindings.Num() == 0)
+	{
+		ResetKeybindingsToDefault();
+		return;
+	}
+
+	// Clone the default IMC on first use (or re-clone from original each time for clean state)
+	if (bUsingRuntimeContext && RuntimeMageContext)
+	{
+		Subsystem->RemoveMappingContext(RuntimeMageContext);
+	}
+	else if (!bUsingRuntimeContext)
+	{
+		Subsystem->RemoveMappingContext(MageContext);
+	}
+
+	RuntimeMageContext = DuplicateObject(MageContext, this);
+	bUsingRuntimeContext = true;
+
+	// Apply each custom binding
+	for (const auto& [InputTag, Binding] : CustomBindings)
+	{
+		// Find the InputAction associated with this InputTag
+		const UInputAction* Action = InputConfig->FindAbilityInputActionForTag(InputTag);
+		if (!Action) continue;
+
+		// Remove existing mappings for this action in the cloned IMC
+		// Collect keys first, then unmap (avoid modifying array during iteration)
+		TArray<FKey> KeysToRemove;
+		for (const FEnhancedActionKeyMapping& Mapping : RuntimeMageContext->GetMappings())
+		{
+			if (Mapping.Action == Action)
+			{
+				KeysToRemove.Add(Mapping.Key);
+			}
+		}
+		for (const FKey& Key : KeysToRemove)
+		{
+			RuntimeMageContext->UnmapKey(Action, Key);
+		}
+
+		// Add the new mapping
+		FEnhancedActionKeyMapping& NewMapping = RuntimeMageContext->MapKey(Action, Binding.PrimaryKey);
+
+		// For chord bindings, add a ChordAction trigger
+		if (Binding.bHasModifier && Binding.ModifierKey.IsValid())
+		{
+			// Find the InputAction for the modifier key (look it up in InputConfig)
+			// First, check if the modifier key is already bound as an InputAction
+			const UInputAction* ModifierAction = nullptr;
+
+			// Search InputConfig for an action whose default key matches the modifier
+			for (const FMageInputAction& MageAction : InputConfig->AbilityInputActions)
+			{
+				if (!MageAction.InputAction) continue;
+
+				// Search the original MageContext for this action's key
+				for (const FEnhancedActionKeyMapping& OrigMapping : MageContext->GetMappings())
+				{
+					if (OrigMapping.Action == MageAction.InputAction && OrigMapping.Key == Binding.ModifierKey)
+					{
+						ModifierAction = MageAction.InputAction;
+						break;
+					}
+				}
+				if (ModifierAction) break;
+			}
+
+			// Also check system actions (Shift, Move, etc.)
+			if (!ModifierAction)
+			{
+				// Check ShiftAction
+				if (ShiftAction)
+				{
+					for (const FEnhancedActionKeyMapping& OrigMapping : MageContext->GetMappings())
+					{
+						if (OrigMapping.Action == ShiftAction && OrigMapping.Key == Binding.ModifierKey)
+						{
+							ModifierAction = ShiftAction;
+							break;
+						}
+					}
+				}
+			}
+
+			if (ModifierAction)
+			{
+				UInputTriggerChordAction* ChordTrigger = NewObject<UInputTriggerChordAction>(RuntimeMageContext);
+				ChordTrigger->ChordAction = ModifierAction;
+				NewMapping.Triggers.Add(ChordTrigger);
+			}
+			else
+			{
+				UE_LOG(LogRageInMage, Warning,
+					TEXT("ApplyCustomKeybindings: No InputAction found for modifier key '%s' on binding '%s'"),
+					*Binding.ModifierKey.ToString(), *InputTag.ToString());
+			}
+		}
+	}
+
+	Subsystem->AddMappingContext(RuntimeMageContext, 0);
+	Subsystem->RequestRebuildControlMappings();
+}
+
+void ARageInMagePlayerController::ResetKeybindingsToDefault()
+{
+	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
+	if (!Subsystem || !MageContext) return;
+
+	if (bUsingRuntimeContext && RuntimeMageContext)
+	{
+		Subsystem->RemoveMappingContext(RuntimeMageContext);
+		RuntimeMageContext = nullptr;
+		bUsingRuntimeContext = false;
+		Subsystem->AddMappingContext(MageContext, 0);
+		Subsystem->RequestRebuildControlMappings();
+	}
+}
+
+void ARageInMagePlayerController::LoadAndApplyKeybindings()
+{
+	URageInMageSettingsSaveGame* Settings = URageInMageSettingsSaveGame::LoadOrCreateSettings();
+	if (Settings && Settings->CustomKeybindings.Num() > 0)
+	{
+		ApplyCustomKeybindings(Settings->CustomKeybindings);
+	}
 }

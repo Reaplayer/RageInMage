@@ -88,11 +88,24 @@ void ARageInMageFireWall::OnWallOverlap(UPrimitiveComponent* OverlappedComponent
 	{
 		if (ARageInMageSphereProjectile* Projectile = Cast<ARageInMageSphereProjectile>(OtherActor))
 		{
-			// Only destroy projectiles from enemies (not our own)
-			if (!URageInMageAbilitySystemLibrary::IsFriendly(GetInstigator(), Projectile->GetInstigator()))
+			UE_LOG(LogTemp, Warning, TEXT("WALL OVERLAP: Wall Instigator=[%s], Projectile Instigator=[%s], OtherActor=[%s]"),
+				GetInstigator() ? *GetInstigator()->GetName() : TEXT("NULL"),
+				Projectile->GetInstigator() ? *Projectile->GetInstigator()->GetName() : TEXT("NULL"),
+				*OtherActor->GetName());
+
+			const bool bIsFriendlyProjectile = URageInMageAbilitySystemLibrary::IsFriendly(GetInstigator(), Projectile->GetInstigator());
+
+			UE_LOG(LogTemp, Warning, TEXT("WALL OVERLAP: IsFriendly=%s, bDestroyFriendlyProjectiles=%s -> %s"),
+				bIsFriendlyProjectile ? TEXT("TRUE") : TEXT("FALSE"),
+				bDestroyFriendlyProjectiles ? TEXT("TRUE") : TEXT("FALSE"),
+				(bIsFriendlyProjectile && !bDestroyFriendlyProjectiles) ? TEXT("PASS THROUGH") : TEXT("DESTROYING"));
+
+			if (bIsFriendlyProjectile && !bDestroyFriendlyProjectiles)
 			{
-				Projectile->Destroy();
+				// Friendly projectile passes through
+				return;
 			}
+			Projectile->Destroy();
 			return;
 		}
 	}
@@ -124,11 +137,18 @@ void ARageInMageFireWall::DamageTickEnemiesInside()
 {
 	if (!DamageEffectSpecHandle.IsValid() || !DamageEffectSpecHandle.Data.IsValid()) return;
 
-	// Clean up stale references
+	// Clean up stale refs
 	ActorsInside.RemoveAll([](const TObjectPtr<AActor>& Actor) { return !IsValid(Actor); });
 
-	for (AActor* Actor : ActorsInside)
+	// Copy the array — applying damage can kill actors, triggering OnZoneEndOverlap
+	// which modifies ActorsInside during iteration
+	TArray<TObjectPtr<AActor>> ActorsToProcess = ActorsInside;
+
+	for (AActor* Actor : ActorsToProcess)
 	{
+		if (!IsValid(Actor)) continue;
+		if (URageInMageAbilitySystemLibrary::IsBothEnemy(GetInstigator(), Actor)) continue;
+
 		if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor))
 		{
 			TargetASC->ApplyGameplayEffectSpecToSelf(*DamageEffectSpecHandle.Data.Get());
