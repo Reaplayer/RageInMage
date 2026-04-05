@@ -64,6 +64,12 @@ void URageInMageChargedSpell::BeginCharge(const FGameplayTag& SocketTag)
 				ChargeEffect, AttachComponent, AttachSocket,
 				FVector::ZeroVector, FRotator::ZeroRotator,
 				EAttachLocation::SnapToTarget, true);
+
+			if (ActiveChargeEffectComponent)
+			{
+				// Force zero world rotation so particles aren't affected by the weapon socket's rotation
+				ActiveChargeEffectComponent->SetWorldRotation(FRotator::ZeroRotator);
+			}
 		}
 		if (ChargeSound)
 		{
@@ -170,13 +176,11 @@ void URageInMageChargedSpell::ReleaseChargedSpell(
 	const bool bHaveSolution = UGameplayStatics::SuggestProjectileVelocity_CustomArc(
 		this, LaunchVelocity, SocketLocation, TargetLocation, 0, Arc);
 
-	FRotator Rotation = bHaveSolution
-		? LaunchVelocity.Rotation()
-		: (TargetLocation - SocketLocation).Rotation();
-
 	FTransform SpawnTransform;
 	SpawnTransform.SetLocation(SocketLocation);
-	SpawnTransform.SetRotation(Rotation.Quaternion());
+	// Keep projectile upright so local-space VFX (flames from top) aren't rotated by aim direction.
+	// Flight trajectory is unaffected because velocity is set in world space (bInitialVelocityInLocalSpace = false).
+	SpawnTransform.SetRotation(FQuat::Identity);
 
 	ARageInMageSphereProjectile* Projectile = GetWorld()->SpawnActorDeferred<ARageInMageSphereProjectile>(
 		ChargedProjectileClass,

@@ -26,7 +26,7 @@ ARageInMageFireWall::ARageInMageFireWall()
 	WallCollision->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
 	// Also overlap projectiles (GameTraceChannel1)
 	WallCollision->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Overlap);
-	WallCollision->SetBoxExtent(FVector(200.f, 20.f, 150.f));
+	WallCollision->SetBoxExtent(FVector(200.f, 20.f, 150.f)); // default; synced from WallHalfWidth/WallHalfHeight in BeginPlay
 }
 
 void ARageInMageFireWall::SetDamageSpec(const FGameplayEffectSpecHandle& InSpecHandle)
@@ -37,6 +37,9 @@ void ARageInMageFireWall::SetDamageSpec(const FGameplayEffectSpecHandle& InSpecH
 void ARageInMageFireWall::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Sync collision box to match dimension properties
+	WallCollision->SetBoxExtent(FVector(WallHalfWidth, 20.f, WallHalfHeight));
 
 	SetLifeSpan(WallDuration);
 
@@ -51,13 +54,20 @@ void ARageInMageFireWall::BeginPlay()
 			DamageTickInterval, true, DamageTickInterval);
 	}
 
-	// Spawn VFX
+	// Spawn VFX with parameter passthrough (spawn inactive, set params, then activate)
 	if (WallEffect)
 	{
-		UNiagaraFunctionLibrary::SpawnSystemAttached(
+		WallNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
 			WallEffect, GetRootComponent(), NAME_None,
 			FVector::ZeroVector, FRotator::ZeroRotator,
-			EAttachLocation::KeepRelativeOffset, true);
+			EAttachLocation::KeepRelativeOffset, /*bAutoActivate=*/false);
+		if (WallNiagaraComponent)
+		{
+			WallNiagaraComponent->SetVariableFloat(FName("WallWidth"), WallHalfWidth * 2.f);
+			WallNiagaraComponent->SetVariableFloat(FName("WallHeight"), WallHalfHeight * 2.f);
+			WallNiagaraComponent->SetVariableFloat(FName("WallDuration"), WallDuration);
+			WallNiagaraComponent->Activate();
+		}
 	}
 	if (WallLoopSound)
 	{

@@ -43,8 +43,11 @@ struct FEffectProperties
 template<class T>
 using TStaticFuncPtr = TBaseStaticDelegateInstance<T, FDefaultDelegateUserPolicy>::FFuncPtr;
 
+/** Broadcast when a shielded target absorbs damage. Passes the amount of damage that was absorbed. */
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnShieldAbsorbedDamage, float /*AbsorbedAmount*/);
+
 /*
- * 
+ *
  */
 UCLASS()
 class RAGEINMAGE_API URageInMageAttributeSet : public UAttributeSet
@@ -53,6 +56,9 @@ class RAGEINMAGE_API URageInMageAttributeSet : public UAttributeSet
 
 public:
 	URageInMageAttributeSet();
+
+	/** Broadcast when a shield absorbs incoming damage. Shield abilities bind to this. */
+	FOnShieldAbsorbedDamage OnShieldAbsorbedDamage;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;

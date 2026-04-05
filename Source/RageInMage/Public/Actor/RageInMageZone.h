@@ -63,13 +63,15 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<USphereComponent> ZoneCollision;
 
-private:
-	void DamageTickEnemiesInside();
+	/** Override in subclasses to add extra per-tick logic (e.g. progressive slow, freeze). */
+	virtual void DamageTickEnemiesInside();
 
-	FTimerHandle DamageTickTimerHandle;
-
+	/** Actors currently inside the zone. Maintained by overlap events. */
 	UPROPERTY()
 	TArray<TObjectPtr<AActor>> ActorsInside;
+
+private:
+	FTimerHandle DamageTickTimerHandle;
 
 	UPROPERTY()
 	TObjectPtr<UAudioComponent> LoopingSoundComponent;

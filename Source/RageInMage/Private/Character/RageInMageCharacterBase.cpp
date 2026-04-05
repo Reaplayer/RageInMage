@@ -181,19 +181,16 @@ FTaggedMontage ARageInMageCharacterBase::GetRandomAttackMontage_Implementation(b
 
 int32 ARageInMageCharacterBase::GetSummonCount_Implementation()
 {
-	UE_LOG(LogTemp, Warning, TEXT("[SUMMON] %s::GetSummonCount() returning %d"), *GetName(), SummonCount);
 	return SummonCount;
 }
 
 void ARageInMageCharacterBase::SetSummonCount_Implementation(int32 NewSummonCount)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[SUMMON] %s::SetSummonCount(%d) — was %d"), *GetName(), NewSummonCount, SummonCount);
 	SummonCount = NewSummonCount;
 }
 
 int32 ARageInMageCharacterBase::GetMaxSummonCount_Implementation()
 {
-	UE_LOG(LogTemp, Warning, TEXT("[SUMMON] %s::GetMaxSummonCount() returning %d"), *GetName(), MaxSummonCount);
 	return MaxSummonCount;
 }
 
@@ -209,23 +206,13 @@ void ARageInMageCharacterBase::RegisterSpawnedMinion_Implementation(AActor* Mini
 		// Guard against double-registration: if already bound, skip
 		if (CombatInterface->GetOnDeathDelegate().IsAlreadyBound(this, &ARageInMageCharacterBase::OnMinionDeath))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("[SUMMON] %s: RegisterSpawnedMinion(%s) SKIPPED — already bound!"),
-				*GetName(), *Minion->GetName());
 			return;
 		}
 
 		const int32 OldCount = Execute_GetSummonCount(this);
 		Execute_SetSummonCount(this, OldCount + 1);
-		UE_LOG(LogTemp, Warning, TEXT("[SUMMON] %s::RegisterSpawnedMinion(%s) — SummonCount: %d -> %d (Max: %d)"),
-			*GetName(), Minion ? *Minion->GetName() : TEXT("NULL"), OldCount, Execute_GetSummonCount(this), MaxSummonCount);
 
 		CombatInterface->GetOnDeathDelegate().AddDynamic(this, &ARageInMageCharacterBase::OnMinionDeath);
-		UE_LOG(LogTemp, Warning, TEXT("[SUMMON] %s: Bound OnMinionDeath delegate for minion %s"), *GetName(), *Minion->GetName());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("[SUMMON] %s: RegisterSpawnedMinion FAILED — %s does not implement ICombatInterface!"),
-			*GetName(), Minion ? *Minion->GetName() : TEXT("NULL"));
 	}
 }
 
@@ -233,8 +220,6 @@ void ARageInMageCharacterBase::OnMinionDeath(AActor* DeadActor)
 {
 	const int32 OldCount = Execute_GetSummonCount(this);
 	const int32 NewCount = FMath::Max(0, OldCount - 1);
-	UE_LOG(LogTemp, Warning, TEXT("[SUMMON] %s::OnMinionDeath(%s) — SummonCount: %d -> %d (Max: %d)"),
-		*GetName(), DeadActor ? *DeadActor->GetName() : TEXT("NULL"), OldCount, NewCount, MaxSummonCount);
 	Execute_SetSummonCount(this, NewCount);
 }
 
@@ -318,8 +303,15 @@ void ARageInMageCharacterBase::AddCharacterAbilities()
 		AllAbilities.Append(ClassInfo->CommonAbilities);
 	}
 
-	// Append any additional abilities set directly on the Blueprint (for testing/overrides)
-	AllAbilities.Append(StartupAbilities);
+	// Append any additional abilities set directly on the Blueprint (for testing/overrides),
+	// but skip duplicates that are already in the data asset list
+	for (const TSubclassOf<UGameplayAbility>& AbilityClass : StartupAbilities)
+	{
+		if (AbilityClass && !AllAbilities.Contains(AbilityClass))
+		{
+			AllAbilities.Add(AbilityClass);
+		}
+	}
 
 	RageASC->AddCharacterAbilities(AllAbilities, CharacterClass);
 }

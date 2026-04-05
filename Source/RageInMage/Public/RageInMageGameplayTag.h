@@ -444,6 +444,11 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Condition_Shocked;
 	FGameplayTag Condition_Charged;
 	FGameplayTag Condition_OverCharged;
+	FGameplayTag Condition_Wet;
+	FGameplayTag Condition_Frostbite;
+
+	/* Status Tags */
+	FGameplayTag Status_Shielded;
 
 
 	/* Combat Socket Tags */

@@ -74,12 +74,6 @@ void ARageInMageSphereProjectile::BeginPlay()
 
 void ARageInMageSphereProjectile::Destroyed()
 {
-	UE_LOG(LogTemp, Warning, TEXT("PROJECTILE [%s] DESTROYED: bHit=[%s] Location=[%s] Instigator=[%s]"),
-		*GetName(),
-		bHit ? TEXT("TRUE") : TEXT("FALSE"),
-		*GetActorLocation().ToString(),
-		GetInstigator() ? *GetInstigator()->GetName() : TEXT("NULL"));
-
 	if (!bHit && !HasAuthority())
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation(), FRotator::ZeroRotator);
@@ -129,13 +123,6 @@ void ARageInMageSphereProjectile::ApplyAoEDamage(const FVector& ImpactLocation)
 void ARageInMageSphereProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                                   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("PROJECTILE [%s] OVERLAP: OtherActor=[%s] OtherComp=[%s] Class=[%s] CollisionChannel=[%d]"),
-		*GetName(),
-		OtherActor ? *OtherActor->GetName() : TEXT("NULL"),
-		OtherComp ? *OtherComp->GetName() : TEXT("NULL"),
-		OtherActor ? *OtherActor->GetClass()->GetName() : TEXT("NULL"),
-		OtherComp ? (int32)OtherComp->GetCollisionObjectType() : -1);
-
 	// Ignore fire walls — the wall's own overlap logic decides whether to destroy this projectile
 	if (Cast<ARageInMageFireWall>(OtherActor))
 	{
@@ -143,21 +130,12 @@ void ARageInMageSphereProjectile::OnSphereOverlap(UPrimitiveComponent* Overlappe
 	}
 	if (!DamageEffectSpecHandle.IsValid() || OtherActor == GetInstigator())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("PROJECTILE [%s] OVERLAP SKIPPED: DamageSpecValid=[%s] IsInstigator=[%s]"),
-			*GetName(),
-			DamageEffectSpecHandle.IsValid() ? TEXT("TRUE") : TEXT("FALSE"),
-			(OtherActor == GetInstigator()) ? TEXT("TRUE") : TEXT("FALSE"));
 		return;
 	}
 	if (URageInMageAbilitySystemLibrary::IsBothEnemy(GetInstigator(), OtherActor))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("PROJECTILE [%s] OVERLAP SKIPPED: IsBothEnemy (friendly) with [%s]"),
-			*GetName(), *OtherActor->GetName());
 		return;
 	}
-
-	UE_LOG(LogTemp, Warning, TEXT("PROJECTILE [%s] OVERLAP PROCEEDING TO HIT: OtherActor=[%s]"),
-		*GetName(), *OtherActor->GetName());
 
 	if (!bHit)
 	{
@@ -224,7 +202,7 @@ void ARageInMageSphereProjectile::OnSphereOverlap(UPrimitiveComponent* Overlappe
 		if (ImpactDecalMaterial)
 		{
 			UDecalComponent* Decal = UGameplayStatics::SpawnDecalAtLocation(
-				this, ImpactDecalMaterial, ImpactDecalSize,
+				GetWorld(), ImpactDecalMaterial, ImpactDecalSize,
 				GroundLocation, FRotator(-90.f, FMath::RandRange(0.f, 360.f), 0.f));
 			if (Decal)
 			{

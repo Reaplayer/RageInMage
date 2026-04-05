@@ -33,6 +33,14 @@ public:
 	UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn = true))
 	FGameplayEffectSpecHandle DamageEffectSpecHandle;
 
+	/** Half-width of the wall (box extent X). Passed to Niagara as "WallWidth" (full width = 2x this). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FireWall|Dimensions")
+	float WallHalfWidth = 200.f;
+
+	/** Half-height of the wall (box extent Z). Passed to Niagara as "WallHeight" (full height = 2x this). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FireWall|Dimensions")
+	float WallHalfHeight = 150.f;
+
 	/** How long the wall lasts before being destroyed. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FireWall")
 	float WallDuration = 5.f;
@@ -79,4 +87,7 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UAudioComponent> LoopingSoundComponent;
+
+	UPROPERTY()
+	TObjectPtr<UNiagaraComponent> WallNiagaraComponent;
 };

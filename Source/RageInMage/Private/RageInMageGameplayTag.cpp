@@ -1069,6 +1069,16 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.Condition_OverCharged = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Condition.OverCharged"), FString("Tag for when OverCharged, able for Electric Spells to chain from you."));
 
+	GameplayTag.Condition_Wet = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Wet"), FString("Target is Wet. Increases Cold damage taken and contributes to Frozen threshold."));
+
+	GameplayTag.Condition_Frostbite = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.Frostbite"), FString("Target has Frostbite. Simple Ice freezes on hit and deals bonus damage."));
+
+	/* Status Tags */
+	GameplayTag.Status_Shielded = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Status.Shielded"), FString("Target is protected by a damage-absorbing shield."));
+
 
 	/* Combat Socket Tags */
 	GameplayTag.CombatSocket_Weapon = UGameplayTagsManager::Get().AddNativeGameplayTag

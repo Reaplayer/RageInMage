@@ -172,6 +172,15 @@ void URageInMageAttributeSet::PostGameplayEffectExecute(const FGameplayEffectMod
 		SetIncomingDamage(0.f);
 		if (LocalDamage > 0.f)
 		{
+			// Shield absorption: if target has Status.Shielded, absorb all damage and broadcast
+			if (Properties.TargetASC && Properties.TargetASC->HasMatchingGameplayTag(
+				FRageInMageGameplayTag::Get().Status_Shielded))
+			{
+				OnShieldAbsorbedDamage.Broadcast(LocalDamage);
+				ShowFloatingText(Properties, LocalDamage, false, false, false);
+				return;
+			}
+
 			const float NewHealth = GetHealth() - LocalDamage;
 			SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
 			if (NewHealth <= 0.f)
