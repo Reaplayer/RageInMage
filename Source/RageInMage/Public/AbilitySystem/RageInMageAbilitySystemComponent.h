@@ -85,7 +85,7 @@ public:
 	void StopHeatDecay();
 
 	UPROPERTY(EditDefaultsOnly, Category = "Mechanics|Heat")
-	float HeatDecayRate = 5.f;
+	float HeatDecayRate = 4.f;
 
 protected:
 

@@ -379,12 +379,12 @@ void URageInMageAbilitySystemComponent::StartHeatDecay()
 	{
 		if (UWorld* World = LocalAvatarActor->GetWorld())
 		{
-			// Tick every 0.2 seconds -> 1 point per tick at 5/sec rate
+			// Tick every 0.25 seconds -> 1 point per tick at 4/sec rate
 			World->GetTimerManager().SetTimer(
 				HeatDecayTimerHandle,
 				this,
 				&URageInMageAbilitySystemComponent::TickHeatDecay,
-				0.2f,
+				0.25f,
 				true
 			);
 		}
@@ -419,8 +419,8 @@ void URageInMageAbilitySystemComponent::TickHeatDecay()
 		return;
 	}
 
-	// Decay: HeatDecayRate per second, tick every 0.2s = Rate * 0.2 per tick
-	const float DecayAmount = HeatDecayRate * 0.2f;
+	// Decay: HeatDecayRate per second, tick every 0.25s = Rate * 0.25 per tick
+	const float DecayAmount = HeatDecayRate * 0.25f;
 	float NewHeat;
 	if (CurrentHeat > 0.f)
 	{
