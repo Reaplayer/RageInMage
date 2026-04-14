@@ -22,6 +22,7 @@ public:
 	static void SetCriticalHit (const FGameplayEffectSpec& Spec, bool bIsCriticalHit);
 	static void SetVulnerableHit (const FGameplayEffectSpec& Spec, bool bIsVulnerableHit);
 	static void SetResistantHit (const FGameplayEffectSpec& Spec, bool bIsResistantHit);
+	static void SetIceDamage (const FGameplayEffectSpec& Spec, bool bIsIceDamage);
 
 private:
 };

@@ -24,7 +24,12 @@
       "mcp__unreal-editor__screenshot_asset",
       "WebFetch(domain:maxroll.gg)",
       "Bash(python:*)",
-      "mcp__unreal-editor__generate_image"
+      "mcp__unreal-editor__generate_image",
+      "WebFetch(domain:dev.epicgames.com)",
+      "WebFetch(domain:forums.unrealengine.com)",
+      "WebFetch(domain:www.a-maze.games)",
+      "WebFetch(domain:zoltane.com)",
+      "Bash(git log:*)"
     ]
   }
 }

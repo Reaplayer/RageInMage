@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
+#include "GameplayEffectTypes.h"
 #include "GameFramework/Character.h"
 #include "AbilitySystem/RageInMageAttributeSet.h"
 #include "AbilitySystem/Data/CharacterClassInfo.h"
@@ -15,6 +16,7 @@ class UGameplayEffect;
 class UAttributeSet;
 class UGameplayAbility;
 class UAnimMontage;
+class UNiagaraComponent;
 
 UCLASS(Abstract)
 class RAGEINMAGE_API ARageInMageCharacterBase : public ACharacter, public IAbilitySystemInterface, public ICombatInterface
@@ -121,6 +123,40 @@ protected:
 
 	void AddCharacterAbilities();
 
+	/* Condition VFX */
+
+	/** Niagara system to spawn on the character when burning. Should have a 'StackCount' user param. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Conditions|Burning")
+	TObjectPtr<UNiagaraSystem> BurningVFXSystem;
+
+	/** Binds the ignite stack count delegate from the ASC to drive burning VFX. Call after ASC is initialized. */
+	void BindIgniteStackDelegate();
+
+	/* Heat Glow VFX — subtle emissive tint driven by Heat attribute */
+
+	/** Emissive intensity at heat near zero. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Conditions|HeatGlow")
+	float HeatGlowMinIntensity = 0.f;
+
+	/** Emissive intensity at max heat (±120). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Conditions|HeatGlow")
+	float HeatGlowMaxIntensity = 2.0f;
+
+	/** Glow color for positive heat (fire). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Conditions|HeatGlow")
+	FLinearColor HeatGlowWarmColor = FLinearColor(1.0f, 0.3f, 0.05f, 1.0f);
+
+	/** Glow color for negative heat (cold). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Conditions|HeatGlow")
+	FLinearColor HeatGlowColdColor = FLinearColor(0.1f, 0.4f, 1.0f, 1.0f);
+
+	/** Mesh material slot indices to apply the glow to. Eyes (slot 2) excluded by default. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Conditions|HeatGlow")
+	TArray<int32> HeatGlowMaterialSlots = {0, 1, 3, 4, 5};
+
+	/** Binds the Heat attribute change delegate. Call after ASC is initialized. */
+	void BindHeatGlowDelegate();
+
 	/* Dissolve Effects */
 	void Dissolve();
 
@@ -137,10 +173,24 @@ protected:
 private:
 	UPROPERTY(EditAnywhere, Category = "Abilities")
 	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities;
-	
+
 	UPROPERTY(EditAnywhere, Category = "Abilities")
 	TArray<TSubclassOf<UGameplayAbility>> StartupPassiveAbilities;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	TObjectPtr<UAnimMontage> HitReactionMontage;
+
+	/* Burning VFX */
+	UPROPERTY()
+	TObjectPtr<UNiagaraComponent> BurningVFXComponent;
+
+	UFUNCTION()
+	void OnIgniteStackCountChanged(int32 NewStackCount);
+
+	/* Heat Glow */
+	UPROPERTY()
+	TArray<TObjectPtr<UMaterialInstanceDynamic>> HeatGlowDMIs;
+	bool bHeatGlowDMIsCreated = false;
+	void CreateHeatGlowDMIs();
+	void OnHeatAttributeChanged(const FOnAttributeChangeData& Data);
 };

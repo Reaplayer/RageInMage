@@ -7,7 +7,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
-#include "Actor/RageInMageSphereProjectile.h"
+#include "Actor/RageInMageProjectile.h"
 #include "Actor/RageInMageZone.h"
 #include "Character/RageInMageCharacterBase.h"
 #include "RageInMageGameplayTag.h"
@@ -86,9 +86,7 @@ float URageInMageChargedSpell::GetChargePercent() const
 	if (MaxChargeTime <= 0.f) return MaxChargePercent;
 
 	// 0% during delay period, then ramp to MaxChargePercent over remaining time
-	const float EffectiveTime = FMath::Max(0.f, CurrentChargeTime - ChargeDelay);
-	const float RampDuration = FMath::Max(0.01f, MaxChargeTime - ChargeDelay);
-	return FMath::Clamp(EffectiveTime / RampDuration, 0.f, MaxChargePercent);
+	return FMath::Clamp(CurrentChargeTime - ChargeDelay, 0.f, MaxChargePercent);
 }
 
 float URageInMageChargedSpell::GetCurrentArc() const
@@ -182,7 +180,7 @@ void URageInMageChargedSpell::ReleaseChargedSpell(
 	// Flight trajectory is unaffected because velocity is set in world space (bInitialVelocityInLocalSpace = false).
 	SpawnTransform.SetRotation(FQuat::Identity);
 
-	ARageInMageSphereProjectile* Projectile = GetWorld()->SpawnActorDeferred<ARageInMageSphereProjectile>(
+	ARageInMageProjectile* Projectile = GetWorld()->SpawnActorDeferred<ARageInMageProjectile>(
 		ChargedProjectileClass,
 		SpawnTransform,
 		GetOwningActorFromActorInfo(),
@@ -205,6 +203,7 @@ void URageInMageChargedSpell::ReleaseChargedSpell(
 	Projectile->AoERadius = ImpactExplosionRadius.GetValueAtLevel(GetAbilityLevel()) * ChargeMultiplier;
 	Projectile->KnockbackStrength = KnockbackStrength.GetValueAtLevel(GetAbilityLevel()) * ChargeMultiplier;
 	Projectile->KnockbackUpwardForce = KnockbackUpwardForce;
+	Projectile->ImpactDecalSize = Projectile->ImpactDecalSize * ChargeMultiplier;
 
 	// Pass VFX/SFX from the ability to the projectile
 	if (ImpactExplosionEffect) Projectile->AoEExplosionEffect = ImpactExplosionEffect;

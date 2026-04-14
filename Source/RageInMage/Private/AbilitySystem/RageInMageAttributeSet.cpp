@@ -211,6 +211,30 @@ void URageInMageAttributeSet::PostGameplayEffectExecute(const FGameplayEffectMod
 		const float OldHeat = GetHeat() - Data.EvaluatedData.Magnitude;
 		const float NewHeat = FMath::Clamp(GetHeat(), -120.f, 120.f);
 		SetHeat(NewHeat);
+
+		// DEBUG: show Heat on screen (remove after testing)
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange,
+				FString::Printf(TEXT("Heat: %.1f (was %.1f)"), NewHeat, OldHeat));
+		}
+
+		// Fire hit on already-burning target -> add ignite stack
+		// Check Magnitude > 0 (heat was added) because when heat is clamped at 120,
+		// OldHeat == NewHeat so the stage-change path in HandleHeatChange won't trigger
+		if (Data.EvaluatedData.Magnitude > 0.f && Properties.TargetASC)
+		{
+			FGameplayTagContainer TargetTags;
+			Properties.TargetASC->GetOwnedGameplayTags(TargetTags);
+			if (TargetTags.HasTagExact(GameplayTags.Condition_Burning))
+			{
+				if (URageInMageAbilitySystemComponent* RageASC = Cast<URageInMageAbilitySystemComponent>(Properties.TargetASC))
+				{
+					RageASC->AddIgniteStack(RageASC->DefaultIgniteDPS, Properties.SourceAvatarActor);
+				}
+			}
+		}
+
 		HandleHeatChange(OldHeat, NewHeat, Properties);
 	}
 	if (Data.EvaluatedData.Attribute == GetChargeAttribute())
@@ -356,15 +380,6 @@ void URageInMageAttributeSet::PostAttributeChange(const FGameplayAttribute& Attr
 				}
 			}
 			bHeatStageHandledByGEPath = false;
-
-			// Update Gameplay Cue for the Heat glow
-			const FRageInMageGameplayTag& Tags = FRageInMageGameplayTag::Get();
-			FGameplayCueParameters CueParams;
-			CueParams.RawMagnitude = FMath::Clamp(NewValue / 120.f, -1.f, 1.f);
-			if (FMath::Abs(NewValue) > 0.f)
-			{
-				ASC->ExecuteGameplayCue(Tags.GameplayCue_Heat_Glow, CueParams);
-			}
 		}
 	}
 }
@@ -918,7 +933,7 @@ void URageInMageAttributeSet::HandleHeatChange(float OldHeat, float NewHeat, con
 		Properties.TargetASC->RemoveLooseGameplayTag(Tags.HeatStage_Frozen);
 	}
 
-	// Ice hit on Burning target -> Extinguish (remove Burning immediately)
+	// Ice hit on Burning target -> Extinguish (remove Burning immediately + clear ignite stacks)
 	if (bHeatDecreased && OwnedTags.HasTagExact(Tags.Condition_Burning))
 	{
 		FGameplayTagContainer BurningTag;
@@ -930,36 +945,33 @@ void URageInMageAttributeSet::HandleHeatChange(float OldHeat, float NewHeat, con
 		IgnitedStageTag.AddTag(Tags.HeatStage_Ignited);
 		Properties.TargetASC->RemoveActiveEffectsWithGrantedTags(IgnitedStageTag);
 		Properties.TargetASC->RemoveLooseGameplayTag(Tags.HeatStage_Ignited);
+
+		// Clear all ignite stacks (extinguish)
+		if (URageInMageAbilitySystemComponent* RageASC = Cast<URageInMageAbilitySystemComponent>(Properties.TargetASC))
+		{
+			RageASC->RemoveAllIgniteStacks();
+		}
 	}
 
 	// --- Stage Change ---
 	if (OldStage != NewStage)
 	{
-		RemoveHeatStageEffect(OldStage, Properties);
-		ApplyHeatStageEffect(NewStage, Properties);
-
-		// --- Bonus Damage on Ignite ONLY ---
-		// Frozen shatter damage is handled on natural thaw in PostAttributeChange
-		if (NewStage == 4 && OldStage < 4)
+		// Freeze (stage -4) requires Ice damage — non-ice cold spells cap at stage -3
+		int32 EffectiveNewStage = NewStage;
+		if (NewStage == -4 && !URageInMageAbilitySystemLibrary::IsIceDamage(Properties.EffectContextHandle))
 		{
-			if (Properties.SourceASC && Properties.TargetASC)
+			EffectiveNewStage = -3;
+		}
+
+		RemoveHeatStageEffect(OldStage, Properties);
+		ApplyHeatStageEffect(EffectiveNewStage, Properties);
+
+		// When heat crosses to Ignited (stage 4), add the first ignite stack
+		if (EffectiveNewStage == 4 && OldStage < 4)
+		{
+			if (URageInMageAbilitySystemComponent* RageASC = Cast<URageInMageAbilitySystemComponent>(Properties.TargetASC))
 			{
-				const float MaxHP = GetMaxHealth();
-				const float BonusDamage = MaxHP * 0.2f;
-
-				const float CurrentHealth = GetHealth();
-				const float ResultHealth = FMath::Max(CurrentHealth - BonusDamage, 0.f);
-				SetHealth(ResultHealth);
-
-				ShowFloatingText(Properties, BonusDamage, false, false, false);
-
-				if (ResultHealth <= 0.f)
-				{
-					if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(Properties.TargetAvatarActor))
-					{
-						CombatInterface->Die();
-					}
-				}
+				RageASC->AddIgniteStack(RageASC->DefaultIgniteDPS, Properties.SourceAvatarActor);
 			}
 		}
 

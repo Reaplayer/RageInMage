@@ -107,7 +107,7 @@ protected:
 
 	// ── Projectile config ──
 
-	/** The projectile class to spawn. Should be a child of ARageInMageSphereProjectile. */
+	/** The projectile class to spawn. Should be a child of ARageInMageProjectile. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ChargedSpell|Projectile")
 	TSubclassOf<AActor> ChargedProjectileClass;
 

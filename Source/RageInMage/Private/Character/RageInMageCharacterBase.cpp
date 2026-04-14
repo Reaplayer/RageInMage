@@ -3,6 +3,8 @@
 
 #include "Character/RageInMageCharacterBase.h"
 
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "RageInMageGameplayTag.h"
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
@@ -329,5 +331,126 @@ void ARageInMageCharacterBase::Dissolve()
 		UMaterialInstanceDynamic* DynamicMaterialInstance = UMaterialInstanceDynamic::Create(WeaponDissolveMaterialInstance, this);
 		Weapon->SetMaterial(0, DynamicMaterialInstance);
 		StartWeaponDissolveTimeline(DynamicMaterialInstance);
+	}
+}
+
+// ── Burning VFX ──
+
+void ARageInMageCharacterBase::BindIgniteStackDelegate()
+{
+	if (URageInMageAbilitySystemComponent* RageASC = Cast<URageInMageAbilitySystemComponent>(AbilitySystemComponent))
+	{
+		// Guard against double-bind (PlayerCharacter calls this from both PossessedBy and OnRep_PlayerState)
+		if (!RageASC->OnIgniteStackCountChanged.IsAlreadyBound(this, &ARageInMageCharacterBase::OnIgniteStackCountChanged))
+		{
+			RageASC->OnIgniteStackCountChanged.AddDynamic(this, &ARageInMageCharacterBase::OnIgniteStackCountChanged);
+		}
+	}
+}
+
+// ── Heat Glow ──
+
+void ARageInMageCharacterBase::BindHeatGlowDelegate()
+{
+	if (!AbilitySystemComponent) return;
+
+	const URageInMageAttributeSet* RageAS = Cast<URageInMageAttributeSet>(AttributeSet);
+	if (!RageAS) return;
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+		RageAS->GetHeatAttribute()
+	).AddUObject(this, &ARageInMageCharacterBase::OnHeatAttributeChanged);
+}
+
+void ARageInMageCharacterBase::CreateHeatGlowDMIs()
+{
+	if (bHeatGlowDMIsCreated) return;
+	bHeatGlowDMIsCreated = true;
+
+	USkeletalMeshComponent* MeshComp = GetMesh();
+	if (!MeshComp) return;
+
+	const int32 NumSlots = MeshComp->GetNumMaterials();
+	HeatGlowDMIs.SetNum(NumSlots);
+
+	for (const int32 SlotIndex : HeatGlowMaterialSlots)
+	{
+		if (SlotIndex < 0 || SlotIndex >= NumSlots) continue;
+
+		UMaterialInterface* BaseMat = MeshComp->GetMaterial(SlotIndex);
+		if (!BaseMat) continue;
+
+		UMaterialInstanceDynamic* DMI = UMaterialInstanceDynamic::Create(BaseMat, this);
+		if (DMI)
+		{
+			MeshComp->SetMaterial(SlotIndex, DMI);
+			HeatGlowDMIs[SlotIndex] = DMI;
+			DMI->SetVectorParameterValue(FName("HeatGlowColor"), FLinearColor::Black);
+			DMI->SetScalarParameterValue(FName("HeatGlowIntensity"), 0.f);
+		}
+	}
+}
+
+void ARageInMageCharacterBase::OnHeatAttributeChanged(const FOnAttributeChangeData& Data)
+{
+	const float HeatNormalized = FMath::Clamp(Data.NewValue / 120.f, -1.f, 1.f);
+	const float AbsHeat = FMath::Abs(HeatNormalized);
+
+	FLinearColor GlowColor = FLinearColor::Black;
+	float Intensity = 0.f;
+
+	if (!FMath::IsNearlyZero(AbsHeat, 0.01f))
+	{
+		GlowColor = (HeatNormalized > 0.f) ? HeatGlowWarmColor : HeatGlowColdColor;
+		Intensity = FMath::Lerp(HeatGlowMinIntensity, HeatGlowMaxIntensity, AbsHeat);
+	}
+
+	if (!bHeatGlowDMIsCreated && !FMath::IsNearlyZero(AbsHeat, 0.01f))
+	{
+		CreateHeatGlowDMIs();
+	}
+
+	for (UMaterialInstanceDynamic* DMI : HeatGlowDMIs)
+	{
+		if (DMI)
+		{
+			DMI->SetVectorParameterValue(FName("HeatGlowColor"), GlowColor);
+			DMI->SetScalarParameterValue(FName("HeatGlowIntensity"), Intensity);
+		}
+	}
+}
+
+void ARageInMageCharacterBase::OnIgniteStackCountChanged(int32 NewStackCount)
+{
+	if (NewStackCount > 0)
+	{
+		// Spawn the burning VFX if not already active
+		if (!BurningVFXComponent && BurningVFXSystem)
+		{
+			BurningVFXComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+				BurningVFXSystem,
+				GetMesh(),
+				NAME_None,
+				FVector::ZeroVector,
+				FRotator::ZeroRotator,
+				EAttachLocation::KeepRelativeOffset,
+				false // bAutoDestroy — we manage the lifetime
+			);
+		}
+		// Update the stack count user parameter for VFX intensity scaling
+		if (BurningVFXComponent)
+		{
+			BurningVFXComponent->SetVariableFloat(FName("StackCount"), static_cast<float>(NewStackCount));
+		}
+	}
+	else
+	{
+		// All stacks gone — destroy the burning VFX
+		if (BurningVFXComponent)
+		{
+			BurningVFXComponent->DeactivateImmediate();
+			BurningVFXComponent->DestroyComponent();
+			BurningVFXComponent = nullptr;
+		}
 	}
 }

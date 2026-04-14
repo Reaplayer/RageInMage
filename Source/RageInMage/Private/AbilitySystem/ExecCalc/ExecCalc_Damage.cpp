@@ -316,9 +316,16 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
         					float ChargeDamage = 0.f;
         					
         					if (Pair.Key.MatchesTagExact(FRageInMageGameplayTag::Get().DamageType_MagicalDamage_Fire) ||
-        						Pair.Key.MatchesTagExact(FRageInMageGameplayTag::Get().DamageType_MagicalDamage_Cold))	
+        						Pair.Key.MatchesTagExact(FRageInMageGameplayTag::Get().DamageType_MagicalDamage_Cold) ||
+        						Pair.Key.MatchesTagExact(FRageInMageGameplayTag::Get().DamageType_MagicalDamage_Ice))
         					{
         						HeatDamage = Spec.GetSetByCallerMagnitude(FRageInMageGameplayTag::Get().Attributes_Mechanics_Heat);
+
+        						// Flag ice damage on the context so HandleHeatChange can gate freeze
+        						if (Pair.Key.MatchesTagExact(FRageInMageGameplayTag::Get().DamageType_MagicalDamage_Ice))
+        						{
+        							SetIceDamage(Spec, true);
+        						}
         					}
         					if (Pair.Key.MatchesTagExact(FRageInMageGameplayTag::Get().DamageType_MagicalDamage_Electric))
         					{
@@ -456,4 +463,10 @@ void UExecCalc_Damage::SetResistantHit(const FGameplayEffectSpec& Spec, bool bIs
 {
 	FGameplayEffectContextHandle EffectContextHandle = Spec.GetContext();
 	URageInMageAbilitySystemLibrary::SetIsResistantHit(EffectContextHandle, bIsResistantHit);
+}
+
+void UExecCalc_Damage::SetIceDamage(const FGameplayEffectSpec& Spec, bool bIsIceDamage)
+{
+	FGameplayEffectContextHandle EffectContextHandle = Spec.GetContext();
+	URageInMageAbilitySystemLibrary::SetIsIceDamage(EffectContextHandle, bIsIceDamage);
 }

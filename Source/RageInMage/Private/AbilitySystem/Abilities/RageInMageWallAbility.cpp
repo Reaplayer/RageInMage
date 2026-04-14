@@ -19,9 +19,18 @@ void URageInMageWallAbility::SpawnWallAtLocation(const FVector& TargetLocation)
 	FVector Direction = TargetLocation - CasterLocation;
 	Direction.Z = 0.f;
 	FRotator SpawnRotation = Direction.GetSafeNormal().Rotation();
+	SpawnRotation.Yaw += 90.f; // Wall spans perpendicular to the cast direction
+
+	// Read the wall's half-height from the CDO so we can offset the spawn upward
+	const ARageInMageFireWall* WallCDO = FireWallClass.GetDefaultObject();
+	const float HalfHeight = WallCDO ? WallCDO->WallHalfHeight : 150.f;
+
+	// Offset spawn location up by HalfHeight so the box bottom sits on the ground
+	FVector SpawnLocation = TargetLocation;
+	SpawnLocation.Z += HalfHeight;
 
 	FTransform SpawnTransform;
-	SpawnTransform.SetLocation(TargetLocation);
+	SpawnTransform.SetLocation(SpawnLocation);
 	SpawnTransform.SetRotation(SpawnRotation.Quaternion());
 
 	ARageInMageFireWall* Wall = GetWorld()->SpawnActorDeferred<ARageInMageFireWall>(
@@ -58,10 +67,16 @@ void URageInMageWallAbility::DrawDebugWallPreview(const FVector& Location, const
 #if ENABLE_DRAW_DEBUG
 	if (!GetWorld()) return;
 
-	// Match the fire wall's box extent: (200, 20, 150) = 400 wide, 40 deep, 300 tall
-	const FVector BoxExtent(200.f, 20.f, 150.f);
+	const ARageInMageFireWall* WallCDO = FireWallClass ? FireWallClass.GetDefaultObject() : nullptr;
+	const float HalfWidth = WallCDO ? WallCDO->WallHalfWidth : 200.f;
+	const float HalfHeight = WallCDO ? WallCDO->WallHalfHeight : 150.f;
+
+	const FVector BoxExtent(HalfWidth, 20.f, HalfHeight);
+	// Offset upward so the box bottom sits on the ground (matches SpawnWallAtLocation)
+	FVector BoxCenter = Location;
+	BoxCenter.Z += HalfHeight;
 	FRotator PreviewRotation = Rotation;
 	PreviewRotation.Yaw += 90.f; // Same perpendicular offset as SpawnWallAtLocation
-	DrawDebugBox(GetWorld(), Location, BoxExtent, PreviewRotation.Quaternion(), FColor::Orange, false, 0.05f, 0, 2.f);
+	DrawDebugBox(GetWorld(), BoxCenter, BoxExtent, PreviewRotation.Quaternion(), FColor::Orange, false, 0.05f, 0, 2.f);
 #endif
 }

@@ -8,7 +8,7 @@
 #include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "CombatInterface.generated.h"
 
-class ARageInMageSphereProjectile;
+class ARageInMageProjectile;
 class UNiagaraSystem;
 class UAnimMontage;
 class USoundBase;

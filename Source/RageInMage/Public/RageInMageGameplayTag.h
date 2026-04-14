@@ -371,6 +371,7 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag DamageType_MagicalDamage;
 	FGameplayTag DamageType_MagicalDamage_Fire;
 	FGameplayTag DamageType_MagicalDamage_Cold;
+	FGameplayTag DamageType_MagicalDamage_Ice;
 	FGameplayTag DamageType_MagicalDamage_Electric;
 	FGameplayTag DamageType_MagicalDamage_Poison;
 	FGameplayTag DamageType_MagicalDamage_Acid;

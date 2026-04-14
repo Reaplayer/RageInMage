@@ -7,6 +7,7 @@
 #include "RageInMageAbilitySystemTypes.h"
 #include "AbilitySystem/Data/ConditionInfo.h"
 #include "Character/RageInMageCharacterBase.h"
+#include "Components/DecalComponent.h"
 #include "Game/RageInMageGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/OverlapResult.h"
@@ -262,6 +263,23 @@ void URageInMageAbilitySystemLibrary::SetIsResistantHit(FGameplayEffectContextHa
 	}
 }
 
+bool URageInMageAbilitySystemLibrary::IsIceDamage(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FRageInMageGameplayEffectContext* RageEffectContext = static_cast<const FRageInMageGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return RageEffectContext->IsIceDamage();
+	}
+	return false;
+}
+
+void URageInMageAbilitySystemLibrary::SetIsIceDamage(FGameplayEffectContextHandle& EffectContextHandle, bool bInIsIceDamage)
+{
+	if (FRageInMageGameplayEffectContext* RageEffectContext = static_cast<FRageInMageGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		RageEffectContext->SetIsIceDamage(bInIsIceDamage);
+	}
+}
+
 void URageInMageAbilitySystemLibrary::GetLivePlayersWithinRadius(const UObject* WorldContextObject, float Radius,
 	TArray<AActor*>& OutOverlappingActors, const TArray<AActor*>& ActorsToIgnore, const FVector& SphereOrigin)
 {
@@ -471,4 +489,26 @@ float URageInMageAbilitySystemLibrary::GetArcFromDistance(
 	if (MaxRange <= 0.f) return (MinArc + MaxArc) * 0.5f;
 	const float Alpha = FMath::Clamp(Distance / MaxRange, 0.f, 1.f);
 	return FMath::Lerp(MinArc, MaxArc, Alpha);
+}
+
+FLinearColor URageInMageAbilitySystemLibrary::GetClassProgressBarColor(const UObject* WorldContextObject,
+	ECharacterClass CharacterClass)
+{
+	UCharacterClassInfo* ClassInfo = GetCharacterClassInfo(WorldContextObject);
+	if (!ClassInfo) return FLinearColor::White;
+	const FCharacterClassDefaultInfo& Info = ClassInfo->GetCharacterClassDefaultInfo(CharacterClass);
+	return Info.ProgressBarColor.GetSpecifiedColor();
+}
+
+// ──────────────────────────────────────────
+// Decal Utilities
+// ──────────────────────────────────────────
+
+void URageInMageAbilitySystemLibrary::SetDecalSize(UDecalComponent* DecalComponent, const FVector& NewSize)
+{
+	if (DecalComponent)
+	{
+		DecalComponent->DecalSize = NewSize;
+		DecalComponent->MarkRenderStateDirty();
+	}
 }

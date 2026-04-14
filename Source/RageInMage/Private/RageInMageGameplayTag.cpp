@@ -865,7 +865,10 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	
 	GameplayTag.DamageType_MagicalDamage_Cold = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("DamageType.MagicalDamage.Cold"), FString("Amount of Cold Damage Done."));
-	
+
+	GameplayTag.DamageType_MagicalDamage_Ice = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("DamageType.MagicalDamage.Ice"), FString("Amount of Ice Damage Done. Can freeze targets at -100 Heat."));
+
 	GameplayTag.DamageType_MagicalDamage_Electric = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("DamageType.MagicalDamage.Electric"), FString("Amount of Electric Damage Done."));
 	
@@ -940,6 +943,7 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_MagicalDamage, GameplayTag.Resistance_MagicalDamage);
 	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_MagicalDamage_Fire, GameplayTag.Resistance_MagicalDamage_Fire);
 	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_MagicalDamage_Cold, GameplayTag.Resistance_MagicalDamage_Cold);
+	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_MagicalDamage_Ice, GameplayTag.Resistance_MagicalDamage_Cold);
 	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_MagicalDamage_Electric, GameplayTag.Resistance_MagicalDamage_Electric);
 	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_MagicalDamage_Poison, GameplayTag.Resistance_MagicalDamage_Poison);
 	GameplayTag.DamageTypeToResistance.Add(GameplayTag.DamageType_MagicalDamage_Acid, GameplayTag.Resistance_MagicalDamage_Acid);
@@ -952,6 +956,7 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	/* Map of Damage Type Tags to Mechanics Attribute Tags */
 	GameplayTag.DamageTypeToMechanics.Add(GameplayTag.DamageType_MagicalDamage_Fire, GameplayTag.Attributes_Mechanics_Heat);
 	GameplayTag.DamageTypeToMechanics.Add(GameplayTag.DamageType_MagicalDamage_Cold, GameplayTag.Attributes_Mechanics_Heat);
+	GameplayTag.DamageTypeToMechanics.Add(GameplayTag.DamageType_MagicalDamage_Ice, GameplayTag.Attributes_Mechanics_Heat);
 	GameplayTag.DamageTypeToMechanics.Add(GameplayTag.DamageType_MagicalDamage_Electric, GameplayTag.Attributes_Mechanics_Charge);
 	GameplayTag.DamageTypeToMechanics.Add(GameplayTag.DamageType_MagicalDamage_Poison, GameplayTag.Attributes_Mechanics_LethalToxins);
 	GameplayTag.DamageTypeToMechanics.Add(GameplayTag.DamageType_MagicalDamage_Force, GameplayTag.Attributes_Mechanics_Momentum);

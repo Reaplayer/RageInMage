@@ -7,9 +7,11 @@
 #include "AbilitySystem/Abilities/RageInMageGameplayAbility.h"
 #include "AbilitySystem/RageInMageAttributeSet.h"
 #include "GameFramework/PlayerState.h"
+#include "Interaction/CombatInterface.h"
 #include "Interaction/PlayerInterface.h"
 #include "Inventory/RageInMageInventoryComponent.h"
 #include "Inventory/RageInMageInventoryTypes.h"
+#include "Net/UnrealNetwork.h"
 #include "RageInMage/RageInMageLogChannels.h"
 #include "RageInMageGameplayTag.h"
 
@@ -432,4 +434,210 @@ void URageInMageAbilitySystemComponent::TickHeatDecay()
 	}
 
 	const_cast<URageInMageAttributeSet*>(AS)->SetHeat(NewHeat);
+}
+
+// ── Replication ──
+
+void URageInMageAbilitySystemComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(URageInMageAbilitySystemComponent, ReplicatedIgniteStackCount);
+}
+
+// ── Ignite Stack System ──
+
+void URageInMageAbilitySystemComponent::AddIgniteStack(float DamagePerSecond, AActor* InInstigator)
+{
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+
+	if (IgniteStacks.Num() < MaxIgniteStacks)
+	{
+		// Add a new stack
+		FIgniteStack NewStack;
+		NewStack.DecayTimeRemaining = IgniteStackDuration;
+		NewStack.DamageTickTimer = IgniteDamageTickInterval; // First tick fires after one full interval
+		NewStack.DamagePerTick = DamagePerSecond * IgniteDamageTickInterval;
+		NewStack.Instigator = InInstigator;
+		IgniteStacks.Add(NewStack);
+	}
+	else
+	{
+		// At max stacks: refresh the stack with the LOWEST remaining decay time
+		// IMPORTANT: Only refresh the decay timer, NOT the damage tick timer
+		int32 LowestIndex = 0;
+		float LowestTime = IgniteStacks[0].DecayTimeRemaining;
+		for (int32 i = 1; i < IgniteStacks.Num(); ++i)
+		{
+			if (IgniteStacks[i].DecayTimeRemaining < LowestTime)
+			{
+				LowestTime = IgniteStacks[i].DecayTimeRemaining;
+				LowestIndex = i;
+			}
+		}
+		IgniteStacks[LowestIndex].DecayTimeRemaining = IgniteStackDuration;
+		// DamageTickTimer is intentionally NOT reset — prevents extending time between ticks
+		IgniteStacks[LowestIndex].DamagePerTick = DamagePerSecond * IgniteDamageTickInterval;
+		IgniteStacks[LowestIndex].Instigator = InInstigator;
+	}
+
+	StartIgniteTick();
+
+	// Update replicated count and broadcast
+	ReplicatedIgniteStackCount = IgniteStacks.Num();
+	OnIgniteStackCountChanged.Broadcast(ReplicatedIgniteStackCount);
+
+	// Ensure the Condition.Burning tag is on the target
+	const FRageInMageGameplayTag& Tags = FRageInMageGameplayTag::Get();
+	if (!HasMatchingGameplayTag(Tags.Condition_Burning))
+	{
+		AddLooseGameplayTag(Tags.Condition_Burning);
+	}
+}
+
+void URageInMageAbilitySystemComponent::RemoveAllIgniteStacks()
+{
+	IgniteStacks.Empty();
+	StopIgniteTick();
+
+	ReplicatedIgniteStackCount = 0;
+	OnIgniteStackCountChanged.Broadcast(0);
+
+	// Remove the Condition.Burning loose tag
+	const FRageInMageGameplayTag& Tags = FRageInMageGameplayTag::Get();
+	RemoveLooseGameplayTag(Tags.Condition_Burning);
+
+	// Also remove any Burning GEs that may have been applied via ConditionInfo
+	FGameplayTagContainer BurningTag;
+	BurningTag.AddTag(Tags.Condition_Burning);
+	RemoveActiveEffectsWithGrantedTags(BurningTag);
+}
+
+void URageInMageAbilitySystemComponent::StartIgniteTick()
+{
+	if (bIgniteTickActive) return;
+	bIgniteTickActive = true;
+
+	if (const AActor* LocalAvatarActor = GetAvatarActor())
+	{
+		if (UWorld* World = LocalAvatarActor->GetWorld())
+		{
+			// Tick at 0.05s (50ms) for accurate independent stack processing
+			World->GetTimerManager().SetTimer(
+				IgniteTickTimerHandle,
+				this,
+				&URageInMageAbilitySystemComponent::TickIgniteStacks,
+				0.05f,
+				true
+			);
+		}
+	}
+}
+
+void URageInMageAbilitySystemComponent::StopIgniteTick()
+{
+	if (!bIgniteTickActive) return;
+	bIgniteTickActive = false;
+
+	if (const AActor* LocalAvatarActor = GetAvatarActor())
+	{
+		if (UWorld* World = LocalAvatarActor->GetWorld())
+		{
+			World->GetTimerManager().ClearTimer(IgniteTickTimerHandle);
+		}
+	}
+}
+
+void URageInMageAbilitySystemComponent::TickIgniteStacks()
+{
+	if (IgniteStacks.Num() == 0)
+	{
+		StopIgniteTick();
+		return;
+	}
+
+	// Early out if the target is dead
+	if (const AActor* LocalAvatarActor = GetAvatarActor())
+	{
+		if (ICombatInterface::Execute_IsDead(LocalAvatarActor))
+		{
+			RemoveAllIgniteStacks();
+			return;
+		}
+	}
+
+	constexpr float DeltaTime = 0.05f; // Matches timer interval
+	bool bStacksRemoved = false;
+
+	// Process stacks in reverse so removal doesn't invalidate indices
+	for (int32 i = IgniteStacks.Num() - 1; i >= 0; --i)
+	{
+		FIgniteStack& Stack = IgniteStacks[i];
+
+		// Decrement decay timer
+		Stack.DecayTimeRemaining -= DeltaTime;
+
+		// Check for expiry
+		if (Stack.DecayTimeRemaining <= 0.f)
+		{
+			IgniteStacks.RemoveAtSwap(i);
+			bStacksRemoved = true;
+			continue;
+		}
+
+		// Decrement damage tick timer
+		Stack.DamageTickTimer -= DeltaTime;
+		if (Stack.DamageTickTimer <= 0.f)
+		{
+			// Apply damage tick
+			ApplyIgniteDamage(Stack.DamagePerTick, Stack.Instigator.Get());
+			// Reset tick timer — add interval rather than assign to prevent cumulative drift
+			Stack.DamageTickTimer += IgniteDamageTickInterval;
+		}
+	}
+
+	if (bStacksRemoved)
+	{
+		ReplicatedIgniteStackCount = IgniteStacks.Num();
+		OnIgniteStackCountChanged.Broadcast(ReplicatedIgniteStackCount);
+
+		if (IgniteStacks.Num() == 0)
+		{
+			StopIgniteTick();
+
+			// Remove Condition.Burning when all stacks have expired
+			const FRageInMageGameplayTag& Tags = FRageInMageGameplayTag::Get();
+			RemoveLooseGameplayTag(Tags.Condition_Burning);
+			FGameplayTagContainer BurningTag;
+			BurningTag.AddTag(Tags.Condition_Burning);
+			RemoveActiveEffectsWithGrantedTags(BurningTag);
+		}
+	}
+}
+
+void URageInMageAbilitySystemComponent::ApplyIgniteDamage(float DamageAmount, AActor* InInstigator)
+{
+	if (!IgniteDamageEffect) return;
+
+	// Create context with the original instigator for damage attribution
+	FGameplayEffectContextHandle Context = MakeEffectContext();
+	if (InInstigator)
+	{
+		Context.AddInstigator(InInstigator, InInstigator);
+	}
+
+	const FGameplayEffectSpecHandle Spec = MakeOutgoingSpec(IgniteDamageEffect, 1, Context);
+	if (Spec.IsValid())
+	{
+		// Set damage via SetByCaller — the GE modifier reads this as IncomingDamage
+		const FRageInMageGameplayTag& Tags = FRageInMageGameplayTag::Get();
+		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(
+			Spec, Tags.DamageType_MagicalDamage_Fire, DamageAmount);
+
+		ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
+	}
+}
+
+void URageInMageAbilitySystemComponent::OnRep_IgniteStackCount()
+{
+	OnIgniteStackCountChanged.Broadcast(ReplicatedIgniteStackCount);
 }

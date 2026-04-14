@@ -6,7 +6,7 @@
 #include "AbilitySystem/Abilities/RageInMageDamageGameplayAbility.h"
 #include "RageInMageProjectileSpell.generated.h"
 
-class ARageInMageSphereProjectile;
+class ARageInMageProjectile;
 
 // Simple struct to store position history
 struct FMotionSample

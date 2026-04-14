@@ -48,7 +48,7 @@ struct FCharacterClassDefaultInfo
 	UPROPERTY(EditDefaultsOnly, Category = "Class Defaults")
 	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Class Defaults")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Class Defaults")
 	FSlateColor ProgressBarColor = FSlateColor::UseForeground();
 
 	UPROPERTY(EditDefaultsOnly, Category = "Class Defaults")
@@ -86,5 +86,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Condition Defaults")
 	TObjectPtr<UConditionInfo> ConditionInfo;
 
+	UFUNCTION(BlueprintPure, Category = "CharacterClassInfo")
 	FCharacterClassDefaultInfo GetCharacterClassDefaultInfo(ECharacterClass CharacterClass);
 };

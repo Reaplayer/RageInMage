@@ -167,6 +167,11 @@ void ARageInMagePlayerCharacter::InitPlayerAbilityActorInfo()
 	InitializeDefaultAttributes();
 	CastChecked<URageInMageAttributeSet>(AttributeSet)->InitialiseTagsToAttributes();
 
+	// Bind ignite stack delegate for burning VFX
+	BindIgniteStackDelegate();
+	// Bind heat glow delegate for material emissive
+	BindHeatGlowDelegate();
+
 	// Try to initialize the overlay UI. TryInitOverlay is safe to call repeatedly
 	// and handles all cases: server, listen-server, and client (where PC/HUD may not
 	// be available yet during OnRep_PlayerState).

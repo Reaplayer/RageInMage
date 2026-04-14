@@ -6,7 +6,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "RageInMageGameplayTag.h"
-#include "Actor/RageInMageSphereProjectile.h"
+#include "Actor/RageInMageProjectile.h"
 #include "Interaction/CombatInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/ProjectileMovementComponent.h"
@@ -78,7 +78,7 @@ void URageInMageProjectileSpell::SpawnProjectile(FVector& ProjectileTargetLocati
 		UE_LOG(LogTemp, Error, TEXT("ProjectileClass is null. Unable to spawn projectile."));
 		return;
 	}
-	ARageInMageSphereProjectile* ProjectileCDO = Cast<ARageInMageSphereProjectile>(ProjectileClass->GetDefaultObject());
+	ARageInMageProjectile* ProjectileCDO = Cast<ARageInMageProjectile>(ProjectileClass->GetDefaultObject());
 	UProjectileMovementComponent* ProjectileMovement = ProjectileCDO->ProjectileMovement;
 	
 
@@ -240,7 +240,7 @@ void URageInMageProjectileSpell::SpawnProjectile(FVector& ProjectileTargetLocati
 		
 
 		// Start the Spawning of the Projectile
-		ARageInMageSphereProjectile* Projectile = GetWorld()->SpawnActorDeferred<ARageInMageSphereProjectile>(
+		ARageInMageProjectile* Projectile = GetWorld()->SpawnActorDeferred<ARageInMageProjectile>(
 			ProjectileClass,
 			SpawnTransform,
 			GetOwningActorFromActorInfo(),
@@ -289,7 +289,7 @@ void URageInMageProjectileSpell::SpawnProjectile(FVector& ProjectileTargetLocati
 
 			// Get Projectile Speed from CDO
 			float ProjectileSpeed = 0.f;
-			if (ARageInMageSphereProjectile* ProjectileCDO = Cast<ARageInMageSphereProjectile>(ProjectileClass->GetDefaultObject()))
+			if (ARageInMageProjectile* ProjectileCDO = Cast<ARageInMageProjectile>(ProjectileClass->GetDefaultObject()))
 			{
 				if (UProjectileMovementComponent* ProjectileMovement = ProjectileCDO->ProjectileMovement)
 				{

@@ -45,9 +45,13 @@ bool FRageInMageGameplayEffectContext::NetSerialize(FArchive& Ar, class UPackage
 		{
 			RepBits |= 1 << 9;
 		}
+		if (bIsIceDamage)
+		{
+			RepBits |= 1 << 10;
+		}
 	}
 
-	Ar.SerializeBits(&RepBits, 10);
+	Ar.SerializeBits(&RepBits, 11);
 
 	if (RepBits & (1 << 0))
 	{
@@ -100,6 +104,10 @@ bool FRageInMageGameplayEffectContext::NetSerialize(FArchive& Ar, class UPackage
 	if (RepBits & (1 << 9))
 	{
 		Ar << bIsResistantHit;
+	}
+	if (RepBits & (1 << 10))
+	{
+		Ar << bIsIceDamage;
 	}
 
 	if (Ar.IsLoading())

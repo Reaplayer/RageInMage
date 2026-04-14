@@ -8,7 +8,7 @@
 
 /**
  * Spread projectile spell — fires multiple projectiles in a cone pattern.
- * Each projectile is a standard ARageInMageSphereProjectile spawned via the parent's SpawnProjectile().
+ * Each projectile is a standard ARageInMageProjectile spawned via the parent's SpawnProjectile().
  * Used for Simple Ice (Water Primary), and reusable for ThornSpread (Nature), etc.
  *
  * Blueprint workflow:

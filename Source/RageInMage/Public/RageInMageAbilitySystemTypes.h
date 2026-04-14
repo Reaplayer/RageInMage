@@ -18,10 +18,12 @@ public:
 	bool IsCriticalHit() const { return bIsCriticalHit; }
 	bool IsVulnerableHit() const { return bIsVulnerableHit; }
 	bool IsResistantHit() const { return bIsResistantHit; }
+	bool IsIceDamage() const { return bIsIceDamage; }
 
 	void SetIsCriticalHit(bool bIsInCriticalHit) { bIsCriticalHit = bIsInCriticalHit; }
 	void SetIsVulnerableHit(bool bIsInVulnerableHit) { bIsVulnerableHit = bIsInVulnerableHit; }
 	void SetIsResistantHit(bool bIsInResistantHit) { bIsResistantHit = bIsInResistantHit; }
+	void SetIsIceDamage(bool bInIsIceDamage) { bIsIceDamage = bInIsIceDamage; }
 
 	/* Returns the actual struct used for Serialization, subclasses must override this! */
 	virtual UScriptStruct* GetScriptStruct() const override
@@ -51,6 +53,8 @@ protected:
 	bool bIsVulnerableHit = false;
 	UPROPERTY()
 	bool bIsResistantHit = false;
+	UPROPERTY()
+	bool bIsIceDamage = false;
 };
 
 // Required template specialization for proper memory management

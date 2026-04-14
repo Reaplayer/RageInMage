@@ -7,7 +7,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
-#include "Actor/RageInMageSphereProjectile.h"
+#include "Actor/RageInMageProjectile.h"
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -57,9 +57,11 @@ void ARageInMageFireWall::BeginPlay()
 	// Spawn VFX with parameter passthrough (spawn inactive, set params, then activate)
 	if (WallEffect)
 	{
+		// Offset VFX down by HalfHeight so it sits at ground level
+		// (the actor origin is at box center, HalfHeight above the ground)
 		WallNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
 			WallEffect, GetRootComponent(), NAME_None,
-			FVector::ZeroVector, FRotator::ZeroRotator,
+			FVector(0.f, 0.f, -WallHalfHeight), FRotator::ZeroRotator,
 			EAttachLocation::KeepRelativeOffset, /*bAutoActivate=*/false);
 		if (WallNiagaraComponent)
 		{
@@ -96,7 +98,7 @@ void ARageInMageFireWall::OnWallOverlap(UPrimitiveComponent* OverlappedComponent
 	// Destroy incoming projectiles if enabled
 	if (bDestroyProjectiles)
 	{
-		if (ARageInMageSphereProjectile* Projectile = Cast<ARageInMageSphereProjectile>(OtherActor))
+		if (ARageInMageProjectile* Projectile = Cast<ARageInMageProjectile>(OtherActor))
 		{
 			UE_LOG(LogTemp, Warning, TEXT("WALL OVERLAP: Wall Instigator=[%s], Projectile Instigator=[%s], OtherActor=[%s]"),
 				GetInstigator() ? *GetInstigator()->GetName() : TEXT("NULL"),

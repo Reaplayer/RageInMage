@@ -122,6 +122,8 @@ void ARageInMageEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	InitPlayerAbilityActorInfo();
+	BindIgniteStackDelegate();
+	BindHeatGlowDelegate();
 	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed + GetRageInMageAttributeSet()->GetMovementSpeed();
 	if (HasAuthority())
 	{
