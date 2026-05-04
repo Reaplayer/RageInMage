@@ -29,7 +29,8 @@
       "WebFetch(domain:forums.unrealengine.com)",
       "WebFetch(domain:www.a-maze.games)",
       "WebFetch(domain:zoltane.com)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "mcp__unreal-editor__generate_3d_model"
     ]
   }
 }

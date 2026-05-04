@@ -47,37 +47,48 @@ void URageInMageShieldAbility::ActivateShield()
 		UGameplayStatics::PlaySoundAtLocation(AvatarActor, ShieldFormSound, AvatarActor->GetActorLocation());
 	}
 
+	// Initialize multi-hit tracking
+	CurrentAbsorbCount = 0;
+	TotalAbsorbedDamage = 0.f;
+
 	OnShieldActivated();
 }
 
 void URageInMageShieldAbility::HandleShieldAbsorbed(float AbsorbedAmount)
 {
+	CurrentAbsorbCount++;
+	TotalAbsorbedDamage += AbsorbedAmount;
+
+	// Per-hit BP event for VFX feedback
+	OnShieldHitAbsorbed(CurrentAbsorbCount, AbsorbedAmount);
+
+	// Shield continues if it can still absorb more hits
+	if (CurrentAbsorbCount < MaxAbsorbCount) return;
+
+	// Shield fully consumed — break it
 	AActor* AvatarActor = GetAvatarActorFromActorInfo();
 	if (!AvatarActor) return;
 
-	// Clear the expiration timer — the shield has been consumed
 	if (AvatarActor->GetWorld())
 	{
 		AvatarActor->GetWorld()->GetTimerManager().ClearTimer(ShieldExpirationTimerHandle);
 	}
 
 	RemoveShieldEffect();
-	OnShieldAbsorbed(AbsorbedAmount);
+	OnShieldAbsorbed(TotalAbsorbedDamage);
 
-	// Convert absorbed damage to healing
-	const float HealAmount = AbsorbedAmount * HealConversionRate;
+	// Convert total absorbed damage to healing
+	const float HealAmount = TotalAbsorbedDamage * HealConversionRate;
 	if (HealAmount > 0.f)
 	{
 		ApplyAbsorbHeal(HealAmount);
 	}
 
-	// Pop sound
 	if (ShieldPopSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(AvatarActor, ShieldPopSound, AvatarActor->GetActorLocation());
 	}
 
-	// Heal VFX
 	if (HealBurstEffect)
 	{
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(

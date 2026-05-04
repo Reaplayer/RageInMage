@@ -106,6 +106,10 @@ public:
 	/** Collision sphere — public so the ability can read its radius. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<USphereComponent> Sphere;
+	
+	/** True once the yo-yo has traveled beyond OriginReturnRadius. Prevents the pull
+	 *  from deactivating on the first tick when it spawns near the caster. */
+	bool bHasLeftOrigin = false;
 
 protected:
 	virtual void BeginPlay() override;

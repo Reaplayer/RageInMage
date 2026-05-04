@@ -450,6 +450,7 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 
 	/* Status Tags */
 	FGameplayTag Status_Shielded;
+	FGameplayTag Status_Channeling;
 
 
 	/* Combat Socket Tags */

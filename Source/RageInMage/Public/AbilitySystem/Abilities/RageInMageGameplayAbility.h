@@ -31,6 +31,7 @@ class RAGEINMAGE_API URageInMageGameplayAbility : public UGameplayAbility
 	GENERATED_BODY()
 
 public:
+	URageInMageGameplayAbility();
 
 	UPROPERTY(EditDefaultsOnly, Category="Input")
 	FGameplayTag StartupInputTag;

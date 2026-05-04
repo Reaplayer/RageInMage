@@ -21,6 +21,8 @@ class RAGEINMAGE_API URageInMageBeamSpell : public URageInMageDamageGameplayAbil
 	GENERATED_BODY()
 
 public:
+	URageInMageBeamSpell();
+
 	/** Start channeling the beam from the caster toward the target location. Called from Blueprint. */
 	UFUNCTION(BlueprintCallable, Category = "Beam")
 	void StartBeamChannel(const FVector& TargetLocation, const FGameplayTag& SocketTag);

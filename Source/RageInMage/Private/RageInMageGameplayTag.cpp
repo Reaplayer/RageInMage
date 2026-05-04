@@ -1084,6 +1084,9 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.Status_Shielded = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Status.Shielded"), FString("Target is protected by a damage-absorbing shield."));
 
+	GameplayTag.Status_Channeling = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Status.Channeling"), FString("Actor is channeling a spell. Blocks activation of other abilities."));
+
 
 	/* Combat Socket Tags */
 	GameplayTag.CombatSocket_Weapon = UGameplayTagsManager::Get().AddNativeGameplayTag

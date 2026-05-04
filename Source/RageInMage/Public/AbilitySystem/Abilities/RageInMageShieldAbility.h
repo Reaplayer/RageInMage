@@ -41,6 +41,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Shield")
 	float ShieldDuration = 10.f;
 
+	/** Maximum number of damage instances the shield absorbs before breaking. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Shield")
+	int32 MaxAbsorbCount = 1;
+
 	// ── Heal ──
 
 	/** Instant GE that heals. Uses SetByCaller for magnitude. */
@@ -83,9 +87,13 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Shield")
 	void OnShieldExpired();
 
-	/** Called when shield absorbs damage. Passes absorbed amount before conversion. */
+	/** Called when shield absorbs damage. Passes total absorbed amount before conversion. */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Shield")
 	void OnShieldAbsorbed(float AbsorbedDamage);
+
+	/** Called each time the shield absorbs a hit (before it breaks). For per-hit VFX feedback. */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Shield")
+	void OnShieldHitAbsorbed(int32 HitNumber, float DamageAbsorbed);
 
 private:
 	void HandleShieldAbsorbed(float AbsorbedAmount);
@@ -98,4 +106,7 @@ private:
 
 	FTimerHandle ShieldExpirationTimerHandle;
 	FDelegateHandle ShieldAbsorbDelegateHandle;
+
+	int32 CurrentAbsorbCount = 0;
+	float TotalAbsorbedDamage = 0.f;
 };

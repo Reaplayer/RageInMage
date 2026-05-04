@@ -4,11 +4,17 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "RageInMageGameplayTag.h"
 #include "AbilitySystem/AbilityTasks/RageInMageAbilityTask_YoyoControl.h"
 #include "Actor/RageInMageYoyoProjectile.h"
 #include "Interaction/CombatInterface.h"
 #include "Kismet/GameplayStatics.h"
 
+
+URageInMageYoyoSpell::URageInMageYoyoSpell()
+{
+	ActivationOwnedTags.AddTag(FRageInMageGameplayTag::Get().Status_Channeling);
+}
 
 void URageInMageYoyoSpell::LaunchYoyo(const FVector& TargetLocation, const FGameplayTag& SocketTag)
 {
@@ -52,8 +58,8 @@ void URageInMageYoyoSpell::LaunchYoyo(const FVector& TargetLocation, const FGame
 		ActiveProjectile->KnockbackStrength = KnockbackStrength.GetValueAtLevel(GetAbilityLevel());
 		ActiveProjectile->KnockbackUpwardForce = KnockbackUpwardForce;
 
-		// Pull physics
-		ActiveProjectile->PullOrigin = AvatarActor->GetActorLocation();
+		// Pull physics — pull toward the spawn (socket) location, not the character center
+		ActiveProjectile->PullOrigin = SocketLocation;
 		ActiveProjectile->PullStrength = PullStrength;
 		ActiveProjectile->OriginReturnRadius = OriginReturnRadius;
 		ActiveProjectile->bPullActive = true;
@@ -86,7 +92,14 @@ void URageInMageYoyoSpell::LaunchYoyo(const FVector& TargetLocation, const FGame
 
 bool URageInMageYoyoSpell::RecastYoyo(const FVector& NewTargetLocation)
 {
-	if (!ActiveProjectile || CurrentChain >= MaxChains) return false;
+	if (!ActiveProjectile)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Orange, TEXT("Recast BLOCKED — No projectile"));
+		}
+		return false;
+	}
 
 	AActor* AvatarActor = GetAvatarActorFromActorInfo();
 	if (!AvatarActor || !AvatarActor->HasAuthority()) return false;
@@ -102,29 +115,47 @@ bool URageInMageYoyoSpell::RecastYoyo(const FVector& NewTargetLocation)
 		NewDirection = -CurrentHeading;
 	}
 
-	// The recast direction should be within RecastConeHalfAngle of the OPPOSITE of current heading
-	const FVector OppositeHeading = -CurrentHeading;
-	const float DotProduct = FVector::DotProduct(OppositeHeading, NewDirection);
+	// The recast direction should be within RecastConeHalfAngle of the CURRENT heading (boost, not redirect)
+	const float DotProduct = FVector::DotProduct(CurrentHeading, NewDirection);
 	const float CosThreshold = FMath::Cos(FMath::DegreesToRadians(RecastConeHalfAngle));
 
 	if (DotProduct < CosThreshold)
 	{
-		// New direction is too far from the opposite heading — recast rejected
+		// New direction is too far from current heading — recast rejected
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red,
+				FString::Printf(TEXT("Recast FAILED! Dot: %.2f (need >= %.2f)"), DotProduct, CosThreshold));
+		}
 		return false;
 	}
 
-	// Apply chain multipliers
-	CurrentChain++;
-	CurrentSpeed *= SpeedMultiplierPerChain;
-	CurrentDamageMultiplier *= DamageMultiplierPerChain;
-	CurrentScaleMultiplier *= ScaleMultiplierPerChain;
+	// Apply chain multipliers only if below max chains
+	const bool bCanMultiply = CurrentChain < MaxChains;
+	if (bCanMultiply)
+	{
+		CurrentChain++;
+		CurrentSpeed *= SpeedMultiplierPerChain;
+		CurrentDamageMultiplier *= DamageMultiplierPerChain;
+		CurrentScaleMultiplier *= ScaleMultiplierPerChain;
+	}
 
-	// Update the projectile
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
+			FString::Printf(TEXT("Recast SUCCESS! Chain: %d | Dot: %.2f | Speed: %.0f%s"),
+				CurrentChain, DotProduct, CurrentSpeed,
+				bCanMultiply ? TEXT("") : TEXT(" (MAX — no multiplier)")));
+	}
+
+	// Update the projectile — pull back toward the caster's current position
 	ActiveProjectile->CurrentVelocity = NewDirection * CurrentSpeed;
 	ActiveProjectile->PullOrigin = AvatarActor->GetActorLocation();
 	ActiveProjectile->bPullActive = true;
+	ActiveProjectile->bHasLeftOrigin = false;
 	ActiveProjectile->CurrentScaleMultiplier = CurrentScaleMultiplier;
 	ActiveProjectile->SetActorScale3D(FVector(CurrentScaleMultiplier));
+	ActiveProjectile->SetLifeSpan(15.f);
 
 	// Update damage spec with the new multiplier
 	ActiveProjectile->DamageEffectSpecHandle = MakeYoyoDamageSpec();
@@ -172,6 +203,43 @@ void URageInMageYoyoSpell::HandleProjectileLost()
 	ActiveProjectile = nullptr;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Aim Indicator
+// ════════════════════════════════════════════════════════════════════════════════
+
+void URageInMageYoyoSpell::BeginAimMode()
+{
+	bIsAiming = true;
+	OnAimBegin();
+}
+
+void URageInMageYoyoSpell::EndAimMode()
+{
+	if (bIsAiming)
+	{
+		bIsAiming = false;
+		OnAimEnd();
+	}
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Ability Lifecycle
+// ════════════════════════════════════════════════════════════════════════════════
+
+void URageInMageYoyoSpell::EndAbility(
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo,
+	bool bReplicateEndAbility, bool bWasCancelled)
+{
+	EndAimMode();
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Damage Specs
+// ════════════════════════════════════════════════════════════════════════════════
 
 FGameplayEffectSpecHandle URageInMageYoyoSpell::MakeYoyoDamageSpec() const
 {

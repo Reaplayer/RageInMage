@@ -29,6 +29,8 @@ class RAGEINMAGE_API URageInMageYoyoSpell : public URageInMageDamageGameplayAbil
 	GENERATED_BODY()
 
 public:
+	URageInMageYoyoSpell();
+
 	/** Launch the yo-yo projectile toward the target. Called from Blueprint. */
 	UFUNCTION(BlueprintCallable, Category = "Yoyo")
 	void LaunchYoyo(const FVector& TargetLocation, const FGameplayTag& SocketTag);
@@ -53,6 +55,24 @@ public:
 	/** Called when the yo-yo hits something and the ability ends. */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Yoyo")
 	void OnYoyoImpact();
+
+	// ── Aim Indicator ──
+
+	/** Called when aim mode begins. Override in BP to spawn aim indicator Niagara system. */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Yoyo|AimIndicator")
+	void OnAimBegin();
+
+	/** Called when aim mode ends (release or cancel). Override in BP to destroy aim indicator VFX. */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Yoyo|AimIndicator")
+	void OnAimEnd();
+
+	/** Call from Blueprint when aim mode begins (before AimMode task starts ticking). */
+	UFUNCTION(BlueprintCallable, Category = "Yoyo|AimIndicator")
+	void BeginAimMode();
+
+	/** Call from Blueprint when aim mode ends (release or cancel). */
+	UFUNCTION(BlueprintCallable, Category = "Yoyo|AimIndicator")
+	void EndAimMode();
 
 protected:
 	// ── Projectile ──
@@ -90,10 +110,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Yoyo|Recast")
 	float RecastRadius = 300.f;
 
-	/** Half-angle of the valid recast cone (in degrees). Recast must be roughly opposite the current heading.
-	 *  90 = full hemisphere (very lenient), 30 = tight redirect. */
+	/** Half-angle of the valid recast cone (in degrees). Recast must be roughly aligned with the current heading.
+	 *  90 = full hemisphere (very lenient), 30 = tight boost. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Yoyo|Recast")
-	float RecastConeHalfAngle = 60.f;
+	float RecastConeHalfAngle = 30.f;
 
 	/** Maximum number of recasts allowed. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Yoyo|Recast")
@@ -137,6 +157,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Yoyo|SFX")
 	TObjectPtr<USoundBase> RecastSound;
 
+
+	// ── Ability Lifecycle ──
+
+	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		bool bReplicateEndAbility, bool bWasCancelled) override;
+
 private:
 	/** Create a damage spec with current chain multiplier applied. */
 	FGameplayEffectSpecHandle MakeYoyoDamageSpec() const;
@@ -162,4 +190,6 @@ private:
 	float CurrentSpeed = 0.f;
 	float CurrentDamageMultiplier = 1.f;
 	float CurrentScaleMultiplier = 1.f;
+
+	bool bIsAiming = false;
 };

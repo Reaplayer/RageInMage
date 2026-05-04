@@ -2,6 +2,14 @@
 
 #include "AbilitySystem/Abilities/RageInMageGameplayAbility.h"
 #include "Player/RageInMagePlayerController.h"
+#include "RageInMageGameplayTag.h"
+
+URageInMageGameplayAbility::URageInMageGameplayAbility()
+{
+	// All abilities are blocked while the caster is channeling another spell.
+	// Channeling abilities grant Status.Channeling via ActivationOwnedTags.
+	ActivationBlockedTags.AddTag(FRageInMageGameplayTag::Get().Status_Channeling);
+}
 
 FVector URageInMageGameplayAbility::GetAimWorldPosition() const
 {

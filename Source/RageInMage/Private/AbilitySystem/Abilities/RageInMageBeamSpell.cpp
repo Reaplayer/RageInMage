@@ -15,6 +15,11 @@
 #include "DrawDebugHelpers.h"
 
 
+URageInMageBeamSpell::URageInMageBeamSpell()
+{
+	ActivationOwnedTags.AddTag(FRageInMageGameplayTag::Get().Status_Channeling);
+}
+
 void URageInMageBeamSpell::StartBeamChannel(const FVector& TargetLocation, const FGameplayTag& SocketTag)
 {
 	if (!GetAvatarActorFromActorInfo()->HasAuthority()) return;

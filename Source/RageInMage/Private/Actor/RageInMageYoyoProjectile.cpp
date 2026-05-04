@@ -54,17 +54,27 @@ void ARageInMageYoyoProjectile::Tick(float DeltaTime)
 		const FVector ToPullOrigin = PullOrigin - GetActorLocation();
 		const float DistToOrigin = ToPullOrigin.Size();
 
-		// Check if we've returned close enough — deactivate pull
-		if (DistToOrigin <= OriginReturnRadius)
+		// Track whether the yo-yo has flown out past the return radius at least once
+		if (!bHasLeftOrigin)
 		{
+			if (DistToOrigin > OriginReturnRadius)
+			{
+				bHasLeftOrigin = true;
+			}
+		}
+		else if (DistToOrigin <= OriginReturnRadius)
+		{
+			// Only deactivate pull after the yo-yo has left and returned
 			bPullActive = false;
 		}
-		else
-		{
-			const FVector PullAcceleration = ToPullOrigin.GetSafeNormal() * PullStrength;
-			CurrentVelocity += PullAcceleration * DeltaTime;
-		}
+
+		// Always apply pull acceleration while active
+		const FVector PullAcceleration = ToPullOrigin.GetSafeNormal() * PullStrength;
+		CurrentVelocity += PullAcceleration * DeltaTime;
 	}
+
+	// Clamp to horizontal plane — yoyo should never drift vertically
+	CurrentVelocity.Z = 0.f;
 
 	// Move
 	const FVector DeltaMove = CurrentVelocity * DeltaTime;

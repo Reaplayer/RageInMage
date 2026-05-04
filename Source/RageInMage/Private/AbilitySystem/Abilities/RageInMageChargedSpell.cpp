@@ -19,6 +19,7 @@
 
 URageInMageChargedSpell::URageInMageChargedSpell()
 {
+	ActivationOwnedTags.AddTag(FRageInMageGameplayTag::Get().Status_Channeling);
 }
 
 // ──────────────────────────────────────────
