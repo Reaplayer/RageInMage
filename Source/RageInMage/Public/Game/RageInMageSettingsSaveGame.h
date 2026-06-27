@@ -74,9 +74,13 @@ public:
 
 	// ── Keybindings ──
 
-	/** Custom keybindings overriding defaults. Key = InputTag, Value = binding info. */
+	/** Custom M&K keybindings overriding defaults. Key = InputTag, Value = binding info. */
 	UPROPERTY(SaveGame)
 	TMap<FGameplayTag, FRageInMageKeyBinding> CustomKeybindings;
+
+	/** Custom controller keybindings overriding defaults. Key = Controller InputTag, Value = binding info. */
+	UPROPERTY(SaveGame)
+	TMap<FGameplayTag, FRageInMageKeyBinding> ControllerCustomKeybindings;
 
 	/** Save current settings to disk. */
 	void SaveSettings();

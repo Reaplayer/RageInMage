@@ -17,6 +17,18 @@ struct FMageInputAction
 
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag InputTag = FGameplayTag();
+	
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag InputModifierTag = FGameplayTag();
+	
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag InputModifierAdditionalTag = FGameplayTag();
+	
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag AbilityTypeTag = FGameplayTag();
+	
+	UPROPERTY(EditDefaultsOnly)
+	FText Name = FText();
 };
 
 /**

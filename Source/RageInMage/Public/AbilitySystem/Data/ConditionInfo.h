@@ -74,6 +74,15 @@ struct FRageInMageConditionInfo
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	float BaseIntensity = 10.f;
 
+	/* Stun Immunity */
+
+	/** If > 0, this condition is treated as a stun: right after it's applied, UConditionInfo's shared
+	 *  StunImmunityEffect is granted for (BaseIntensity + this) seconds — BaseIntensity being the
+	 *  stun's own duration for threshold-driven conditions (e.g. OverCharged). Leave at 0 for any
+	 *  condition that isn't a stun. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float StunImmunityGraceSeconds = 0.f;
+
 	/* Stacking */
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
@@ -129,6 +138,17 @@ public:
 	 *  Stages ±4 (Ignited/Frozen) remain in the ConditionInfo threshold system. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Heat Stages")
 	TMap<int32, TSubclassOf<UGameplayEffect>> HeatStageEffects;
+
+	/** Shared GE that grants Condition.Stunned. Used by any ability/condition that needs a generic,
+	 *  unconditional stun application (e.g. Flash And Awe's ApplyGuaranteedStun). */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stun")
+	TSubclassOf<UGameplayEffect> StunnedEffect;
+
+	/** Shared GE that grants Condition.StunImmune. Applied alongside every stun (see
+	 *  FRageInMageConditionInfo::StunImmunityGraceSeconds and ApplyGuaranteedStun) so a target can't
+	 *  be re-stunned until both the stun and its grace window have elapsed. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stun")
+	TSubclassOf<UGameplayEffect> StunImmunityEffect;
 
 	FRageInMageConditionInfo FindConditionInfoForTag(const FGameplayTag& ConditionTag, bool bLogNotFound = false) const;
 

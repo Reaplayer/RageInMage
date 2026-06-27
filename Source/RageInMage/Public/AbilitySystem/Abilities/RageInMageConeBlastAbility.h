@@ -37,6 +37,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ConeBlast")
 	FScalableFloat ConeRange;
 
+	/** Max vertical distance (above and below caster) that the cone can hit. 0 = unlimited. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ConeBlast")
+	float ConeHeightLimit = 0.f;
+
 	/** Pushback force applied to enemies in the cone. Scales with ability level. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ConeBlast|Pushback")
 	FScalableFloat PushbackStrength;

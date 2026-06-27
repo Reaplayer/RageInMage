@@ -8,7 +8,9 @@
 #include "NiagaraFunctionLibrary.h"
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
 #include "Components/AudioComponent.h"
+#include "DrawDebugHelpers.h"
 #include "Components/SphereComponent.h"
+#include "GameFramework/Pawn.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -32,6 +34,10 @@ void ARageInMageZone::BeginPlay()
 	// Update collision radius to match the configured zone radius
 	ZoneCollision->SetSphereRadius(ZoneRadius);
 
+#if ENABLE_DRAW_DEBUG
+	DrawDebugSphere(GetWorld(), GetActorLocation(), ZoneRadius, 24, FColor::Cyan, false, ZoneDuration, 0, 2.f);
+#endif
+
 	SetLifeSpan(ZoneDuration);
 
 	ZoneCollision->OnComponentBeginOverlap.AddDynamic(this, &ARageInMageZone::OnZoneOverlap);
@@ -39,6 +45,19 @@ void ARageInMageZone::BeginPlay()
 
 	if (HasAuthority())
 	{
+		// Overlap delegates only fire on state changes, so actors already standing inside
+		// the zone's footprint at spawn (e.g. the radius resize above, or component
+		// registration before this even ran) never generate a BeginOverlap event. Seed
+		// ActorsInside with a snapshot of whoever's already overlapping right now.
+		TArray<AActor*> InitialOverlaps;
+		ZoneCollision->GetOverlappingActors(InitialOverlaps, APawn::StaticClass());
+		for (AActor* Actor : InitialOverlaps)
+		{
+			if (!Actor || Actor == GetInstigator()) continue;
+			if (URageInMageAbilitySystemLibrary::IsBothEnemy(GetInstigator(), Actor)) continue;
+			ActorsInside.AddUnique(Actor);
+		}
+
 		// Tick damage immediately, then periodically
 		DamageTickEnemiesInside();
 		GetWorld()->GetTimerManager().SetTimer(

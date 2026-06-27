@@ -71,7 +71,10 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.Attributes_Secondary_MaxMana = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Attributes.Secondary.MaxMana"), FString("Maximum amount of an innate resource used to cast spells."));
 
-	
+	GameplayTag.Attributes_Secondary_Poise = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Attributes.Secondary.Poise"), FString("Resistance to knockback and being shoved by other characters' collisions."));
+
+
 	/* Vital Tags */
 	GameplayTag.Attributes_Vital_Health = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Attributes.Vital.Health"), FString("Current amount of damage you can take before death."));
@@ -966,6 +969,16 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.DamageTypeToMechanics.Add(GameplayTag.DamageType_MagicalDamage_Psychic, GameplayTag.Attributes_Mechanics_Crescendo);
 
 
+	/* M&K InputTag -> Controller InputTag default mapping */
+	GameplayTag.InputTagToControllerInputTag.Add(GameplayTag.InputTag_LMB, GameplayTag.InputTag_Controller_LT);
+	GameplayTag.InputTagToControllerInputTag.Add(GameplayTag.InputTag_RMB, GameplayTag.InputTag_Controller_RT);
+	GameplayTag.InputTagToControllerInputTag.Add(GameplayTag.InputTag_Shift, GameplayTag.InputTag_Controller_RightShoulder);
+	GameplayTag.InputTagToControllerInputTag.Add(GameplayTag.InputTag_1, GameplayTag.InputTag_Controller_A);
+	GameplayTag.InputTagToControllerInputTag.Add(GameplayTag.InputTag_2, GameplayTag.InputTag_Controller_B);
+	GameplayTag.InputTagToControllerInputTag.Add(GameplayTag.InputTag_3, GameplayTag.InputTag_Controller_X);
+	GameplayTag.InputTagToControllerInputTag.Add(GameplayTag.InputTag_4, GameplayTag.InputTag_Controller_Y);
+
+
 	/* Heat Stage Tags */
 	GameplayTag.HeatStage_Cold1 = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("HeatStage.Cold1"), FString("Heat -25 to -49: 10% Movement Slow."));
@@ -1034,7 +1047,10 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	
 	GameplayTag.Condition_Stunned = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Condition.Stunned"), FString("Tag for when Stunned, unable to Move or make any Action."));
-	
+
+	GameplayTag.Condition_StunImmune = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.StunImmune"), FString("Tag for a brief grace period after Stunned ends, preventing immediate re-stunning (stun-lock protection)."));
+
 	GameplayTag.Condition_Paralysed = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Condition.Paralysed"), FString("Tag for when Paralysed, unable to Move or make any Action."));
 	

@@ -8,7 +8,7 @@
 #include "RageInMageEInputComponent.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class RAGEINMAGE_API URageInMageEInputComponent : public UEnhancedInputComponent
@@ -39,7 +39,7 @@ void URageInMageEInputComponent::BindAbilityActions(const URageInMageConfig* Inp
 			{
 				BindAction(Action.InputAction, ETriggerEvent::Completed, Object, ReleasedFunc, Action.InputTag);
 			}
-			
+
 			if (HeldFunc)
 			{
 				BindAction(Action.InputAction, ETriggerEvent::Triggered, Object, HeldFunc, Action.InputTag);

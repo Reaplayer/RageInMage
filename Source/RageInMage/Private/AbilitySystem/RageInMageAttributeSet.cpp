@@ -11,6 +11,7 @@
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
 #include "AbilitySystem/Data/ConditionInfo.h"
+#include "Character/RageInMageCharacterBase.h"
 #include "GameplayCueInterface.h"
 #include "Interaction/CombatInterface.h"
 #include "Interaction/PlayerInterface.h"
@@ -48,6 +49,7 @@ void URageInMageAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, MagicalDefencePenetration, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, MaxMana, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Poise, COND_None, REPNOTIFY_Always);
 
 	// Vital Attributes
 	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Health, COND_None, REPNOTIFY_Always);
@@ -193,9 +195,13 @@ void URageInMageAttributeSet::PostGameplayEffectExecute(const FGameplayEffectMod
 			}
 			else
 			{
-				FGameplayTagContainer TagContainer;
-				TagContainer.AddTag(FRageInMageGameplayTag::Get().Effects_HitReaction);
-				Properties.TargetASC->TryActivateAbilitiesByTag(TagContainer);
+				const ARageInMageCharacterBase* TargetCharacter = Cast<ARageInMageCharacterBase>(Properties.TargetAvatarActor);
+				if (!TargetCharacter || TargetCharacter->CanTriggerHitReaction())
+				{
+					FGameplayTagContainer TagContainer;
+					TagContainer.AddTag(FRageInMageGameplayTag::Get().Effects_HitReaction);
+					Properties.TargetASC->TryActivateAbilitiesByTag(TagContainer);
+				}
 			}
 			const bool bCritHit = URageInMageAbilitySystemLibrary::IsCriticalHit(Properties.EffectContextHandle);
 			const bool bVulnerableHit = URageInMageAbilitySystemLibrary::IsVulnerableHit(Properties.EffectContextHandle);
@@ -213,11 +219,12 @@ void URageInMageAttributeSet::PostGameplayEffectExecute(const FGameplayEffectMod
 		SetHeat(NewHeat);
 
 		// DEBUG: show Heat on screen (remove after testing)
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange,
-				FString::Printf(TEXT("Heat: %.1f (was %.1f)"), NewHeat, OldHeat));
-		}
+		// Commented out for now while testing the Frozen mechanic — re-enable later if needed.
+		// if (GEngine)
+		// {
+		// 	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange,
+		// 		FString::Printf(TEXT("Heat: %.1f (was %.1f)"), NewHeat, OldHeat));
+		// }
 
 		// Fire hit on already-burning target -> add ignite stack
 		// Check Magnitude > 0 (heat was added) because when heat is clamped at 120,
@@ -382,6 +389,24 @@ void URageInMageAttributeSet::PostAttributeChange(const FGameplayAttribute& Attr
 			bHeatStageHandledByGEPath = false;
 		}
 	}
+
+	// Charge: manage decay timer on any Charge change (including decay ticks).
+	// The Charge >= 100 -> Stunned threshold is handled by HandleMechanicsThreshold
+	// via PostGameplayEffectExecute (ConditionInfo-driven), not here.
+	if (Attribute == GetChargeAttribute())
+	{
+		if (URageInMageAbilitySystemComponent* ASC = Cast<URageInMageAbilitySystemComponent>(GetOwningAbilitySystemComponent()))
+		{
+			if (!FMath::IsNearlyZero(NewValue, 0.5f))
+			{
+				ASC->StartChargeDecay();
+			}
+			else
+			{
+				ASC->StopChargeDecay();
+			}
+		}
+	}
 }
 
 void URageInMageAttributeSet::InitialiseTagsToAttributes()
@@ -407,6 +432,7 @@ void URageInMageAttributeSet::InitialiseTagsToAttributes()
 	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MagicalAttack, GetMagicalAttackAttribute);
 	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MaxHealth, GetMaxHealthAttribute);
 	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MaxMana, GetMaxManaAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_Poise, GetPoiseAttribute);
 }
 
 
@@ -547,6 +573,11 @@ void URageInMageAttributeSet::OnRep_Mana(const FGameplayAttributeData& OldMana) 
 void URageInMageAttributeSet::OnRep_MaxMana(const FGameplayAttributeData& OldMaxMana) const
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, MaxMana, OldMaxMana);
+}
+
+void URageInMageAttributeSet::OnRep_Poise(const FGameplayAttributeData& OldPoise) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Poise, OldPoise);
 }
 
 void URageInMageAttributeSet::OnRep_Resistance_PhysicalDamage(const FGameplayAttributeData& OldResistance_PhysicalDamage) const
@@ -740,6 +771,16 @@ void URageInMageAttributeSet::ApplyConditionFromData(const FRageInMageConditionI
 	{
 		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, CondInfo->ConditionTag, CondInfo->BaseIntensity);
 		Properties.TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+
+		// Treat this condition as a stun: grant immunity for its own duration plus the grace period,
+		// starting now rather than on natural expiry, so a refreshed/extended stun can't outrun it.
+		// Mirrors URageInMageAbilitySystemLibrary::ApplyConditionToTarget, which this threshold pipeline bypasses.
+		if (CondInfo->StunImmunityGraceSeconds > 0.f)
+		{
+			URageInMageAbilitySystemLibrary::ApplyStunImmunity(
+				Instigator, Properties.TargetASC, Properties.TargetAvatarActor,
+				CondInfo->BaseIntensity + CondInfo->StunImmunityGraceSeconds);
+		}
 	}
 }
 

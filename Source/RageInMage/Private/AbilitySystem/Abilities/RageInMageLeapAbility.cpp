@@ -4,6 +4,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "Character/RageInMageCharacterBase.h"
 #include "GameFramework/Character.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
@@ -143,12 +144,12 @@ void URageInMageLeapAbility::ApplyLandingExplosion()
 		}
 
 		// Apply pushback — direction away from explosion center, scaled by distance
-		if (ACharacter* TargetCharacter = Cast<ACharacter>(Target))
+		if (ARageInMageCharacterBase* TargetCharacter = Cast<ARageInMageCharacterBase>(Target))
 		{
 			FVector PushDirection = (Target->GetActorLocation() - ExplosionCenter).GetSafeNormal();
 			PushDirection.Z = 0.3f; // Slight upward push
 			PushDirection.Normalize();
-			TargetCharacter->LaunchCharacter(PushDirection * Pushback, true, true);
+			TargetCharacter->ApplyKnockbackImpulse(PushDirection * Pushback, true, true);
 		}
 	}
 }

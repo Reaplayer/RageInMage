@@ -63,6 +63,7 @@ public:
 	void ForEachAbilitySpec(const FForEachAbilitySpec& Delegate);
 	static FGameplayTag GetAbilityTagFromSpec(const FGameplayAbilitySpec& AbilitySpec);
 	static FGameplayTag GetInputTagFromSpec(const FGameplayAbilitySpec& AbilitySpec);
+	static FGameplayTag GetControllerInputTagFromSpec(const FGameplayAbilitySpec& AbilitySpec);
 	static FGameplayTag GetAbilityTypeTagFromSpec(const FGameplayAbilitySpec& AbilitySpec);
 	static FGameplayTag GetAbilityProgressionTagFromSpec(const FGameplayAbilitySpec& AbilitySpec);
 
@@ -109,6 +110,15 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Mechanics|Heat")
 	float HeatDecayRate = 4.f;
+
+	// ── Charge Decay ──
+
+	void StartChargeDecay();
+	void StopChargeDecay();
+
+	/** How much Charge decays per second when not being actively charged. */
+	UPROPERTY(EditDefaultsOnly, Category = "Mechanics|Charge")
+	float ChargeDecayRate = 10.f;
 
 	// ── Ignite Stack System ──
 
@@ -162,10 +172,18 @@ protected:
 	void OnAbilitiesGiven(URageInMageAbilitySystemComponent* RageInMageAbilitySystemComponent);
 
 private:
+	// Debug: reset each time abilities are granted so spec dump fires again
+	bool bSpecsDumped = false;
+
 	// ── Heat Decay Internals ──
 	FTimerHandle HeatDecayTimerHandle;
 	void TickHeatDecay();
 	bool bHeatDecayActive = false;
+
+	// ── Charge Decay Internals ──
+	FTimerHandle ChargeDecayTimerHandle;
+	void TickChargeDecay();
+	bool bChargeDecayActive = false;
 
 	// ── Ignite Stack Internals ──
 	TArray<FIgniteStack> IgniteStacks;

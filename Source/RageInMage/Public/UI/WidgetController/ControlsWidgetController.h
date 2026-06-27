@@ -13,6 +13,7 @@ class URageInMageConfig;
 class UInputDisplayInfo;
 class UInputMappingContext;
 class ARageInMagePlayerController;
+class UDataTable;
 
 /**
  * Displayable keybinding info for the remapping UI.
@@ -87,7 +88,8 @@ class RAGEINMAGE_API UControlsWidgetController : public UObject
 
 public:
 	void Initialize(USettingsWidgetController* InParent, ARageInMagePlayerController* InPC,
-		URageInMageConfig* InInputConfig, UInputMappingContext* InDefaultIMC);
+		URageInMageConfig* InInputConfig, UInputMappingContext* InDefaultIMC,
+		URageInMageConfig* InControllerInputConfig = nullptr, UInputMappingContext* InControllerIMC = nullptr);
 	void BroadcastInitialValues();
 	void RevertValues();
 
@@ -111,13 +113,21 @@ public:
 
 	// ── Query ──
 
-	/** Get all bindings for UI display */
+	/** Get all M&K bindings for UI display */
 	UFUNCTION(BlueprintCallable, Category = "Controls")
 	TArray<FRageInMageDisplayBinding> GetAllBindings();
+
+	/** Get all controller bindings for UI display */
+	UFUNCTION(BlueprintCallable, Category = "Controls")
+	TArray<FRageInMageDisplayBinding> GetAllControllerBindings();
 
 	/** Check if currently in key capture mode */
 	UFUNCTION(BlueprintPure, Category = "Controls")
 	bool IsCapturingKey() const { return bIsCapturingKey; }
+
+	/** Get the key icon DataTable from the player controller. */
+	UFUNCTION(BlueprintPure, Category = "Controls")
+	UDataTable* GetKeyIconTable() const;
 
 	// ── Key capture workflow ──
 
@@ -151,9 +161,21 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Controls")
 	void ResetBinding(FGameplayTag InputTag);
 
-	/** Reset all bindings to defaults */
+	/** Reset all M&K bindings to defaults */
 	UFUNCTION(BlueprintCallable, Category = "Controls")
 	void ResetAllBindings();
+
+	/** Set a controller binding directly. Returns true on success. */
+	UFUNCTION(BlueprintCallable, Category = "Controls")
+	bool SetControllerBinding(FGameplayTag InputTag, FKey PrimaryKey);
+
+	/** Reset a single controller binding to its default */
+	UFUNCTION(BlueprintCallable, Category = "Controls")
+	void ResetControllerBinding(FGameplayTag InputTag);
+
+	/** Reset all controller bindings to defaults */
+	UFUNCTION(BlueprintCallable, Category = "Controls")
+	void ResetAllControllerBindings();
 
 	// ── Conflict detection ──
 
@@ -176,7 +198,9 @@ protected:
 
 private:
 	void LoadDefaultBindings();
+	void LoadControllerDefaultBindings();
 	void ApplyAllBindingsToIMC();
+	void ApplyAllControllerBindingsToIMC();
 	void BroadcastBindings();
 	FRageInMageDisplayBinding BuildDisplayBinding(const FGameplayTag& InputTag, const FRageInMageKeyBinding& Binding, bool bCustomized) const;
 
@@ -192,8 +216,18 @@ private:
 	UPROPERTY()
 	TObjectPtr<UInputMappingContext> DefaultIMC;
 
+	/** Controller-specific input config and IMC */
+	UPROPERTY()
+	TObjectPtr<URageInMageConfig> ControllerInputConfig;
+
+	UPROPERTY()
+	TObjectPtr<UInputMappingContext> ControllerDefaultIMC;
+
 	/** Default bindings loaded from the original IMC at startup (never modified) */
 	TMap<FGameplayTag, FRageInMageKeyBinding> DefaultBindings;
+
+	/** Default controller bindings loaded from the controller IMC at startup */
+	TMap<FGameplayTag, FRageInMageKeyBinding> ControllerDefaultBindings;
 
 	// ── Key capture state ──
 	bool bIsCapturingKey = false;

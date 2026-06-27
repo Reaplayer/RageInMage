@@ -132,6 +132,10 @@ public:
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxMana, Category = "Secondary Attributes")
 	FGameplayAttributeData MaxMana;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, MaxMana);
+	/** Resistance to knockback/displacement. Reduces incoming knockback impulses and how easily this character can be shoved by another character's collision. Granted by gear. */
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Poise, Category = "Secondary Attributes")
+	FGameplayAttributeData Poise;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Poise);
 
 
 	/* Resistance Attributes */
@@ -291,8 +295,10 @@ public:
 	void OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth) const;
 	UFUNCTION()
 	void OnRep_MaxMana(const FGameplayAttributeData& OldMaxMana) const;
+	UFUNCTION()
+	void OnRep_Poise(const FGameplayAttributeData& OldPoise) const;
 
-	
+
 	/* Vital Attributes */
 	
 	UFUNCTION()

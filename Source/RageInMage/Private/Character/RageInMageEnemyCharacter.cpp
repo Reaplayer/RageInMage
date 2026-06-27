@@ -110,7 +110,13 @@ void ARageInMageEnemyCharacter::SetSummonCount_Implementation(int32 NewSummonCou
 void ARageInMageEnemyCharacter::HitReactionTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
 {
 	bHitReacting = NewCount > 0;
-	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0.f : BaseWalkSpeed + GetRageInMageAttributeSet()->GetMovementSpeed();
+	// Restore walk speed when hit reaction ends; don't zero it during hit reaction
+	// so that LaunchCharacter pushback still works. AI movement is blocked by the
+	// BT's HitReacting blackboard key instead.
+	if (!bHitReacting)
+	{
+		UpdateMovementSpeed();
+	}
 	if (HasAuthority())
 	{
 		if (AIController == nullptr) return;
@@ -124,7 +130,8 @@ void ARageInMageEnemyCharacter::BeginPlay()
 	InitPlayerAbilityActorInfo();
 	BindIgniteStackDelegate();
 	BindHeatGlowDelegate();
-	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed + GetRageInMageAttributeSet()->GetMovementSpeed();
+	BindMovementSpeedDelegate();
+	UpdateMovementSpeed();
 	if (HasAuthority())
 	{
 		URageInMageAbilitySystemLibrary::GiveStartupAbilities(this, AbilitySystemComponent, CharacterClass);
@@ -153,6 +160,11 @@ void ARageInMageEnemyCharacter::BeginPlay()
 			this,
 			&ARageInMageEnemyCharacter::HitReactionTagChanged
 			);
+
+		// Bind stun delegate to lock/unlock movement
+		BindStunDelegate();
+		// Bind hit reaction grace delegate to track when reactions end
+		BindHitReactionGraceDelegate();
 
 		OnHealthChanged.Broadcast(EnemyAS->GetHealth());
 		OnMaxHealthChanged.Broadcast(EnemyAS->GetMaxHealth());

@@ -9,6 +9,8 @@
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
 #include "Components/CapsuleComponent.h"
+#include "Engine/World.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "RageInMage/RageInMageLogChannels.h"
 
@@ -32,6 +34,85 @@ ARageInMageCharacterBase::ARageInMageCharacterBase()
 URageInMageAttributeSet* ARageInMageCharacterBase::GetRageInMageAttributeSet() const
 {
 	return CastChecked<URageInMageAttributeSet>(AttributeSet.Get());
+}
+
+void ARageInMageCharacterBase::ApplyKnockbackImpulse(FVector Impulse, bool bXYOverride, bool bZOverride)
+{
+	const URageInMageAttributeSet* AS = GetRageInMageAttributeSet();
+	const float MyPoise = AS ? FMath::Max(0.f, AS->GetPoise()) : 0.f;
+	const float PoiseMultiplier = 100.f / (100.f + MyPoise);
+
+	// Cut any in-flight AI move synchronously. The Behavior Tree normally stops chasing via the
+	// Effects.HitReaction tag -> "HitReacting" Blackboard key -> decorator abort, but that chain
+	// resolves on the BT's next tick. If the target is mid-MoveTo right now, its movement
+	// component still has lateral Acceleration pointed at the old goal, which fights this same
+	// tick's launch (even at reduced AirControl while airborne) before the BT catches up.
+	if (AController* MyController = GetController())
+	{
+		MyController->StopMovement();
+	}
+
+	LaunchCharacter(Impulse * PoiseMultiplier, bXYOverride, bZOverride);
+}
+
+void ARageInMageCharacterBase::NotifyHit(UPrimitiveComponent* MyComp, AActor* Other, UPrimitiveComponent* OtherComp,
+	bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult& Hit)
+{
+	Super::NotifyHit(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
+
+	// Only the character whose own movement caused the hit resolves the transfer/bounce — the
+	// actor on the receiving end gets its own NotifyHit call with bSelfMoved=false, which we ignore.
+	if (!bSelfMoved || !HasAuthority() || !Other) return;
+
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	if (!MoveComp) return;
+
+	FVector FlatVelocity = MoveComp->Velocity;
+	FlatVelocity.Z = 0.f;
+	const float Speed = FlatVelocity.Size();
+	if (Speed < MinKnockbackTransferSpeed) return;
+
+	// De-dupe: sliding/multi-sweep movement resolution can call NotifyHit several times against
+	// the same actor within a single frame (or across consecutive frames while still in contact).
+	const float Now = GetWorld()->GetTimeSeconds();
+	if (LastKnockbackHitActor.Get() == Other && (Now - LastKnockbackHitTime) < 0.2f) return;
+	LastKnockbackHitActor = Other;
+	LastKnockbackHitTime = Now;
+
+	ARageInMageCharacterBase* OtherCharacter = Cast<ARageInMageCharacterBase>(Other);
+
+	float TargetResistance = TNumericLimits<float>::Max();
+	if (OtherCharacter)
+	{
+		const URageInMageAttributeSet* OtherAS = OtherCharacter->GetRageInMageAttributeSet();
+		const float OtherPoise = OtherAS ? FMath::Max(0.f, OtherAS->GetPoise()) : 0.f;
+		TargetResistance = BaseShoveResistance + OtherPoise * PoiseResistancePerPoint;
+	}
+
+	if (OtherCharacter && Speed > TargetResistance)
+	{
+		// Movable: shove the target with a share of our momentum, and keep moving ourselves —
+		// slowed by how much resistance we had to push through, but never stopped dead.
+		const float OvercomeRatio = FMath::Clamp((Speed - TargetResistance) / Speed, 0.f, 1.f);
+		const FVector TransferVelocity = FlatVelocity * KnockbackTransferRatio * OvercomeRatio;
+		OtherCharacter->ApplyKnockbackImpulse(TransferVelocity, true, false);
+
+		MoveComp->Velocity *= (1.f - KnockbackAbsorptionRatio * (1.f - OvercomeRatio));
+	}
+	else
+	{
+		// Immovable (a heavier character, or static world geometry): bounce off it instead of
+		// stopping dead. Reflect the horizontal velocity across the hit normal and lose some energy.
+		FVector FlatNormal = HitNormal;
+		FlatNormal.Z = 0.f;
+		FlatNormal = FlatNormal.GetSafeNormal();
+		if (!FlatNormal.IsNearlyZero())
+		{
+			const FVector Reflected = (FlatVelocity - 2.f * FVector::DotProduct(FlatVelocity, FlatNormal) * FlatNormal) * KnockbackBounceRestitution;
+			MoveComp->Velocity.X = Reflected.X;
+			MoveComp->Velocity.Y = Reflected.Y;
+		}
+	}
 }
 
 UAnimMontage* ARageInMageCharacterBase::GetHitReactionMontage_Implementation()
@@ -362,6 +443,33 @@ void ARageInMageCharacterBase::BindHeatGlowDelegate()
 	).AddUObject(this, &ARageInMageCharacterBase::OnHeatAttributeChanged);
 }
 
+// ── Movement Speed ──
+
+void ARageInMageCharacterBase::UpdateMovementSpeed()
+{
+	const URageInMageAttributeSet* RageAS = GetRageInMageAttributeSet();
+	if (!RageAS || !GetCharacterMovement()) return;
+
+	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed * RageAS->GetMovementSpeed();
+}
+
+void ARageInMageCharacterBase::BindMovementSpeedDelegate()
+{
+	if (!AbilitySystemComponent) return;
+
+	const URageInMageAttributeSet* RageAS = Cast<URageInMageAttributeSet>(AttributeSet);
+	if (!RageAS) return;
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+		RageAS->GetMovementSpeedAttribute()
+	).AddUObject(this, &ARageInMageCharacterBase::OnMovementSpeedAttributeChanged);
+}
+
+void ARageInMageCharacterBase::OnMovementSpeedAttributeChanged(const FOnAttributeChangeData& Data)
+{
+	UpdateMovementSpeed();
+}
+
 void ARageInMageCharacterBase::CreateHeatGlowDMIs()
 {
 	if (bHeatGlowDMIsCreated) return;
@@ -418,6 +526,65 @@ void ARageInMageCharacterBase::OnHeatAttributeChanged(const FOnAttributeChangeDa
 			DMI->SetScalarParameterValue(FName("HeatGlowIntensity"), Intensity);
 		}
 	}
+}
+
+// ── Stun ──
+
+void ARageInMageCharacterBase::BindStunDelegate()
+{
+	if (URageInMageAbilitySystemComponent* RageASC = Cast<URageInMageAbilitySystemComponent>(AbilitySystemComponent))
+	{
+		const FGameplayTag StunTag = FRageInMageGameplayTag::Get().Condition_Stunned;
+		// Guard against double-bind (PlayerCharacter calls this from both PossessedBy and OnRep_PlayerState)
+		if (!RageASC->RegisterGameplayTagEvent(StunTag, EGameplayTagEventType::NewOrRemoved).IsBoundToObject(this))
+		{
+			RageASC->RegisterGameplayTagEvent(StunTag, EGameplayTagEventType::NewOrRemoved)
+				.AddUObject(this, &ARageInMageCharacterBase::StunTagChanged);
+		}
+	}
+}
+
+void ARageInMageCharacterBase::StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
+{
+	UCharacterMovementComponent* Movement = GetCharacterMovement();
+	if (!Movement) return;
+
+	if (NewCount > 0)
+	{
+		MovementModeBeforeStun = Movement->MovementMode;
+		Movement->DisableMovement();
+	}
+	else
+	{
+		Movement->SetMovementMode(MovementModeBeforeStun);
+	}
+}
+
+void ARageInMageCharacterBase::BindHitReactionGraceDelegate()
+{
+	if (URageInMageAbilitySystemComponent* RageASC = Cast<URageInMageAbilitySystemComponent>(AbilitySystemComponent))
+	{
+		const FGameplayTag HitReactionTag = FRageInMageGameplayTag::Get().Effects_HitReaction;
+		// Guard against double-bind (PlayerCharacter calls this from both PossessedBy and OnRep_PlayerState)
+		if (!RageASC->RegisterGameplayTagEvent(HitReactionTag, EGameplayTagEventType::NewOrRemoved).IsBoundToObject(this))
+		{
+			RageASC->RegisterGameplayTagEvent(HitReactionTag, EGameplayTagEventType::NewOrRemoved)
+				.AddUObject(this, &ARageInMageCharacterBase::HitReactionGraceTagChanged);
+		}
+	}
+}
+
+void ARageInMageCharacterBase::HitReactionGraceTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
+{
+	if (NewCount == 0)
+	{
+		LastHitReactionEndTime = GetWorld()->GetTimeSeconds();
+	}
+}
+
+bool ARageInMageCharacterBase::CanTriggerHitReaction() const
+{
+	return GetWorld()->GetTimeSeconds() - LastHitReactionEndTime >= HitReactionGraceSeconds;
 }
 
 void ARageInMageCharacterBase::OnIgniteStackCountChanged(int32 NewStackCount)

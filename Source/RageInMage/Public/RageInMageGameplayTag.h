@@ -45,6 +45,7 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Attributes_Secondary_MagicalDefencePenetration;
 	FGameplayTag Attributes_Secondary_MaxHealth;
 	FGameplayTag Attributes_Secondary_MaxMana;
+	FGameplayTag Attributes_Secondary_Poise;
 
 	
 	/* Vital Attributes */
@@ -397,6 +398,9 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Resistance_MagicalDamage_Force;
 	FGameplayTag Resistance_MagicalDamage_Psychic;
 
+	/* M&K InputTag -> Controller InputTag default mapping (centralised, avoids touching 72 ability BPs) */
+	TMap<FGameplayTag, FGameplayTag> InputTagToControllerInputTag;
+
 	TMap<FGameplayTag, FGameplayTag> DamageTypeToResistance;
 
 	/* Map of Damage Type Tags to Mechanics Attribute Tags */
@@ -427,6 +431,7 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Condition_Frozen;
 	FGameplayTag Condition_Paralysed;
 	FGameplayTag Condition_Stunned;
+	FGameplayTag Condition_StunImmune;
 	FGameplayTag Condition_Rooted;
 	FGameplayTag Condition_Pushed;
 	FGameplayTag Condition_Invisible;

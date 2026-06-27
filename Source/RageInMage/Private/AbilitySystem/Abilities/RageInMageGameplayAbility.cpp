@@ -9,6 +9,9 @@ URageInMageGameplayAbility::URageInMageGameplayAbility()
 	// All abilities are blocked while the caster is channeling another spell.
 	// Channeling abilities grant Status.Channeling via ActivationOwnedTags.
 	ActivationBlockedTags.AddTag(FRageInMageGameplayTag::Get().Status_Channeling);
+
+	// Stunned characters cannot act.
+	ActivationBlockedTags.AddTag(FRageInMageGameplayTag::Get().Condition_Stunned);
 }
 
 FVector URageInMageGameplayAbility::GetAimWorldPosition() const

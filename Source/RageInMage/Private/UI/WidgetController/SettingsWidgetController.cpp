@@ -126,6 +126,7 @@ void USettingsWidgetController::CreateChildControllers()
 	if (!ControlsController && ControlsControllerClass)
 	{
 		ControlsController = NewObject<UControlsWidgetController>(this, ControlsControllerClass);
-		ControlsController->Initialize(this, GetRagePC(), InputConfig, DefaultMageContext);
+		ControlsController->Initialize(this, GetRagePC(), InputConfig, DefaultMageContext,
+			ControllerInputConfig, DefaultControllerMageContext);
 	}
 }

@@ -39,6 +39,10 @@ void URageInMageAbilitySystemComponent::AbilityActorInfoSet()
 void URageInMageAbilitySystemComponent::AddCharacterAbilities(
 	const TArray<TSubclassOf<UGameplayAbility>>& StartupAbilities, ECharacterClass CharacterClass)
 {
+	UE_LOG(LogRageInMage, Warning, TEXT("[GRANT] === Granting %d abilities for class %d ==="),
+		StartupAbilities.Num(), static_cast<int32>(CharacterClass));
+	bSpecsDumped = false; // Reset so spec dump fires again on next input
+
 	const FRageInMageGameplayTag& GameplayTag = FRageInMageGameplayTag::Get();
 	const TMap<FGameplayTag, FGameplayTag>* TypeMap = GameplayTag.GetAbilityTypeMapForClass(CharacterClass);
 
@@ -54,6 +58,20 @@ void URageInMageAbilitySystemComponent::AddCharacterAbilities(
 			AbilitySpec.GetDynamicSpecSourceTags().AddTag(MageAbility->StartupInputTag);
 			AbilitySpec.GetDynamicSpecSourceTags().AddTag(MageAbility->StartupAbilityTag);
 			AbilitySpec.GetDynamicSpecSourceTags().AddTag(FRageInMageGameplayTag::Get().Ability_Progression_Unlocked);
+
+			// Inject controller input tag: explicit override > auto-mapped from M&K tag
+			FGameplayTag ControllerTag = MageAbility->StartupControllerInputTag;
+			if (!ControllerTag.IsValid())
+			{
+				if (const FGameplayTag* Mapped = GameplayTag.InputTagToControllerInputTag.Find(MageAbility->StartupInputTag))
+				{
+					ControllerTag = *Mapped;
+				}
+			}
+			if (ControllerTag.IsValid())
+			{
+				AbilitySpec.GetDynamicSpecSourceTags().AddTag(ControllerTag);
+			}
 
 			// Override AbilityTypeTag from the class's school map (single source of truth)
 			FGameplayTag AbilityTypeTag = MageAbility->StartupAbilityTypeTag; // fallback to BP default
@@ -71,10 +89,19 @@ void URageInMageAbilitySystemComponent::AddCharacterAbilities(
 			AbilitySpec.GetDynamicSpecSourceTags().AddTag(AbilityTypeTag);
 
 			// Give Ability
+			UE_LOG(LogRageInMage, Warning, TEXT("[GRANT] %s  InputTag=%s  AbilityTag=%s  ControllerTag=%s  TypeTag=%s"),
+				*AbilityClass->GetName(),
+				*MageAbility->StartupInputTag.ToString(),
+				*MageAbility->StartupAbilityTag.ToString(),
+				*ControllerTag.ToString(),
+				*AbilityTypeTag.ToString());
 			GiveAbility(AbilitySpec);
 		}
 	}
 	bStartupAbilitiesGiven = true;
+
+	UE_LOG(LogRageInMage, Warning, TEXT("[GRANT] === All %d startup abilities granted for class %d ==="),
+		StartupAbilities.Num(), static_cast<int32>(CharacterClass));
 
 	// Broadcast Ability Given Event
 	AbilitiesGivenDelegate.Broadcast();
@@ -95,16 +122,41 @@ void URageInMageAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& 
 	// Return if Input Tag is not valid
 	if (!InputTag.IsValid()) return;
 
+	// DEBUG: dump all specs once per ability grant cycle
+	if (!bSpecsDumped)
+	{
+		bSpecsDumped = true;
+		UE_LOG(LogRageInMage, Warning, TEXT("[SPEC DUMP] === %d activatable abilities ==="), GetActivatableAbilities().Num());
+		for (FGameplayAbilitySpec& Spec : GetActivatableAbilities())
+		{
+			UE_LOG(LogRageInMage, Warning, TEXT("[SPEC] %s  AllTags=%s"),
+				*Spec.Ability->GetName(), *Spec.GetDynamicSpecSourceTags().ToString());
+		}
+	}
+
+	bool bFoundMatch = false;
 	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
 	{
 		if (AbilitySpec.GetDynamicSpecSourceTags().HasTagExact(InputTag))
 		{
+			bFoundMatch = true;
+			UE_LOG(LogRageInMage, Warning, TEXT("[ASC:HELD] Tag=%s -> MATCHED %s (Active=%d, Cooldown=%d)"),
+				*InputTag.ToString(), *AbilitySpec.Ability->GetName(),
+				AbilitySpec.IsActive() ? 1 : 0,
+				AbilitySpec.Ability->CheckCooldown(AbilitySpec.Handle, AbilityActorInfo.Get()) ? 1 : 0);
 			AbilitySpecInputPressed(AbilitySpec);
 			if (!AbilitySpec.IsActive())
 			{
-				TryActivateAbility(AbilitySpec.Handle);
+				const bool bSuccess = TryActivateAbility(AbilitySpec.Handle);
+				UE_LOG(LogRageInMage, Warning, TEXT("[ASC:HELD] TryActivateAbility -> %s"), bSuccess ? TEXT("SUCCESS") : TEXT("FAILED"));
 			}
 		}
+	}
+
+	if (!bFoundMatch)
+	{
+		UE_LOG(LogRageInMage, Warning, TEXT("[ASC:HELD] Tag=%s -> NO MATCH FOUND in %d abilities"),
+			*InputTag.ToString(), GetActivatableAbilities().Num());
 	}
 }
 
@@ -112,12 +164,21 @@ void URageInMageAbilitySystemComponent::AbilityInputTagReleased(const FGameplayT
 {
 	if (!InputTag.IsValid()) return;
 
+	bool bFoundMatch = false;
 	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
 	{
 		if (AbilitySpec.GetDynamicSpecSourceTags().HasTagExact(InputTag))
 		{
+			bFoundMatch = true;
+			UE_LOG(LogRageInMage, Warning, TEXT("[ASC:RELEASED] Tag=%s -> MATCHED %s (Active=%d)"),
+				*InputTag.ToString(), *AbilitySpec.Ability->GetName(), AbilitySpec.IsActive() ? 1 : 0);
 			AbilitySpecInputReleased(AbilitySpec);
 		}
+	}
+
+	if (!bFoundMatch)
+	{
+		UE_LOG(LogRageInMage, Warning, TEXT("[ASC:RELEASED] Tag=%s -> NO MATCH FOUND"), *InputTag.ToString());
 	}
 }
 
@@ -155,9 +216,25 @@ FGameplayTag URageInMageAbilitySystemComponent::GetAbilityTagFromSpec(const FGam
 
 FGameplayTag URageInMageAbilitySystemComponent::GetInputTagFromSpec(const FGameplayAbilitySpec& AbilitySpec)
 {
+	const FGameplayTag ControllerParent = FGameplayTag::RequestGameplayTag(FName("InputTag.Controller"));
 	for (FGameplayTag Tag : AbilitySpec.GetDynamicSpecSourceTags())
 	{
 		if (Tag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("InputTag"))))
+		{
+			// Skip controller input tags — this returns M&K tags only
+			if (Tag.MatchesTag(ControllerParent)) continue;
+			return Tag;
+		}
+	}
+	return FGameplayTag();
+}
+
+FGameplayTag URageInMageAbilitySystemComponent::GetControllerInputTagFromSpec(const FGameplayAbilitySpec& AbilitySpec)
+{
+	const FGameplayTag ControllerParent = FGameplayTag::RequestGameplayTag(FName("InputTag.Controller"));
+	for (FGameplayTag Tag : AbilitySpec.GetDynamicSpecSourceTags())
+	{
+		if (Tag.MatchesTag(ControllerParent))
 		{
 			return Tag;
 		}
@@ -434,6 +511,60 @@ void URageInMageAbilitySystemComponent::TickHeatDecay()
 	}
 
 	const_cast<URageInMageAttributeSet*>(AS)->SetHeat(NewHeat);
+}
+
+// ── Charge Decay ──
+
+void URageInMageAbilitySystemComponent::StartChargeDecay()
+{
+	if (bChargeDecayActive) return;
+	bChargeDecayActive = true;
+
+	if (const AActor* LocalAvatarActor = GetAvatarActor())
+	{
+		if (UWorld* World = LocalAvatarActor->GetWorld())
+		{
+			// Tick every 1 second, ChargeDecayRate amount per tick.
+			World->GetTimerManager().SetTimer(
+				ChargeDecayTimerHandle,
+				this,
+				&URageInMageAbilitySystemComponent::TickChargeDecay,
+				1.0f,
+				true
+			);
+		}
+	}
+}
+
+void URageInMageAbilitySystemComponent::StopChargeDecay()
+{
+	if (!bChargeDecayActive) return;
+	bChargeDecayActive = false;
+
+	if (const AActor* LocalAvatarActor = GetAvatarActor())
+	{
+		if (UWorld* World = LocalAvatarActor->GetWorld())
+		{
+			World->GetTimerManager().ClearTimer(ChargeDecayTimerHandle);
+		}
+	}
+}
+
+void URageInMageAbilitySystemComponent::TickChargeDecay()
+{
+	const URageInMageAttributeSet* AS = GetSet<URageInMageAttributeSet>();
+	if (!AS) return;
+
+	const float CurrentCharge = AS->GetCharge();
+	if (FMath::IsNearlyZero(CurrentCharge, 0.5f))
+	{
+		const_cast<URageInMageAttributeSet*>(AS)->SetCharge(0.f);
+		StopChargeDecay();
+		return;
+	}
+
+	const float NewCharge = FMath::Max(CurrentCharge - ChargeDecayRate, 0.f);
+	const_cast<URageInMageAttributeSet*>(AS)->SetCharge(NewCharge);
 }
 
 // ── Replication ──

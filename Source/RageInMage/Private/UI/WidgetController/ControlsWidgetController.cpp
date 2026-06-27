@@ -11,14 +11,18 @@
 #include "RageInMage/RageInMageLogChannels.h"
 
 void UControlsWidgetController::Initialize(USettingsWidgetController* InParent, ARageInMagePlayerController* InPC,
-	URageInMageConfig* InInputConfig, UInputMappingContext* InDefaultIMC)
+	URageInMageConfig* InInputConfig, UInputMappingContext* InDefaultIMC,
+	URageInMageConfig* InControllerInputConfig, UInputMappingContext* InControllerIMC)
 {
 	ParentController = InParent;
 	RagePC = InPC;
 	InputConfig = InInputConfig;
 	DefaultIMC = InDefaultIMC;
+	ControllerInputConfig = InControllerInputConfig;
+	ControllerDefaultIMC = InControllerIMC;
 
 	LoadDefaultBindings();
+	LoadControllerDefaultBindings();
 }
 
 void UControlsWidgetController::BroadcastInitialValues()
@@ -193,6 +197,9 @@ bool UControlsWidgetController::SetBinding(FGameplayTag InputTag, FKey PrimaryKe
 	// Broadcast updated bindings to UI
 	BroadcastBindings();
 
+	// Notify spell globes of the specific binding change
+	if (RagePC) RagePC->BroadcastKeybindDisplayChanged(InputTag);
+
 	return true;
 }
 
@@ -205,6 +212,9 @@ void UControlsWidgetController::ResetBinding(FGameplayTag InputTag)
 
 	ApplyAllBindingsToIMC();
 	BroadcastBindings();
+
+	// Notify spell globes of the specific binding change
+	if (RagePC) RagePC->BroadcastKeybindDisplayChanged(InputTag);
 }
 
 void UControlsWidgetController::ResetAllBindings()
@@ -217,9 +227,137 @@ void UControlsWidgetController::ResetAllBindings()
 	if (RagePC)
 	{
 		RagePC->ResetKeybindingsToDefault();
+
+		// Notify spell globes of each binding reset
+		for (const auto& [InputTag, Binding] : DefaultBindings)
+		{
+			RagePC->BroadcastKeybindDisplayChanged(InputTag);
+		}
 	}
 
 	BroadcastBindings();
+}
+
+// ── Controller binding methods ──
+
+void UControlsWidgetController::LoadControllerDefaultBindings()
+{
+	if (!ControllerInputConfig || !ControllerDefaultIMC) return;
+
+	ControllerDefaultBindings.Empty();
+
+	for (const FMageInputAction& MageAction : ControllerInputConfig->AbilityInputActions)
+	{
+		if (!MageAction.InputAction || !MageAction.InputTag.IsValid()) continue;
+
+		const TArray<FEnhancedActionKeyMapping>& Mappings = ControllerDefaultIMC->GetMappings();
+		for (const FEnhancedActionKeyMapping& Mapping : Mappings)
+		{
+			if (Mapping.Action == MageAction.InputAction)
+			{
+				FRageInMageKeyBinding DefaultBinding;
+				DefaultBinding.InputTag = MageAction.InputTag;
+				DefaultBinding.PrimaryKey = Mapping.Key;
+				DefaultBinding.bHasModifier = false;
+
+				ControllerDefaultBindings.Add(MageAction.InputTag, DefaultBinding);
+				break;
+			}
+		}
+	}
+}
+
+TArray<FRageInMageDisplayBinding> UControlsWidgetController::GetAllControllerBindings()
+{
+	TArray<FRageInMageDisplayBinding> Result;
+
+	URageInMageSettingsSaveGame* Settings = ParentController ? ParentController->GetCurrentSettings() : nullptr;
+
+	for (const auto& [InputTag, DefaultBinding] : ControllerDefaultBindings)
+	{
+		const FRageInMageKeyBinding* CustomBinding = Settings ? Settings->ControllerCustomKeybindings.Find(InputTag) : nullptr;
+
+		if (CustomBinding)
+		{
+			Result.Add(BuildDisplayBinding(InputTag, *CustomBinding, true));
+		}
+		else
+		{
+			Result.Add(BuildDisplayBinding(InputTag, DefaultBinding, false));
+		}
+	}
+
+	return Result;
+}
+
+bool UControlsWidgetController::SetControllerBinding(FGameplayTag InputTag, FKey PrimaryKey)
+{
+	if (!InputTag.IsValid() || !PrimaryKey.IsValid()) return false;
+
+	URageInMageSettingsSaveGame* Settings = ParentController ? ParentController->GetCurrentSettings() : nullptr;
+	if (!Settings) return false;
+
+	const FRageInMageKeyBinding* DefaultBinding = ControllerDefaultBindings.Find(InputTag);
+	if (DefaultBinding && DefaultBinding->PrimaryKey == PrimaryKey)
+	{
+		Settings->ControllerCustomKeybindings.Remove(InputTag);
+	}
+	else
+	{
+		FRageInMageKeyBinding NewBinding(InputTag, PrimaryKey);
+		Settings->ControllerCustomKeybindings.Add(InputTag, NewBinding);
+	}
+
+	ApplyAllControllerBindingsToIMC();
+	BroadcastBindings();
+
+	// Notify spell globes of the specific binding change
+	if (RagePC) RagePC->BroadcastKeybindDisplayChanged(InputTag);
+
+	return true;
+}
+
+void UControlsWidgetController::ResetControllerBinding(FGameplayTag InputTag)
+{
+	URageInMageSettingsSaveGame* Settings = ParentController ? ParentController->GetCurrentSettings() : nullptr;
+	if (!Settings) return;
+
+	Settings->ControllerCustomKeybindings.Remove(InputTag);
+
+	ApplyAllControllerBindingsToIMC();
+	BroadcastBindings();
+
+	// Notify spell globes of the specific binding change
+	if (RagePC) RagePC->BroadcastKeybindDisplayChanged(InputTag);
+}
+
+void UControlsWidgetController::ResetAllControllerBindings()
+{
+	URageInMageSettingsSaveGame* Settings = ParentController ? ParentController->GetCurrentSettings() : nullptr;
+	if (!Settings) return;
+
+	Settings->ControllerCustomKeybindings.Empty();
+
+	if (RagePC)
+	{
+		RagePC->ResetControllerKeybindingsToDefault();
+
+		// Notify spell globes of each controller binding reset
+		for (const auto& [InputTag, Binding] : ControllerDefaultBindings)
+		{
+			RagePC->BroadcastKeybindDisplayChanged(InputTag);
+		}
+	}
+
+	BroadcastBindings();
+}
+
+void UControlsWidgetController::ApplyAllControllerBindingsToIMC()
+{
+	URageInMageSettingsSaveGame* Settings = ParentController ? ParentController->GetCurrentSettings() : nullptr;
+	if (!Settings || !RagePC) return;
+
+	RagePC->ApplyControllerCustomKeybindings(Settings->ControllerCustomKeybindings);
 }
 
 bool UControlsWidgetController::CheckForConflicts(FKey PrimaryKey, FKey ModifierKey, bool bHasModifier,
@@ -268,6 +406,11 @@ bool UControlsWidgetController::CheckForConflicts(FKey PrimaryKey, FKey Modifier
 	}
 
 	return false;
+}
+
+UDataTable* UControlsWidgetController::GetKeyIconTable() const
+{
+	return RagePC ? RagePC->KeyIconTable : nullptr;
 }
 
 void UControlsWidgetController::ApplyAllBindingsToIMC()

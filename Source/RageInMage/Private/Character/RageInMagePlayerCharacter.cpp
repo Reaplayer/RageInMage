@@ -171,6 +171,13 @@ void ARageInMagePlayerCharacter::InitPlayerAbilityActorInfo()
 	BindIgniteStackDelegate();
 	// Bind heat glow delegate for material emissive
 	BindHeatGlowDelegate();
+	// Bind stun delegate to lock/unlock movement
+	BindStunDelegate();
+	// Bind hit reaction grace delegate to track when reactions end
+	BindHitReactionGraceDelegate();
+	// Bind movement speed delegate so slow/haste effects update walk speed live
+	BindMovementSpeedDelegate();
+	UpdateMovementSpeed();
 
 	// Try to initialize the overlay UI. TryInitOverlay is safe to call repeatedly
 	// and handles all cases: server, listen-server, and client (where PC/HUD may not

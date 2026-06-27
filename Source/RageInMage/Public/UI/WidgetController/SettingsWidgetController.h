@@ -78,6 +78,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputMappingContext> DefaultMageContext;
 
+	/** Controller-specific input config for controls tab */
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<URageInMageConfig> ControllerInputConfig;
+
+	/** Controller-specific IMC for controls tab */
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputMappingContext> DefaultControllerMageContext;
+
 private:
 	void LoadSettings();
 	void CreateChildControllers();

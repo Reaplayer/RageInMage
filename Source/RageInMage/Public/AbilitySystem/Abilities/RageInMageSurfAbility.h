@@ -7,6 +7,7 @@
 #include "RageInMageSurfAbility.generated.h"
 
 class ARageInMageZone;
+class ARageInMageWaveBox;
 class UNiagaraSystem;
 
 /**
@@ -66,9 +67,21 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Surf")
 	FScalableFloat SurfDuration;
 
+	/** If true, the player can steer the surf direction with movement input (WASD/thumbstick). */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Surf")
+	bool bCanSteer = false;
+
+	/** How quickly the surf direction blends toward movement input. Higher = snappier turns. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Surf", meta = (EditCondition = "bCanSteer", ClampMin = "0.0"))
+	float SurfSteerRate = 5.f;
+
 	/** Collision sweep radius for hitting enemies during surf. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Surf|Damage")
 	float SurfCollisionRadius = 150.f;
+
+	/** Interval between damage ticks on the same enemy (seconds). 0 = hit once only. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Surf|Damage")
+	float SurfDamageTickInterval = 0.f;
 
 	/** Pushback strength applied to enemies hit. Scales with ability level. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Surf|Damage")
@@ -116,6 +129,32 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Surf|Trail|SFX")
 	TObjectPtr<USoundBase> TrailZoneLoopSound;
 
+	// ── Wave Box ──
+
+	/** Wave box actor class. If set, spawns an invisible box under the caster that rises/falls. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Surf|WaveBox")
+	TSubclassOf<ARageInMageWaveBox> WaveBoxClass;
+
+	/** Maximum height the wave lifts the caster (units). */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Surf|WaveBox")
+	float MaxWaveHeight = 200.f;
+
+	/** Seconds to rise from ground to max height. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Surf|WaveBox")
+	float WaveRiseDuration = 0.5f;
+
+	/** Seconds to descend from max height back to ground (at end of surf). */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Surf|WaveBox")
+	float WaveDescendDuration = 0.8f;
+
+	/** Half-extents of the wave box collision (X=forward, Y=side, Z=height). Thin and wide. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Surf|WaveBox")
+	FVector WaveBoxHalfExtent = FVector(100.f, 30.f, 10.f);
+
+	/** If true, taking damage during surf interrupts the ability. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Surf|WaveBox")
+	bool bInterruptOnHit = false;
+
 	// ── VFX/SFX ──
 
 	/** Looping sound while surfing. */
@@ -127,7 +166,14 @@ private:
 	void SurfDamageCheck();
 	void SpawnTrailSegment(const FVector& Location);
 	FGameplayEffectSpecHandle MakeSurfDamageSpec() const;
+	FGameplayEffectSpecHandle MakeSurfOnHitSpec() const;
 	FGameplayEffectSpecHandle MakeTrailDamageSpec() const;
+
+	/** Calculate the current wave height based on elapsed time (rise/cruise/descend phases). */
+	float CalculateCurrentWaveHeight() const;
+
+	/** Called when the caster receives a hit reaction tag during surf. */
+	void OnCasterHitDuringSurf(const FGameplayTag Tag, int32 NewCount);
 
 	FVector SurfDirection = FVector::ZeroVector;
 	bool bIsSurfing = false;
@@ -136,10 +182,24 @@ private:
 
 	FTimerHandle SurfTickTimerHandle;
 
-	/** Track enemies already damaged this surf to prevent multi-hit on the same enemy. */
+	/** Track last hit time per enemy for tick interval enforcement. */
 	UPROPERTY()
-	TSet<TObjectPtr<AActor>> DamagedEnemies;
+	TMap<TObjectPtr<AActor>, double> DamagedEnemyTimestamps;
 
 	UPROPERTY()
 	TObjectPtr<UAudioComponent> SurfSoundComponent;
+
+	// ── Wave Box state ──
+
+	UPROPERTY()
+	TObjectPtr<ARageInMageWaveBox> ActiveWaveBox;
+
+	/** Total duration when surf started (for elapsed time calculation). */
+	float SurfTotalDuration = 0.f;
+
+	/** Ground-level Z when surf started (baseline for height offset). */
+	float SurfStartZ = 0.f;
+
+	/** Delegate handle for hit reaction tag event (used for bInterruptOnHit). */
+	FDelegateHandle HitReactionDelegateHandle;
 };

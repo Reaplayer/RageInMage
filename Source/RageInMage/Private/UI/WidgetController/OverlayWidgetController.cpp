@@ -157,6 +157,7 @@ void UOverlayWidgetController::OnInitialiseStartUpAbilities(URageInMageAbilitySy
 		FRageInMageAbilityInfo Info = AbilityInfo->FindAbilityInfoForTag(
 			URageInMageAbilitySystemComponent::GetAbilityTagFromSpec(AbilitySpec));
 		Info.InputTag = URageInMageAbilitySystemComponent::GetInputTagFromSpec(AbilitySpec);
+		Info.ControllerInputTag = URageInMageAbilitySystemComponent::GetControllerInputTagFromSpec(AbilitySpec);
 		Info.AbilityTypeTag = URageInMageAbilitySystemComponent::GetAbilityTypeTagFromSpec(AbilitySpec);
 		AbilityInfoDelegate.Broadcast(Info);
 	});

@@ -30,7 +30,18 @@
       "WebFetch(domain:www.a-maze.games)",
       "WebFetch(domain:zoltane.com)",
       "Bash(git log:*)",
-      "mcp__unreal-editor__generate_3d_model"
+      "mcp__unreal-editor__generate_3d_model",
+      "Bash(Get-ChildItem:*)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(where /r \"C:\"\" pending-tasks.md 2>nul || echo \"Not found on C drive \")",
+      "mcp__unreal-editor__edit_data_structure",
+      "Bash(done)",
+      "mcp__unreal-editor__execute_script",
+      "Bash(\"C:/Program Files/Epic Games/UE_5.8/Engine/Build/BatchFiles/Build.bat\" RageInMageEditor Win64 Development \"C:/Users/reapw/Documents/UnrealProjects/RageInMage5.8/RageInMage.uproject\" -waitmutex)",
+      "Bash(ls -la '/c/Users/reapw/.claude/projects/C--Users-reapw-Documents-UnrealProjects-RageInMage5-8/memory/')",
+      "Bash(find / -path \"*Plugins/GameplayAbilities/Source/GameplayAbilities/Public/GameplayEffect.h\" 2>/dev/null | head -5; find \"/c/Program Files/Epic Games\" -iname \"GameplayEffect.h\" -path \"*GameplayAbilities*\" 2>/dev/null | head -5)",
+      "Bash(tasklist)",
+      "Bash(awk -F: '$1>=7897 && $1<=7920')"
     ]
   }
 }

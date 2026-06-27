@@ -40,6 +40,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="Input")
 	FGameplayTag StartupAbilityTypeTag;
 
+	/** Optional controller input tag override. If empty, auto-mapped from StartupInputTag
+	 *  via FRageInMageGameplayTag::InputTagToControllerInputTag at ability grant time. */
+	UPROPERTY(EditDefaultsOnly, Category="Input")
+	FGameplayTag StartupControllerInputTag;
+
 	// ── Aim System ──
 
 	/** If true, this ability uses hold-to-aim: press = enter aim mode, release = cast.

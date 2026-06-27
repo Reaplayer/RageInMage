@@ -9,7 +9,9 @@
 #include "NiagaraFunctionLibrary.h"
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
 #include "Actor/RageInMageDecal.h"
+#include "Character/RageInMageCharacterBase.h"
 #include "Actor/RageInMageFireWall.h"
+#include "Actor/RageInMageWaveBox.h"
 #include "Actor/RageInMageZone.h"
 #include "Components/AudioComponent.h"
 #include "Components/DecalComponent.h"
@@ -22,12 +24,12 @@ namespace
 	void ApplyKnockbackToActor(AActor* Target, const FVector& Origin, float Strength, float UpwardForce)
 	{
 		if (Strength <= 0.f || !Target) return;
-		if (ACharacter* TargetChar = Cast<ACharacter>(Target))
+		if (ARageInMageCharacterBase* TargetChar = Cast<ARageInMageCharacterBase>(Target))
 		{
 			FVector PushDir = (Target->GetActorLocation() - Origin).GetSafeNormal();
 			PushDir.Z = FMath::Clamp(UpwardForce, 0.f, 1.f);
 			PushDir.Normalize();
-			TargetChar->LaunchCharacter(PushDir * Strength, true, true);
+			TargetChar->ApplyKnockbackImpulse(PushDir * Strength, true, true);
 		}
 	}
 }
@@ -127,8 +129,12 @@ void ARageInMageProjectile::ApplyAoEDamage(const FVector& ImpactLocation)
 void ARageInMageProjectile::OnProjectileOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                                   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	// Ignore fire walls — the wall's own overlap logic decides whether to destroy this projectile
+	// Ignore fire walls and wave boxes — they handle their own overlap logic
 	if (Cast<ARageInMageFireWall>(OtherActor))
+	{
+		return;
+	}
+	if (Cast<ARageInMageWaveBox>(OtherActor))
 	{
 		return;
 	}

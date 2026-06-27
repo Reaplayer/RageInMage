@@ -19,6 +19,18 @@ URageInMageYoyoSpell::URageInMageYoyoSpell()
 void URageInMageYoyoSpell::LaunchYoyo(const FVector& TargetLocation, const FGameplayTag& SocketTag)
 {
 	AActor* AvatarActor = GetAvatarActorFromActorInfo();
+
+	// DEBUG — remove after fixing spawn issue
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow,
+			FString::Printf(TEXT("LaunchYoyo called! Avatar=%s HasAuth=%d ProjClass=%s SocketTag=%s"),
+				AvatarActor ? *AvatarActor->GetName() : TEXT("NULL"),
+				AvatarActor ? AvatarActor->HasAuthority() : 0,
+				YoyoProjectileClass ? *YoyoProjectileClass->GetName() : TEXT("NULL"),
+				*SocketTag.ToString()));
+	}
+
 	if (!AvatarActor || !AvatarActor->HasAuthority() || !YoyoProjectileClass) return;
 
 	const FVector SocketLocation = ICombatInterface::Execute_GetCombatSocketLocation(AvatarActor, SocketTag);

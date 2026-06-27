@@ -26,7 +26,10 @@ struct FRageInMageAbilityInfo
 	
 	UPROPERTY(BlueprintReadOnly)
 	FGameplayTag InputTag = FGameplayTag();
-	
+
+	UPROPERTY(BlueprintReadOnly)
+	FGameplayTag ControllerInputTag = FGameplayTag();
+
 	UPROPERTY(BlueprintReadOnly)
 	FGameplayTag ProgressionTag = FGameplayTag();
 	

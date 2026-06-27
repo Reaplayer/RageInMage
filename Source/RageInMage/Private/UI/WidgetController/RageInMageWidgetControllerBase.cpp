@@ -59,6 +59,7 @@ void URageInMageWidgetControllerBase::BroadcastAbilityInfo()
 	{
 		FRageInMageAbilityInfo Info = AbilityInfo->FindAbilityInfoForTag(GetRageASC()->GetAbilityTagFromSpec(AbilitySpec));
 		Info.InputTag = GetRageASC()->GetInputTagFromSpec(AbilitySpec);
+		Info.ControllerInputTag = GetRageASC()->GetControllerInputTagFromSpec(AbilitySpec);
 		Info.AbilityTypeTag = GetRageASC()->GetAbilityTypeTagFromSpec(AbilitySpec);
 		Info.ProgressionTag = GetRageASC()->GetAbilityProgressionTagFromSpec(AbilitySpec);
 		AbilityInfoDelegate.Broadcast(Info);

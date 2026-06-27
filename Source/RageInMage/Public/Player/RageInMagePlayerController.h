@@ -9,6 +9,7 @@
 
 struct FRageInMageKeyBinding;
 class UDamageTextComponent;
+class UDataTable;
 class UInputAction;
 class UInputMappingContext;
 struct FInputActionValue;
@@ -18,8 +19,11 @@ class URageInMageAbilitySystemComponent;
 class ARageInMageHUD;
 class USplineComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInputDeviceChanged, bool, bIsGamepad);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnKeybindDisplayChanged, const FGameplayTag&, InputTag, const FText&, NewDisplayLabel);
+
 /**
- * 
+ *
  */
 UCLASS()
 class RAGEINMAGE_API ARageInMagePlayerController : public APlayerController
@@ -56,12 +60,57 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	void ApplyCustomKeybindings(const TMap<FGameplayTag, FRageInMageKeyBinding>& CustomBindings);
 
+	/** Apply custom controller keybindings by cloning the default controller IMC. */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	void ApplyControllerCustomKeybindings(const TMap<FGameplayTag, FRageInMageKeyBinding>& CustomBindings);
+
 	/** Reset keybindings to defaults by restoring the original MageContext. */
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	void ResetKeybindingsToDefault();
 
+	/** Reset controller keybindings to defaults by restoring the original controller IMC. */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	void ResetControllerKeybindingsToDefault();
+
 	/** Load saved keybindings and apply them. Called during BeginPlay. */
 	void LoadAndApplyKeybindings();
+
+	/** Whether the player is currently using a gamepad (vs M&K). */
+	UFUNCTION(BlueprintPure, Category = "Input")
+	bool IsUsingGamepad() const { return bUsingGamepad; }
+
+	/** Broadcast when the active input device changes between M&K and gamepad. */
+	UPROPERTY(BlueprintAssignable, Category = "Input")
+	FOnInputDeviceChanged OnInputDeviceChanged;
+
+	/** Broadcast when a keybinding changes. Each globe can filter by its own InputTag. */
+	UPROPERTY(BlueprintAssignable, Category = "Input")
+	FOnKeybindDisplayChanged OnKeybindDisplayChanged;
+
+	/** Fire OnKeybindDisplayChanged for the given InputTag with its current display label. */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	void BroadcastKeybindDisplayChanged(const FGameplayTag& InputTag);
+
+	/** Get the FKey currently bound to an InputTag for the active device (M&K or controller).
+	 *  Accounts for runtime rebinds. Returns invalid FKey if not found. */
+	UFUNCTION(BlueprintPure, Category = "Input")
+	FKey GetBoundKeyForInputTag(const FGameplayTag& InputTag) const;
+
+	/** Get the active InputConfig for the current device. */
+	UFUNCTION(BlueprintPure, Category = "Input")
+	URageInMageConfig* GetActiveInputConfig() const;
+
+	/** Get the active IMC for the current device (accounts for runtime clones). */
+	UFUNCTION(BlueprintPure, Category = "Input")
+	UInputMappingContext* GetActiveIMC() const;
+
+	/** Get the display label for a given InputTag based on current device and key icon DataTable. */
+	UFUNCTION(BlueprintPure, Category = "Input")
+	FText GetKeybindDisplayLabel(const FGameplayTag& InputTag) const;
+
+	/** Key icon DataTable for resolving FKey -> display icon/label. */
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UDataTable> KeyIconTable;
 
 protected:
 	UPROPERTY()
@@ -79,6 +128,14 @@ private:
 	TObjectPtr<UInputAction> ShiftAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> LookAction;
+
+	/** Controller-specific IMC (stacked on top of MageContext at higher priority when gamepad detected). */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputMappingContext> ControllerMageContext;
+
+	/** Controller-specific InputConfig DataAsset mapping controller InputActions to controller InputTags. */
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<URageInMageConfig> ControllerInputConfig;
 
 	void ShiftPressed() {bShiftKeyDown = true;}
 	void ShiftReleased()  {bShiftKeyDown = false;}
@@ -145,4 +202,21 @@ private:
 	TObjectPtr<UInputMappingContext> RuntimeMageContext;
 
 	bool bUsingRuntimeContext = false;
+
+	/** Runtime clone of ControllerMageContext used for custom controller keybindings. */
+	UPROPERTY()
+	TObjectPtr<UInputMappingContext> RuntimeControllerContext;
+
+	bool bUsingRuntimeControllerContext = false;
+
+	// ── Device Detection ──
+
+	/** Whether the controller IMC is currently added to the subsystem. */
+	bool bControllerIMCActive = false;
+
+	/** Add/remove the controller IMC based on current device state. */
+	void UpdateControllerIMC();
+
+	/** Handle cursor visibility when switching devices. */
+	void UpdateCursorForDevice();
 };

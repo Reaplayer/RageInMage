@@ -2,21 +2,23 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **IMPORTANT:** Read `.claude/memory.md` at the start of every session. It contains pending tasks, saved plans, completed work history, and architecture notes that persist across sessions. Update it at the end of each session.
+
 ## Project Overview
 
-RageInMage is a multiplayer action RPG built on **Unreal Engine 5.6** using the **Gameplay Ability System (GAS)**. It features 12 elemental magic schools (Fire, Water, Air, Earth, Lightning, Nature, Sound, Shadow, Necromancer, Holy, Life, Poison), each with 6 abilities (72 total), and 21 character classes. Copyright Krymson Reaplays.
+RageInMage is a multiplayer action RPG built on **Unreal Engine 5.8** using the **Gameplay Ability System (GAS)**. It features 12 elemental magic schools (Fire, Water, Air, Earth, Lightning, Nature, Sound, Shadow, Necromancer, Holy, Life, Poison), each with 6 abilities (72 total), and 21 character classes. Copyright Krymson Reaplays.
 
 ## Build Commands
 
 ```bash
 # Build from command line (adjust UE path to your install)
-"C:/Program Files/Epic Games/UE_5.6/Engine/Build/BatchFiles/Build.bat" RageInMage Win64 Development "C:/Users/reapw/Documents/UnrealProjects/RageInMage5.6/RageInMage.uproject" -waitmutex
+"C:/Program Files/Epic Games/UE_5.8/Engine/Build/BatchFiles/Build.bat" RageInMage Win64 Development "C:/Users/reapw/Documents/UnrealProjects/RageInMage5.8/RageInMage.uproject" -waitmutex
 
 # Build editor target
-"C:/Program Files/Epic Games/UE_5.6/Engine/Build/BatchFiles/Build.bat" RageInMageEditor Win64 Development "C:/Users/reapw/Documents/UnrealProjects/RageInMage5.6/RageInMage.uproject" -waitmutex
+"C:/Program Files/Epic Games/UE_5.8/Engine/Build/BatchFiles/Build.bat" RageInMageEditor Win64 Development "C:/Users/reapw/Documents/UnrealProjects/RageInMage5.8/RageInMage.uproject" -waitmutex
 
 # Generate project files
-"C:/Program Files/Epic Games/UE_5.6/Engine/Binaries/DotNET/UnrealBuildTool/UnrealBuildTool.exe" -projectfiles -project="C:/Users/reapw/Documents/UnrealProjects/RageInMage5.6/RageInMage.uproject" -game -engine
+"C:/Program Files/Epic Games/UE_5.8/Engine/Binaries/DotNET/UnrealBuildTool/UnrealBuildTool.exe" -projectfiles -project="C:/Users/reapw/Documents/UnrealProjects/RageInMage5.8/RageInMage.uproject" -game -engine
 ```
 
 The project can also be built via Visual Studio using `RageInMage.sln`.
@@ -28,7 +30,7 @@ Single module: **RageInMage** (Runtime, Default loading phase).
 - **Public dependencies:** Core, CoreUObject, Engine, InputCore, NavigationSystem, AIModule, Niagara, EnhancedInput, GameplayAbilities
 - **Private dependencies:** GameplayTags, GameplayTasks, Slate, SlateCore, GameplayAbilitiesEditor
 - **Plugins:** GameplayAbilities, MotionWarping, LineOfSight, WaterAdvanced, Water, ModelingToolsEditorMode (editor only)
-- Game target uses `IncludeOrderVersion::Unreal5_5`; Editor target uses `Unreal5_6`
+- Game and Editor targets both use `IncludeOrderVersion::Unreal5_8`
 
 ## Architecture
 

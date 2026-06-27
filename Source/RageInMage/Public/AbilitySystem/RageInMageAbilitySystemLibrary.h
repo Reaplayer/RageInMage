@@ -6,9 +6,11 @@
 #include "GameplayTagContainer.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Data/CharacterClassInfo.h"
+#include "Data/KeyIconData.h"
 #include "RageInMageAbilitySystemLibrary.generated.h"
 
 class UConditionInfo;
+class UNiagaraSystem;
 class URageInMageWidgetController;
 class UTabbedMenuWidgetController;
 class USpellMenuWidgetController;
@@ -19,6 +21,9 @@ class UOverlayWidgetController;
 class USettingsWidgetController;
 class UDecalComponent;
 class UInventoryWidgetController;
+class UDataTable;
+class UInputMappingContext;
+class URageInMageConfig;
 struct FRageInMageWidgetControllerParams;
 /**
  * 
@@ -99,6 +104,44 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "RageInMageAbilitySystemLibrary|Conditions")
 	static bool ApplyConditionToTarget(UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, const FGameplayTag& ConditionTag, const UObject* WorldContextObject);
 
+	/** Applies UConditionInfo's shared StunImmunityEffect to TargetASC for TotalDuration (typically a
+	 *  stun's own duration plus a grace period) via SetByCaller(Condition.StunImmune). Granting this
+	 *  alongside a stun — rather than only on that stun's natural expiry — guarantees immunity covers
+	 *  the whole stun+grace window even if the stun gets refreshed/extended, closing off any path to a
+	 *  permanent stun-lock. Does not affect an already-active Condition.Stunned effect; it only blocks
+	 *  future stun applications that check for it (e.g. via BlockedByConditions). */
+	UFUNCTION(BlueprintCallable, Category = "RageInMageAbilitySystemLibrary|Conditions")
+	static void ApplyStunImmunity(UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, const UObject* WorldContextObject, float TotalDuration);
+
+	/** For abilities with a guaranteed, unconditional stun (e.g. Flash And Awe) that should land even
+	 *  through an existing Condition.StunImmune grace window. Strips any active StunImmunity from
+	 *  TargetASC, applies UConditionInfo's shared StunnedEffect for StunDuration, then re-grants
+	 *  StunImmunity for StunDuration + GraceSeconds so the target isn't immediately re-stunnable. */
+	UFUNCTION(BlueprintCallable, Category = "RageInMageAbilitySystemLibrary|Conditions")
+	static void ApplyGuaranteedStun(UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, const UObject* WorldContextObject, float StunDuration, float GraceSeconds);
+
+	// ── Lightning Chain ──
+
+	/** Applies a lightning damage spec to InitialTargetActor, then chains to the nearest enemy
+	 *  actor within JumpRadius, repeating from each new target — but only as long as the target
+	 *  that was just hit owns Condition.Charged (granted at Charge >= 50 via ConditionInfo); if a
+	 *  hit lands on a target that isn't and doesn't become Charged from that hit, the chain stops.
+	 *  Each successive jump's damage (and other SetByCaller magnitudes on the spec, e.g. Charge
+	 *  gain) is multiplied by (1 - DamageFalloffPerJump) cumulatively, EXCEPT a jump leaving a
+	 *  target that owns Condition.OverCharged (Charge >= 100) always chains at 100% damage.
+	 *  A target already hit by this instance is never hit again.
+	 *  Charge accumulation and the Charge >= 100 -> OverCharged/Stunned threshold are handled
+	 *  automatically by the existing ConditionInfo/HandleMechanicsThreshold pipeline as each hit lands. */
+	UFUNCTION(BlueprintCallable, Category = "RageInMageAbilitySystemLibrary|Lightning")
+	static void ApplyChainLightningDamage(
+		AActor* InstigatorActor,
+		AActor* InitialTargetActor,
+		const FGameplayEffectSpecHandle& DamageEffectSpecHandle,
+		float JumpRadius = 350.f,
+		float DamageFalloffPerJump = 0.1f,
+		int32 MaxJumps = 10,
+		UNiagaraSystem* ImpactEffect = nullptr);
+
 	static int32 GetXPRewardForClassAndLevel(ECharacterClass CharacterClass, int32 Level, const UObject* WorldContextObject);
 
 	UFUNCTION(BlueprintPure, Category = "RageInMageAbilitySystemLibrary|Player")
@@ -136,4 +179,39 @@ public:
 	 *  Size is the half-extents in each axis (Width, Width, Depth). */
 	UFUNCTION(BlueprintCallable, Category = "RageInMageAbilitySystemLibrary|Decal")
 	static void SetDecalSize(UDecalComponent* DecalComponent, const FVector& NewSize);
+
+	// ── InputConfig Lookups ──
+
+	/** Find the InputTag and ModifierTag for a given AbilityTypeTag in the InputConfig.
+	 *  Returns true if found. Use this to query "what keys does the Primary/Defensive/etc ability use?" */
+	UFUNCTION(BlueprintPure, Category = "RageInMageAbilitySystemLibrary|Input")
+	static bool GetInputTagsForAbilityType(const FGameplayTag& AbilityTypeTag, const URageInMageConfig* InputConfig,
+		FGameplayTag& OutInputTag, FGameplayTag& OutModifierTag);
+
+	/** Find the InputAction for a given InputTag, optionally narrowing by ModifierTag.
+	 *  If ModifierTag is valid: finds all entries matching the InputTag, then returns the one
+	 *  whose InputModifierTag matches. If ModifierTag is empty: returns the entry matching
+	 *  the InputTag that has NO modifier (InputModifierTag is empty).
+	 *  Returns nullptr if not found. */
+	UFUNCTION(BlueprintPure, Category = "RageInMageAbilitySystemLibrary|Input")
+	static const UInputAction* FindInputActionByTags(const URageInMageConfig* InputConfig,
+		const FGameplayTag& InputTag, const FGameplayTag& ModifierTag);
+
+	// ── Key Icon Lookup ──
+
+	/** Look up the FKey currently bound to a given InputTag in the active IMC.
+	 *  Searches the InputConfig for the matching InputAction, then finds
+	 *  which key is mapped to that action in the provided IMC. */
+	UFUNCTION(BlueprintPure, Category = "RageInMageAbilitySystemLibrary|Input")
+	static FKey GetKeyForInputTag(const FGameplayTag& InputTag, const URageInMageConfig* InputConfig, const UInputMappingContext* IMC);
+
+	/** Look up the icon row for a given FKey from a KeyIcon DataTable.
+	 *  Returns true if found, filling OutRow. */
+	UFUNCTION(BlueprintPure, Category = "RageInMageAbilitySystemLibrary|Input")
+	static bool GetIconForKey(const FKey& InKey, const UDataTable* KeyIconTable, FKeyIconRow& OutRow);
+
+	/** Convenience: get the icon texture for an InputTag in one call.
+	 *  Combines GetKeyForInputTag + GetIconForKey. Returns null if not found. */
+	UFUNCTION(BlueprintPure, Category = "RageInMageAbilitySystemLibrary|Input")
+	static UTexture2D* GetIconTextureForInputTag(const FGameplayTag& InputTag, const URageInMageConfig* InputConfig, const UInputMappingContext* IMC, const UDataTable* KeyIconTable);
 };

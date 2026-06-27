@@ -52,6 +52,7 @@ void USpellMenuWidgetController::BroadcastAllAbilities()
 	{
 		FRageInMageAbilityInfo Info = AbilityInfo->FindAbilityInfoForTag(ASC->GetAbilityTagFromSpec(AbilitySpec));
 		Info.InputTag = ASC->GetInputTagFromSpec(AbilitySpec);
+		Info.ControllerInputTag = ASC->GetControllerInputTagFromSpec(AbilitySpec);
 		Info.AbilityTypeTag = ASC->GetAbilityTypeTagFromSpec(AbilitySpec);
 		AbilityInfoDelegate.Broadcast(Info);
 	});

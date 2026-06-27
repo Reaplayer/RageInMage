@@ -4,6 +4,7 @@
 #include "AbilitySystem/Abilities/RageInMageDamageGameplayAbility.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "Character/RageInMageCharacterBase.h"
 #include "GameFramework/Character.h"
 
 void URageInMageDamageGameplayAbility::CauseDamage(AActor* TargetActor)
@@ -26,13 +27,13 @@ void URageInMageDamageGameplayAbility::ApplyKnockback(AActor* Target, const FVec
 	const float Strength = KnockbackStrength.GetValueAtLevel(GetAbilityLevel());
 	if (Strength <= 0.f || !Target) return;
 
-	ACharacter* TargetCharacter = Cast<ACharacter>(Target);
+	ARageInMageCharacterBase* TargetCharacter = Cast<ARageInMageCharacterBase>(Target);
 	if (!TargetCharacter) return;
 
 	FVector PushDirection = (Target->GetActorLocation() - Origin).GetSafeNormal();
 	PushDirection.Z = FMath::Clamp(KnockbackUpwardForce, 0.f, 1.f);
 	PushDirection.Normalize();
-	TargetCharacter->LaunchCharacter(PushDirection * Strength, true, true);
+	TargetCharacter->ApplyKnockbackImpulse(PushDirection * Strength, true, true);
 }
 
 FTaggedMontage URageInMageDamageGameplayAbility::GetRandomTaggedMontageFromArray(

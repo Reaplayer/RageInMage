@@ -6,6 +6,7 @@
 #include "AbilitySystemInterface.h"
 #include "GameplayEffectTypes.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "AbilitySystem/RageInMageAttributeSet.h"
 #include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "Interaction/CombatInterface.h"
@@ -63,6 +64,15 @@ public:
 
 	virtual FOnDeathSignature& GetOnDeathDelegate() override { return OnDeathDelegate; }
 
+	/**
+	 * Launches this character with a knockback impulse, scaled down by this character's own Poise
+	 * (gear that grants Poise makes knockback "not so effective" on the wearer). All knockback sources
+	 * (abilities, projectiles, wave drag, etc.) should route through this instead of calling
+	 * LaunchCharacter directly, so collision-transfer/bounce in NotifyHit applies uniformly everywhere.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Knockback")
+	void ApplyKnockbackImpulse(FVector Impulse, bool bXYOverride = true, bool bZOverride = true);
+
 	UFUNCTION()
 	void OnMinionDeath(AActor* DeadActor);
 
@@ -79,9 +89,38 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	int32 MaxSummonCount = 5;
 	/* End Summons */
+	
+	/** True if enough time has passed since the last hit reaction ended (or none has happened yet). */
+	bool CanTriggerHitReaction() const;
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void NotifyHit(UPrimitiveComponent* MyComp, AActor* Other, UPrimitiveComponent* OtherComp, bool bSelfMoved,
+		FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult& Hit) override;
+
+	/** Below this horizontal speed, a blocking hit is treated as incidental movement (e.g. AI pathing bumping into someone), not an active knockback — no transfer/bounce occurs. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Combat|Knockback")
+	float MinKnockbackTransferSpeed = 300.f;
+
+	/** Base resistance (in cm/s of incoming speed) a character presents to being shoved by another character's body, before the target's own Poise is added. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Combat|Knockback")
+	float BaseShoveResistance = 400.f;
+
+	/** Additional shove resistance contributed per point of the target's Poise attribute. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Combat|Knockback")
+	float PoiseResistancePerPoint = 5.f;
+
+	/** Fraction of the mover's momentum that transfers into a target that CAN be moved (0-1). */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Combat|Knockback")
+	float KnockbackTransferRatio = 0.6f;
+
+	/** How much of its own velocity the mover loses on impact with a movable target, scaled by how much resistance it had to overcome (0-1). */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Combat|Knockback")
+	float KnockbackAbsorptionRatio = 0.5f;
+
+	/** Velocity retained (as a fraction) when bouncing off a target/object that couldn't be moved at all. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Combat|Knockback")
+	float KnockbackBounceRestitution = 0.4f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
 	TObjectPtr<USkeletalMeshComponent> Weapon;
@@ -157,6 +196,38 @@ protected:
 	/** Binds the Heat attribute change delegate. Call after ASC is initialized. */
 	void BindHeatGlowDelegate();
 
+	/* Stun — Condition.Stunned blocks abilities (see URageInMageGameplayAbility) and movement (here) */
+
+	/** Binds the Condition.Stunned tag delegate to lock/unlock movement. Call after ASC is initialized. */
+	void BindStunDelegate();
+
+	/* Hit Reaction Grace — deliberately separate from Condition.Stunned. GA_HitReaction already
+	 * blocks retriggering while one is still playing (InstancedPerActor, bRetriggerInstancedAbility
+	 * false), but nothing stopped a new one starting the instant the last one ended — multi-hit
+	 * abilities (e.g. Lightning Flash's rods) could chain flinches with no recovery window, which
+	 * reads as a stun-lock even though no CC is actually applied. */
+
+	/** Minimum time after a hit reaction ends before another can start. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|HitReaction")
+	float HitReactionGraceSeconds = 0.3f;
+
+	/** Binds the Effects.HitReaction tag delegate to track when reactions end. Call after ASC is initialized. */
+	void BindHitReactionGraceDelegate();
+
+	/* Movement Speed — MovementSpeed attribute is a multiplier (1.0 = unchanged) applied to BaseWalkSpeed,
+	 * so any GE that modifies it (slows, haste) takes effect live instead of only at BeginPlay. */
+
+	/** Base walk speed before the MovementSpeed attribute multiplier is applied. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat|MovementSpeed")
+	float BaseWalkSpeed = 600.f;
+
+	/** Recomputes CharacterMovementComponent's MaxWalkSpeed from BaseWalkSpeed * MovementSpeed. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|MovementSpeed")
+	void UpdateMovementSpeed();
+
+	/** Binds the MovementSpeed attribute change delegate to live-update walk speed. Call after ASC is initialized. */
+	void BindMovementSpeedDelegate();
+
 	/* Dissolve Effects */
 	void Dissolve();
 
@@ -192,5 +263,20 @@ private:
 	TArray<TObjectPtr<UMaterialInstanceDynamic>> HeatGlowDMIs;
 	bool bHeatGlowDMIsCreated = false;
 	void CreateHeatGlowDMIs();
+
+	/* Stun */
+	void StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
+	TEnumAsByte<EMovementMode> MovementModeBeforeStun = MOVE_Walking;
+
+	/* Hit Reaction Grace */
+	void HitReactionGraceTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
+	float LastHitReactionEndTime = -1000.f;
 	void OnHeatAttributeChanged(const FOnAttributeChangeData& Data);
+
+	/* Movement Speed */
+	void OnMovementSpeedAttributeChanged(const FOnAttributeChangeData& Data);
+
+	/* Knockback collision transfer — de-dupes repeated NotifyHit calls against the same actor within one resolution window (sliding/multi-sweep can fire NotifyHit several times per frame). */
+	TWeakObjectPtr<AActor> LastKnockbackHitActor;
+	float LastKnockbackHitTime = -1.f;
 };

@@ -126,6 +126,9 @@ private:
 	float LifeSpan = 15.f;
 	bool bHit = false;
 
+	// Debug: track total enemies hit by this projectile
+	int32 EnemiesHitCount = 0;
+
 	UPROPERTY()
 	TObjectPtr<UAudioComponent> LoopingSoundComponent;
 
