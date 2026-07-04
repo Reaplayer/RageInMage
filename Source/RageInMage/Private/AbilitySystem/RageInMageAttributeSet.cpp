@@ -56,6 +56,7 @@ void URageInMageAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Mana, COND_None, REPNOTIFY_Always);
 
 	// Resistance Attributes
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Resistance_Damage, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Resistance_PhysicalDamage, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Resistance_PhysicalDamage_Slashing, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Resistance_PhysicalDamage_Piercing, COND_None, REPNOTIFY_Always);
@@ -181,6 +182,15 @@ void URageInMageAttributeSet::PostGameplayEffectExecute(const FGameplayEffectMod
 				OnShieldAbsorbedDamage.Broadcast(LocalDamage);
 				ShowFloatingText(Properties, LocalDamage, false, false, false);
 				return;
+			}
+
+			// Reflect: target still takes the (possibly reduced) damage normally below, but also
+			// zaps the attacker back. The reflecting ability (e.g. Static Megasurge) owns the actual
+			// zap-back amount/effect and binds to this delegate only while its buff is active.
+			if (Properties.TargetASC && Properties.SourceAvatarActor && Properties.SourceAvatarActor != Properties.TargetAvatarActor
+				&& Properties.TargetASC->HasMatchingGameplayTag(FRageInMageGameplayTag::Get().Status_Reflecting))
+			{
+				OnDamageReflected.Broadcast(Properties.SourceAvatarActor);
 			}
 
 			const float NewHealth = GetHealth() - LocalDamage;
@@ -468,254 +478,6 @@ void URageInMageAttributeSet::SendXPEvent(const FEffectProperties& Properties) c
 	}
 }
 
-void URageInMageAttributeSet::OnRep_Strength(const FGameplayAttributeData& OldStrength) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Strength, OldStrength);
-}
-
-void URageInMageAttributeSet::OnRep_Dexterity(const FGameplayAttributeData& OldDexterity) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Dexterity, OldDexterity);
-}
-
-void URageInMageAttributeSet::OnRep_Agility(const FGameplayAttributeData& OldAgility) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Agility, OldAgility);
-}
-
-void URageInMageAttributeSet::OnRep_Intelligence(const FGameplayAttributeData& OldIntelligence) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Intelligence, OldIntelligence);
-}
-
-void URageInMageAttributeSet::OnRep_Wit(const FGameplayAttributeData& OldWit) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Wit, OldWit);
-}
-
-void URageInMageAttributeSet::OnRep_Vigor(const FGameplayAttributeData& OldVigor) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Vigor, OldVigor);
-}
-
-void URageInMageAttributeSet::OnRep_Endurance(const FGameplayAttributeData& OldEndurance) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Endurance, OldEndurance);
-}
-
-void URageInMageAttributeSet::OnRep_PhysicalAttack(const FGameplayAttributeData& OldPhysicalAttack) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, PhysicalAttack, OldPhysicalAttack);
-}
-
-void URageInMageAttributeSet::OnRep_MagicalAttack(const FGameplayAttributeData& OldMagicalAttack) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, MagicalAttack, OldMagicalAttack);
-}
-
-void URageInMageAttributeSet::OnRep_CriticalChance(const FGameplayAttributeData& OldCriticalChance) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, CriticalChance, OldCriticalChance);
-}
-
-void URageInMageAttributeSet::OnRep_CriticalDamage(const FGameplayAttributeData& OldCriticalDamage) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, CriticalDamage, OldCriticalDamage);
-}
-
-void URageInMageAttributeSet::OnRep_AttackSpeed(const FGameplayAttributeData& OldAttackSpeed) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, AttackSpeed, OldAttackSpeed);
-}
-
-void URageInMageAttributeSet::OnRep_MovementSpeed(const FGameplayAttributeData& OldMovementSpeed) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, MovementSpeed, OldMovementSpeed);
-}
-
-void URageInMageAttributeSet::OnRep_PhysicalDefence(const FGameplayAttributeData& OldPhysicalDefence) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, PhysicalDefence, OldPhysicalDefence);
-}
-
-void URageInMageAttributeSet::OnRep_MagicalDefence(const FGameplayAttributeData& OldMagicalDefence) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, MagicalDefence, OldMagicalDefence);
-}
-
-void URageInMageAttributeSet::OnRep_PhysicalDefencePenetration(
-	const FGameplayAttributeData& OldPhysicalDefencePenetration) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, PhysicalDefencePenetration, OldPhysicalDefencePenetration);
-}
-
-void URageInMageAttributeSet::OnRep_MagicalDefencePenetration(
-	const FGameplayAttributeData& OldMagicalDefencePenetration) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, MagicalDefencePenetration, OldMagicalDefencePenetration);
-}
-
-void URageInMageAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Health, OldHealth);
-}
-
-void URageInMageAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, MaxHealth, OldMaxHealth);
-}
-
-void URageInMageAttributeSet::OnRep_Mana(const FGameplayAttributeData& OldMana) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Mana, OldMana);
-}
-
-void URageInMageAttributeSet::OnRep_MaxMana(const FGameplayAttributeData& OldMaxMana) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, MaxMana, OldMaxMana);
-}
-
-void URageInMageAttributeSet::OnRep_Poise(const FGameplayAttributeData& OldPoise) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Poise, OldPoise);
-}
-
-void URageInMageAttributeSet::OnRep_Resistance_PhysicalDamage(const FGameplayAttributeData& OldResistance_PhysicalDamage) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_PhysicalDamage, OldResistance_PhysicalDamage);
-}
-
-void URageInMageAttributeSet::OnRep_Resistance_PhysicalDamage_Slashing(const FGameplayAttributeData& OldResistance_PhysicalDamage_Slashing) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_PhysicalDamage_Slashing, OldResistance_PhysicalDamage_Slashing);
-}
-
-void URageInMageAttributeSet::OnRep_Resistance_PhysicalDamage_Piercing(const FGameplayAttributeData& OldResistance_PhysicalDamage_Piercing) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_PhysicalDamage_Piercing, OldResistance_PhysicalDamage_Piercing);
-}
-
-void URageInMageAttributeSet::OnRep_Resistance_PhysicalDamage_Bludgeoning(const FGameplayAttributeData& OldResistance_PhysicalDamage_Bludgeoning) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_PhysicalDamage_Bludgeoning, OldResistance_PhysicalDamage_Bludgeoning);
-}
-
-void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage(const FGameplayAttributeData& OldResistance_MagicalDamage) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage, OldResistance_MagicalDamage);
-}
-
-void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Fire(const FGameplayAttributeData& OldResistance_MagicalDamage_Fire) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Fire, OldResistance_MagicalDamage_Fire);
-}
-
-void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Cold(const FGameplayAttributeData& OldResistance_MagicalDamage_Cold) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Cold, OldResistance_MagicalDamage_Cold);
-}
-
-void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Electric(const FGameplayAttributeData& OldResistance_MagicalDamage_Electric) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Electric, OldResistance_MagicalDamage_Electric);
-}
-
-void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Poison(const FGameplayAttributeData& OldResistance_MagicalDamage_Poison) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Poison, OldResistance_MagicalDamage_Poison);
-}
-
-void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Acid(const FGameplayAttributeData& OldResistance_MagicalDamage_Acid) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Acid, OldResistance_MagicalDamage_Acid);
-}
-
-void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Shadow(const FGameplayAttributeData& OldResistance_MagicalDamage_Shadow) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Shadow, OldResistance_MagicalDamage_Shadow);
-}
-
-void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Radiant(const FGameplayAttributeData& OldResistance_MagicalDamage_Radiant) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Radiant, OldResistance_MagicalDamage_Radiant);
-}
-
-void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Force(const FGameplayAttributeData& OldResistance_MagicalDamage_Force) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Force, OldResistance_MagicalDamage_Force);
-}
-
-void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Psychic(const FGameplayAttributeData& OldResistance_MagicalDamage_Psychic) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Psychic, OldResistance_MagicalDamage_Psychic);
-}
-
-void URageInMageAttributeSet::OnRep_PhysicalDefencePenetrationPercentage(
-	const FGameplayAttributeData& OldPhysicalDefencePenetrationPercentage) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, PhysicalDefencePenetrationPercentage, OldPhysicalDefencePenetrationPercentage);
-}
-
-void URageInMageAttributeSet::OnRep_MagicalDefencePenetrationPercentage(
-	const FGameplayAttributeData& OldMagicalDefencePenetrationPercentage) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, MagicalDefencePenetrationPercentage, OldMagicalDefencePenetrationPercentage);
-}
-
-void URageInMageAttributeSet::OnRep_Heat(const FGameplayAttributeData& OldHeat) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Heat, OldHeat);
-}
-
-void URageInMageAttributeSet::OnRep_Charge(const FGameplayAttributeData& OldCharge) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Charge, OldCharge);
-}
-
-void URageInMageAttributeSet::OnRep_Momentum(const FGameplayAttributeData& OldMomentum) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Momentum, OldMomentum);
-}
-
-void URageInMageAttributeSet::OnRep_ImmovableMass(const FGameplayAttributeData& OldImmovableMass) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, ImmovableMass, OldImmovableMass);
-}
-
-void URageInMageAttributeSet::OnRep_OverGrowth(const FGameplayAttributeData& OldOverGrowth) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, OverGrowth, OldOverGrowth);
-}
-
-void URageInMageAttributeSet::OnRep_Crescendo(const FGameplayAttributeData& OldCrescendo) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Crescendo, OldCrescendo);
-}
-
-void URageInMageAttributeSet::OnRep_Obscurity(const FGameplayAttributeData& OldObscurity) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Obscurity, OldObscurity);
-}
-
-void URageInMageAttributeSet::OnRep_BlackOmen(const FGameplayAttributeData& OldBlackOmen) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, BlackOmen, OldBlackOmen);
-}
-
-void URageInMageAttributeSet::OnRep_Retribution(const FGameplayAttributeData& OldRetribution) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Retribution, OldRetribution);
-}
-
-void URageInMageAttributeSet::OnRep_ConstantCirculation(const FGameplayAttributeData& OldConstantCirculation) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, ConstantCirculation, OldConstantCirculation);
-}
-
-void URageInMageAttributeSet::OnRep_LethalToxins(const FGameplayAttributeData& OldLethalToxins) const
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, LethalToxins, OldLethalToxins);
-}
 
 void URageInMageAttributeSet::HandleMechanicsThreshold(
 	const FGameplayAttribute& Attribute, const FGameplayTag& MechanicsTag,
@@ -1023,4 +785,255 @@ void URageInMageAttributeSet::HandleHeatChange(float OldHeat, float NewHeat, con
 		}
 	}
 
+}
+
+
+void URageInMageAttributeSet::OnRep_Strength(const FGameplayAttributeData& OldStrength) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Strength, OldStrength);
+}
+
+void URageInMageAttributeSet::OnRep_Dexterity(const FGameplayAttributeData& OldDexterity) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Dexterity, OldDexterity);
+}
+
+void URageInMageAttributeSet::OnRep_Agility(const FGameplayAttributeData& OldAgility) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Agility, OldAgility);
+}
+
+void URageInMageAttributeSet::OnRep_Intelligence(const FGameplayAttributeData& OldIntelligence) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Intelligence, OldIntelligence);
+}
+
+void URageInMageAttributeSet::OnRep_Wit(const FGameplayAttributeData& OldWit) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Wit, OldWit);
+}
+
+void URageInMageAttributeSet::OnRep_Vigor(const FGameplayAttributeData& OldVigor) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Vigor, OldVigor);
+}
+
+void URageInMageAttributeSet::OnRep_Endurance(const FGameplayAttributeData& OldEndurance) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Endurance, OldEndurance);
+}
+
+void URageInMageAttributeSet::OnRep_PhysicalAttack(const FGameplayAttributeData& OldPhysicalAttack) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, PhysicalAttack, OldPhysicalAttack);
+}
+
+void URageInMageAttributeSet::OnRep_MagicalAttack(const FGameplayAttributeData& OldMagicalAttack) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, MagicalAttack, OldMagicalAttack);
+}
+
+void URageInMageAttributeSet::OnRep_CriticalChance(const FGameplayAttributeData& OldCriticalChance) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, CriticalChance, OldCriticalChance);
+}
+
+void URageInMageAttributeSet::OnRep_CriticalDamage(const FGameplayAttributeData& OldCriticalDamage) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, CriticalDamage, OldCriticalDamage);
+}
+
+void URageInMageAttributeSet::OnRep_AttackSpeed(const FGameplayAttributeData& OldAttackSpeed) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, AttackSpeed, OldAttackSpeed);
+}
+
+void URageInMageAttributeSet::OnRep_MovementSpeed(const FGameplayAttributeData& OldMovementSpeed) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, MovementSpeed, OldMovementSpeed);
+}
+
+void URageInMageAttributeSet::OnRep_PhysicalDefence(const FGameplayAttributeData& OldPhysicalDefence) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, PhysicalDefence, OldPhysicalDefence);
+}
+
+void URageInMageAttributeSet::OnRep_MagicalDefence(const FGameplayAttributeData& OldMagicalDefence) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, MagicalDefence, OldMagicalDefence);
+}
+
+void URageInMageAttributeSet::OnRep_PhysicalDefencePenetration(const FGameplayAttributeData& OldPhysicalDefencePenetration) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, PhysicalDefencePenetration, OldPhysicalDefencePenetration);
+}
+
+void URageInMageAttributeSet::OnRep_MagicalDefencePenetration(const FGameplayAttributeData& OldMagicalDefencePenetration) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, MagicalDefencePenetration, OldMagicalDefencePenetration);
+}
+
+void URageInMageAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Health, OldHealth);
+}
+
+void URageInMageAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, MaxHealth, OldMaxHealth);
+}
+
+void URageInMageAttributeSet::OnRep_Mana(const FGameplayAttributeData& OldMana) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Mana, OldMana);
+}
+
+void URageInMageAttributeSet::OnRep_MaxMana(const FGameplayAttributeData& OldMaxMana) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, MaxMana, OldMaxMana);
+}
+
+void URageInMageAttributeSet::OnRep_Poise(const FGameplayAttributeData& OldPoise) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Poise, OldPoise);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_Damage(const FGameplayAttributeData& OldResistance_Damage) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_Damage, OldResistance_Damage);	
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_PhysicalDamage(const FGameplayAttributeData& OldResistance_PhysicalDamage) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_PhysicalDamage, OldResistance_PhysicalDamage);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_PhysicalDamage_Slashing(const FGameplayAttributeData& OldResistance_PhysicalDamage_Slashing) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_PhysicalDamage_Slashing, OldResistance_PhysicalDamage_Slashing);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_PhysicalDamage_Piercing(const FGameplayAttributeData& OldResistance_PhysicalDamage_Piercing) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_PhysicalDamage_Piercing, OldResistance_PhysicalDamage_Piercing);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_PhysicalDamage_Bludgeoning(const FGameplayAttributeData& OldResistance_PhysicalDamage_Bludgeoning) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_PhysicalDamage_Bludgeoning, OldResistance_PhysicalDamage_Bludgeoning);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage(const FGameplayAttributeData& OldResistance_MagicalDamage) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage, OldResistance_MagicalDamage);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Fire(const FGameplayAttributeData& OldResistance_MagicalDamage_Fire) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Fire, OldResistance_MagicalDamage_Fire);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Cold(const FGameplayAttributeData& OldResistance_MagicalDamage_Cold) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Cold, OldResistance_MagicalDamage_Cold);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Electric(const FGameplayAttributeData& OldResistance_MagicalDamage_Electric) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Electric, OldResistance_MagicalDamage_Electric);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Poison(const FGameplayAttributeData& OldResistance_MagicalDamage_Poison) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Poison, OldResistance_MagicalDamage_Poison);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Acid(const FGameplayAttributeData& OldResistance_MagicalDamage_Acid) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Acid, OldResistance_MagicalDamage_Acid);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Shadow(const FGameplayAttributeData& OldResistance_MagicalDamage_Shadow) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Shadow, OldResistance_MagicalDamage_Shadow);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Radiant(const FGameplayAttributeData& OldResistance_MagicalDamage_Radiant) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Radiant, OldResistance_MagicalDamage_Radiant);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Force(const FGameplayAttributeData& OldResistance_MagicalDamage_Force) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Force, OldResistance_MagicalDamage_Force);
+}
+
+void URageInMageAttributeSet::OnRep_Resistance_MagicalDamage_Psychic(const FGameplayAttributeData& OldResistance_MagicalDamage_Psychic) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Resistance_MagicalDamage_Psychic, OldResistance_MagicalDamage_Psychic);
+}
+
+void URageInMageAttributeSet::OnRep_PhysicalDefencePenetrationPercentage(const FGameplayAttributeData& OldPhysicalDefencePenetrationPercentage) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, PhysicalDefencePenetrationPercentage, OldPhysicalDefencePenetrationPercentage);
+}
+
+void URageInMageAttributeSet::OnRep_MagicalDefencePenetrationPercentage(const FGameplayAttributeData& OldMagicalDefencePenetrationPercentage) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, MagicalDefencePenetrationPercentage, OldMagicalDefencePenetrationPercentage);
+}
+
+void URageInMageAttributeSet::OnRep_Heat(const FGameplayAttributeData& OldHeat) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Heat, OldHeat);
+}
+
+void URageInMageAttributeSet::OnRep_Charge(const FGameplayAttributeData& OldCharge) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Charge, OldCharge);
+}
+
+void URageInMageAttributeSet::OnRep_Momentum(const FGameplayAttributeData& OldMomentum) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Momentum, OldMomentum);
+}
+
+void URageInMageAttributeSet::OnRep_ImmovableMass(const FGameplayAttributeData& OldImmovableMass) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, ImmovableMass, OldImmovableMass);
+}
+
+void URageInMageAttributeSet::OnRep_OverGrowth(const FGameplayAttributeData& OldOverGrowth) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, OverGrowth, OldOverGrowth);
+}
+
+void URageInMageAttributeSet::OnRep_Crescendo(const FGameplayAttributeData& OldCrescendo) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Crescendo, OldCrescendo);
+}
+
+void URageInMageAttributeSet::OnRep_Obscurity(const FGameplayAttributeData& OldObscurity) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Obscurity, OldObscurity);
+}
+
+void URageInMageAttributeSet::OnRep_BlackOmen(const FGameplayAttributeData& OldBlackOmen) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, BlackOmen, OldBlackOmen);
+}
+
+void URageInMageAttributeSet::OnRep_Retribution(const FGameplayAttributeData& OldRetribution) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Retribution, OldRetribution);
+}
+
+void URageInMageAttributeSet::OnRep_ConstantCirculation(const FGameplayAttributeData& OldConstantCirculation) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, ConstantCirculation, OldConstantCirculation);
+}
+
+void URageInMageAttributeSet::OnRep_LethalToxins(const FGameplayAttributeData& OldLethalToxins) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, LethalToxins, OldLethalToxins);
 }

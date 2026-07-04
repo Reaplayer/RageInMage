@@ -73,6 +73,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Knockback")
 	void ApplyKnockbackImpulse(FVector Impulse, bool bXYOverride = true, bool bZOverride = true);
 
+	/** Current BaseWalkSpeed (before the MovementSpeed attribute multiplier). Lets abilities (e.g. a
+	 *  dash that temporarily boosts walk speed) save off the value to restore later. */
+	UFUNCTION(BlueprintPure, Category = "Combat|MovementSpeed")
+	float GetBaseWalkSpeed() const { return BaseWalkSpeed; }
+
+	/** Sets BaseWalkSpeed and immediately recomputes MaxWalkSpeed from it. Lets abilities drive
+	 *  movement speed directly (e.g. a dash) while still going through the MovementSpeed multiplier. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|MovementSpeed")
+	void SetBaseWalkSpeed(float NewBaseWalkSpeed);
+
 	UFUNCTION()
 	void OnMinionDeath(AActor* DeadActor);
 
@@ -275,6 +285,12 @@ private:
 
 	/* Movement Speed */
 	void OnMovementSpeedAttributeChanged(const FOnAttributeChangeData& Data);
+
+	/* Movement Speed debug — temporary instrumentation for tracking down the "MovementSpeed=0" bug.
+	 * Ticking is disabled project-wide (see PrimaryActorTick.bCanEverTick = false in the constructor),
+	 * so this uses a repeating timer instead of Tick() to avoid changing that perf characteristic. */
+	FTimerHandle MovementSpeedDebugTimerHandle;
+	void LogMovementSpeedDebug();
 
 	/* Knockback collision transfer — de-dupes repeated NotifyHit calls against the same actor within one resolution window (sliding/multi-sweep can fire NotifyHit several times per frame). */
 	TWeakObjectPtr<AActor> LastKnockbackHitActor;

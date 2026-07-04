@@ -84,13 +84,13 @@ void URageInMageLightningFlashAbility::ApplyLightningFlash(const FVector& Target
 	const FVector WeaponTipLocation = ICombatInterface::Execute_GetCombatSocketLocation(
 		AvatarActor, FRageInMageGameplayTag::Get().CombatSocket_Weapon);
 
-	// Fire rods at random targets in the cone, without replacement — each rod picks a target out of
-	// TargetsToHit and moves it to TargetsHit, so nobody gets hit twice before everyone's been hit
-	// once. Once TargetsToHit runs dry with rods still left, TargetsHit refills it and the random
-	// draw starts over. Each rod is its own chain-lightning run (own crit roll, own Charge gain,
-	// and can jump onward from its target via ApplyChainLightningDamage — the same helper any future
-	// Lightning spell should call to get chaining "for free") and spawns its own impact VFX, so the
-	// number of rods fired always equals both the initial-hit count and the VFX spawn count.
+	/*  Fire rods at random targets in the cone, without replacement — each rod picks a target out of
+		TargetsToHit and moves it to TargetsHit, so nobody gets hit twice before everyone's been hit
+		once. Once TargetsToHit runs dry with rods still left, TargetsHit refills it and the random
+		draw starts over. Each rod is its own chain-lightning run (own crit roll, own Charge gain,
+		and can jump onward from its target via ApplyChainLightningDamage — the same helper any future
+		Lightning spell should call to get chaining "for free") and spawns its own impact VFX, so the
+		number of rods fired always equals both the initial-hit count and the VFX spawn count.	*/
 	TArray<AActor*> TargetsHit;
 	for (int32 RodIndex = 0; RodIndex < NumRods; ++RodIndex)
 	{
@@ -105,8 +105,7 @@ void URageInMageLightningFlashAbility::ApplyLightningFlash(const FVector& Target
 		TargetsToHit.RemoveAt(RandomIndex);
 		TargetsHit.Add(Target);
 
-		// Inherited from URageInMageLightningDamageAbility — builds this rod's own spec and routes
-		// it through ApplyChainLightningDamage, which applies it to Target and jumps onward on its own.
+		// Inherited from URageInMageLightningDamageAbility — builds this rod's own spec and routes it through ApplyChainLightningDamage, which applies it to Target and jumps onward on its own.
 		CauseChainDamage(Target);
 
 		if (RodImpactEffect)

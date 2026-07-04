@@ -164,7 +164,15 @@ void ARageInMagePlayerCharacter::InitPlayerAbilityActorInfo()
 	CastChecked<URageInMageAbilitySystemComponent>(AbilitySystemComponent)->AbilityActorInfoSet();
 	
 	AttributeSet = RagePlayerState->GetAttributeSet();
-	InitializeDefaultAttributes();
+	// Attribute initialisation is authority-only: the server applies the default-attribute GEs
+	// and replicates the resulting values down to clients. Without this guard, OnRep_PlayerState
+	// would re-run it on clients (and on any PlayerState re-replication), re-baking the Instant
+	// Primary GE and stacking extra copies of the non-stacking Infinite Secondary GE. Mirrors the
+	// HasAuthority() gate already used in ARageInMageEnemyCharacter::InitPlayerAbilityActorInfo().
+	if (HasAuthority())
+	{
+		InitializeDefaultAttributes();
+	}
 	CastChecked<URageInMageAttributeSet>(AttributeSet)->InitialiseTagsToAttributes();
 
 	// Bind ignite stack delegate for burning VFX

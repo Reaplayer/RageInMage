@@ -22,6 +22,7 @@ struct RageInMageDamageStatics
 
 
 	/* Declare Target Attributes */
+	DECLARE_ATTRIBUTE_CAPTUREDEF(Resistance_Damage);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(PhysicalDefence);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(Resistance_PhysicalDamage);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(Resistance_PhysicalDamage_Slashing);
@@ -61,6 +62,7 @@ struct RageInMageDamageStatics
 
 
 		/* Capture Target Attributes */
+		DEFINE_ATTRIBUTE_CAPTUREDEF(URageInMageAttributeSet, Resistance_Damage, Target, false);
 		DEFINE_ATTRIBUTE_CAPTUREDEF(URageInMageAttributeSet, PhysicalDefence, Target, false);
 		DEFINE_ATTRIBUTE_CAPTUREDEF(URageInMageAttributeSet, Resistance_PhysicalDamage, Target, false);
 		DEFINE_ATTRIBUTE_CAPTUREDEF(URageInMageAttributeSet, Resistance_PhysicalDamage_Slashing, Target, false);
@@ -92,6 +94,7 @@ struct RageInMageDamageStatics
 		// Get Gameplay Tags
 		const FRageInMageGameplayTag& GameplayTag = FRageInMageGameplayTag::Get();
 		// Populate ResistanceTagsToCaptureDefs
+		ResistanceTagToCaptureDef.Add(GameplayTag.Resistance_Damage, Resistance_DamageDef);
 		ResistanceTagToCaptureDef.Add(GameplayTag.Resistance_PhysicalDamage, Resistance_PhysicalDamageDef);
 		ResistanceTagToCaptureDef.Add(GameplayTag.Resistance_PhysicalDamage_Slashing, Resistance_PhysicalDamage_SlashingDef);
 		ResistanceTagToCaptureDef.Add(GameplayTag.Resistance_PhysicalDamage_Piercing, Resistance_PhysicalDamage_PiercingDef);
@@ -209,6 +212,19 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
         				{
         					// Get Damage Set by Caller Magnitude
         					float DamageTypeValue = Spec.GetSetByCallerMagnitude(Pair.Key);
+        					
+        					// Check to see if Target is Resistant to Damage
+        					float DamageResistance = 0.f;
+        					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().Resistance_DamageDef, EvaluationParams, DamageResistance);
+        					if (DamageResistance != 0.f)
+        					{
+        						DamageTypeValue *= 1 - DamageResistance / 100.f;
+        						// Set the Resistant Hit variables for Show Damage Numbers
+        						if (DamageResistance > 0.f)
+        						{
+        							SetResistantHit(Spec, true);
+        						}
+        					}
         
         		 	
         					// Get Attacker's Physical Attack
@@ -311,6 +327,20 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
         				{
         					// Get Damage Set by Caller Magnitude
         					float DamageTypeValue = Spec.GetSetByCallerMagnitude(Pair.Key);
+        					
+        					// Check to see if Target is Resistant to Damage
+        					float DamageResistance = 0.f;
+        					ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().Resistance_DamageDef, EvaluationParams, DamageResistance);
+        					if (DamageResistance != 0.f)
+        					{
+        						DamageTypeValue *= 1 - DamageResistance / 100.f;
+        						// Set the Resistant Hit variable for Show Damage Numbers
+        						if (DamageResistance > 0.f)
+        						{
+        							SetResistantHit(Spec, true);
+        						}
+        					}
+        					
         					// Make Local Mechanics Variables
         					float HeatDamage = 0.f;
         					float ChargeDamage = 0.f;

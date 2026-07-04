@@ -31,4 +31,14 @@ public:
 
 protected:
 	virtual void Tick(float DeltaTime) override;
+
+	/**
+	 * SparkingSphere drives its own damage in Tick() with a per-target cooldown, so it opts out
+	 * of the base zone's fixed-interval timer and immediate on-entry damage.
+	 */
+	virtual bool UsesBuiltinTickDamage() const override { return false; }
+
+private:
+	/** Last time (world seconds) each in-range actor was damaged. Weak so dead actors fall out safely. */
+	TMap<TWeakObjectPtr<AActor>, float> LastDamageTimeByActor;
 };

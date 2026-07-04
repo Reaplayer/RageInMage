@@ -328,7 +328,8 @@ void URageInMageAbilitySystemLibrary::ApplyChainLightningDamage(
 			UE_LOG(LogRageInMage, Log, TEXT("%s"), *Msg);
 			if (GEngine)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 4.f, bIsOverCharged ? FColor::Red : (bIsCharged ? FColor::Cyan : FColor::White), Msg);
+				// Silenced — uncomment to restore the on-screen chain readout (UE_LOG above still fires).
+				// GEngine->AddOnScreenDebugMessage(-1, 4.f, bIsOverCharged ? FColor::Red : (bIsCharged ? FColor::Cyan : FColor::White), Msg);
 			}
 		}
 
@@ -342,14 +343,16 @@ void URageInMageAbilitySystemLibrary::ApplyChainLightningDamage(
 			UE_LOG(LogRageInMage, Log, TEXT("%s"), *Msg);
 			if (GEngine)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, Msg);
+				// Silenced — uncomment to restore the on-screen chain readout (UE_LOG above still fires).
+				// GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, Msg);
 			}
 			break;
 		}
 
 		// Debug: visualize the actual search radius used to find the next jump target.
+		// Silenced — uncomment to restore the per-jump search-radius sphere.
 #if ENABLE_DRAW_DEBUG
-		DrawDebugSphere(InstigatorActor->GetWorld(), CurrentTarget->GetActorLocation(), JumpRadius, 24, FColor::Cyan, false, 3.f, 0, 2.f);
+		// DrawDebugSphere(InstigatorActor->GetWorld(), CurrentTarget->GetActorLocation(), JumpRadius, 24, FColor::Cyan, false, 3.f, 0, 2.f);
 #endif
 
 		// Find the nearest not-yet-hit enemy within JumpRadius — eligibility to RECEIVE a jump
@@ -378,7 +381,8 @@ void URageInMageAbilitySystemLibrary::ApplyChainLightningDamage(
 			UE_LOG(LogRageInMage, Log, TEXT("%s"), *Msg);
 			if (GEngine)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, Msg);
+				// Silenced — uncomment to restore the on-screen chain readout (UE_LOG above still fires).
+				// GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, Msg);
 			}
 			break;
 		}

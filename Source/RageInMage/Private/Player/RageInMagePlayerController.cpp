@@ -88,6 +88,10 @@ void ARageInMagePlayerController::AutoRun()
 void ARageInMagePlayerController::CursorTrace()
 {
 	GetHitResultUnderCursor(ECC_Visibility, false, CursorTraceHit);
+	// On gamepad, highlighting is driven by the virtual cursor in UpdateAimDirection.
+	// We still run the trace above so CursorTraceHit stays fresh for mouse-move detection
+	// (the mouse -> gamepad switch-back in UpdateAimDirection compares against it).
+	if (bUsingGamepad) return;
 	if (!CursorTraceHit.bBlockingHit) return;
 	LastActor = ThisActor;
 	ThisActor = Cast<IEnemyInterface>(CursorTraceHit.GetActor());
@@ -138,9 +142,20 @@ void ARageInMagePlayerController::BeginPlay()
 	if(Subsystem)
 	{
 		Subsystem->AddMappingContext(MageContext, 0);
+
+		// Keep the controller context active alongside M&K for the whole session.
+		// The two contexts map disjoint physical keys (keyboard/mouse vs Gamepad_*),
+		// so there is no conflict. This must be added up-front: the only input that
+		// flips bUsingGamepad (the right-stick Look) is mapped *only* in this context,
+		// so gating the context behind gamepad detection can never bootstrap itself.
+		if (ControllerMageContext)
+		{
+			Subsystem->AddMappingContext(ControllerMageContext, 1);
+			bControllerIMCActive = true;
+		}
 	}
 
-	// Apply any saved custom keybindings
+	// Apply any saved custom keybindings (may swap ControllerMageContext for a runtime copy)
 	LoadAndApplyKeybindings();
 
 	bShowMouseCursor = true;
@@ -158,34 +173,12 @@ void ARageInMagePlayerController::BeginPlay()
 
 void ARageInMagePlayerController::UpdateControllerIMC()
 {
-	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
-	if (!Subsystem) return;
-
-	if (bUsingGamepad && !bControllerIMCActive)
-	{
-		// Activate controller IMC at higher priority (1) so it overrides M&K
-		UInputMappingContext* ControllerCtx = bUsingRuntimeControllerContext && RuntimeControllerContext
-			? RuntimeControllerContext.Get()
-			: ControllerMageContext.Get();
-		if (ControllerCtx)
-		{
-			Subsystem->AddMappingContext(ControllerCtx, 1);
-			bControllerIMCActive = true;
-		}
-	}
-	else if (!bUsingGamepad && bControllerIMCActive)
-	{
-		// Deactivate controller IMC
-		if (bUsingRuntimeControllerContext && RuntimeControllerContext)
-		{
-			Subsystem->RemoveMappingContext(RuntimeControllerContext);
-		}
-		else if (ControllerMageContext)
-		{
-			Subsystem->RemoveMappingContext(ControllerMageContext);
-		}
-		bControllerIMCActive = false;
-	}
+	// Both the M&K and controller mapping contexts are added once in BeginPlay and
+	// stay active for the whole session (they map disjoint physical keys). Switching
+	// input device only affects the cursor and aim mode (bUsingGamepad), not which
+	// contexts are mapped — tearing the controller context down here would make it
+	// impossible to switch back to the gamepad, since the right-stick Look that
+	// re-detects the gamepad lives inside that very context.
 }
 
 void ARageInMagePlayerController::UpdateCursorForDevice()
@@ -271,18 +264,75 @@ void ARageInMagePlayerController::UpdateAimDirection()
 
 	if (bUsingGamepad)
 	{
-		// Project right stick direction from character onto ground plane
 		if (APawn* ControlledPawn = GetPawn())
 		{
-			if (GamepadAimInput.SizeSquared() > 0.04f)
+			const FVector Origin = ControlledPawn->GetActorLocation();
+
+			if (bAimingSpell)
 			{
+				// AIMING A SPELL: right stick drives a persistent "virtual cursor" — stick
+				// deflection is a VELOCITY that moves the cursor, not an absolute direction.
+				// The cursor is a local XY offset from the caster (AimCursorOffset), so
+				// releasing the stick holds it in place (no snapback) and it keeps its
+				// position relative to the character as they move.
+				const float DeltaTime = GetWorld() ? GetWorld()->GetDeltaSeconds() : 0.f;
+
+				if (GamepadAimInput.SizeSquared() > 0.04f) // past dead zone
+				{
+					const FRotator CamYaw(0.f, GetControlRotation().Yaw, 0.f);
+					const FVector Forward = FRotationMatrix(CamYaw).GetUnitAxis(EAxis::X);
+					const FVector Right = FRotationMatrix(CamYaw).GetUnitAxis(EAxis::Y);
+
+					const FVector MoveDir = Forward * GamepadAimInput.Y + Right * GamepadAimInput.X;
+					AimCursorOffset += FVector2D(MoveDir.X, MoveDir.Y) * AimCursorSpeed * DeltaTime;
+
+					// Clamp reach so the cursor can't drift off to infinity.
+					if (AimCursorOffset.Size() > AimProjectionDistance)
+					{
+						AimCursorOffset = AimCursorOffset.GetSafeNormal() * AimProjectionDistance;
+					}
+				}
+
+				FVector AimPos = Origin + FVector(AimCursorOffset.X, AimCursorOffset.Y, 0.f);
+
+				// Resolve Z by tracing straight down the cursor column: snaps the aim onto the
+				// ground or whatever object sits under the cursor, and highlights an enemy there.
+				FHitResult AimHit;
+				const FVector TraceStart = AimPos + FVector(0.f, 0.f, 10000.f);
+				const FVector TraceEnd   = AimPos - FVector(0.f, 0.f, 10000.f);
+				FCollisionQueryParams AimTraceParams;
+				AimTraceParams.AddIgnoredActor(ControlledPawn);
+				if (GetWorld() && GetWorld()->LineTraceSingleByChannel(AimHit, TraceStart, TraceEnd, ECC_Visibility, AimTraceParams))
+				{
+					AimPos.Z = AimHit.ImpactPoint.Z;
+
+					LastActor = ThisActor;
+					ThisActor = Cast<IEnemyInterface>(AimHit.GetActor());
+					if (LastActor != ThisActor)
+					{
+						if (LastActor) LastActor->UnHighlightActor();
+						if (ThisActor) ThisActor->HighlightActor();
+					}
+				}
+				else
+				{
+					AimPos.Z = Origin.Z;
+				}
+
+				CurrentAimWorldPosition = AimPos;
+			}
+			else if (GamepadAimInput.SizeSquared() > 0.04f)
+			{
+				// NORMAL MOVEMENT: right stick is a direction for character facing/dodging.
+				// Distance scales with stick push so releasing snaps the aim back toward the
+				// caster — keeps turning tight and dodges pointed the right way.
 				const FRotator CamYaw(0.f, GetControlRotation().Yaw, 0.f);
 				const FVector Forward = FRotationMatrix(CamYaw).GetUnitAxis(EAxis::X);
 				const FVector Right = FRotationMatrix(CamYaw).GetUnitAxis(EAxis::Y);
 
 				const FVector AimDirection = (Forward * GamepadAimInput.Y + Right * GamepadAimInput.X).GetSafeNormal();
 				const float StickMagnitude = FMath::Min(GamepadAimInput.Size(), 1.f);
-				CurrentAimWorldPosition = ControlledPawn->GetActorLocation() + AimDirection * AimProjectionDistance * StickMagnitude;
+				CurrentAimWorldPosition = Origin + AimDirection * AimProjectionDistance * StickMagnitude;
 			}
 		}
 	}
@@ -295,6 +345,29 @@ void ARageInMagePlayerController::UpdateAimDirection()
 			CurrentAimWorldPosition = CursorTraceHit.ImpactPoint;
 		}
 	}
+}
+
+void ARageInMagePlayerController::BeginGamepadAim(float InitialReach)
+{
+	bAimingSpell = true;
+
+	// Seed the virtual cursor out in front of the caster so the spell starts aimed where
+	// the character faces, rather than on top of itself. The stick then moves it from here.
+	const float Reach = InitialReach > 0.f ? FMath::Min(InitialReach, AimProjectionDistance) : AimProjectionDistance;
+	if (const APawn* ControlledPawn = GetPawn())
+	{
+		const FVector Fwd = ControlledPawn->GetActorForwardVector();
+		AimCursorOffset = FVector2D(Fwd.X, Fwd.Y).GetSafeNormal() * Reach;
+	}
+	else
+	{
+		AimCursorOffset = FVector2D(Reach, 0.f);
+	}
+}
+
+void ARageInMagePlayerController::EndGamepadAim()
+{
+	bAimingSpell = false;
 }
 
 void ARageInMagePlayerController::RotatePawnToFaceAim(float DeltaSeconds)

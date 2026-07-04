@@ -58,11 +58,14 @@ void ARageInMageZone::BeginPlay()
 			ActorsInside.AddUnique(Actor);
 		}
 
-		// Tick damage immediately, then periodically
-		DamageTickEnemiesInside();
-		GetWorld()->GetTimerManager().SetTimer(
-			DamageTickTimerHandle, this, &ARageInMageZone::DamageTickEnemiesInside,
-			DamageTickInterval, true);
+		// Tick damage immediately, then periodically — unless a subclass drives its own damage.
+		if (UsesBuiltinTickDamage())
+		{
+			DamageTickEnemiesInside();
+			GetWorld()->GetTimerManager().SetTimer(
+				DamageTickTimerHandle, this, &ARageInMageZone::DamageTickEnemiesInside,
+				DamageTickInterval, true);
+		}
 	}
 
 	// VFX — spawn inactive, set user params, then activate
@@ -111,13 +114,10 @@ void ARageInMageZone::OnZoneOverlap(UPrimitiveComponent* OverlappedComponent, AA
 
 	ActorsInside.AddUnique(OtherActor);
 
-	// Apply damage immediately on entry
-	if (DamageEffectSpecHandle.IsValid() && DamageEffectSpecHandle.Data.IsValid())
+	// Apply damage immediately on entry — unless a subclass drives its own damage.
+	if (UsesBuiltinTickDamage())
 	{
-		if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor))
-		{
-			TargetASC->ApplyGameplayEffectSpecToSelf(*DamageEffectSpecHandle.Data.Get());
-		}
+		ApplyDamageSpecToActor(OtherActor);
 	}
 }
 
@@ -143,9 +143,16 @@ void ARageInMageZone::DamageTickEnemiesInside()
 		if (!IsValid(Actor)) continue;
 		if (URageInMageAbilitySystemLibrary::IsBothEnemy(GetInstigator(), Actor)) continue;
 
-		if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor))
-		{
-			TargetASC->ApplyGameplayEffectSpecToSelf(*DamageEffectSpecHandle.Data.Get());
-		}
+		ApplyDamageSpecToActor(Actor);
+	}
+}
+
+void ARageInMageZone::ApplyDamageSpecToActor(AActor* Actor) const
+{
+	if (!DamageEffectSpecHandle.IsValid() || !DamageEffectSpecHandle.Data.IsValid()) return;
+
+	if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor))
+	{
+		TargetASC->ApplyGameplayEffectSpecToSelf(*DamageEffectSpecHandle.Data.Get());
 	}
 }

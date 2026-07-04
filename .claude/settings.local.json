@@ -41,7 +41,18 @@
       "Bash(ls -la '/c/Users/reapw/.claude/projects/C--Users-reapw-Documents-UnrealProjects-RageInMage5-8/memory/')",
       "Bash(find / -path \"*Plugins/GameplayAbilities/Source/GameplayAbilities/Public/GameplayEffect.h\" 2>/dev/null | head -5; find \"/c/Program Files/Epic Games\" -iname \"GameplayEffect.h\" -path \"*GameplayAbilities*\" 2>/dev/null | head -5)",
       "Bash(tasklist)",
-      "Bash(awk -F: '$1>=7897 && $1<=7920')"
+      "Bash(awk -F: '$1>=7897 && $1<=7920')",
+      "Read(//c/Program Files/Epic Games/UE_5.8/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/**)",
+      "Read(//c/Program Files/Epic Games/UE_5.8/Engine/Plugins/Runtime/GameplayAbilities/**)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(claude config *)",
+      "Bash(claude /config --help)",
+      "Bash(cat ~/.claude/settings.json 2>/dev/null; echo \"---local---\"; cat \"C:/Users/reapw/Documents/UnrealProjects/RageInMage5.8/.claude/settings.local.json\" 2>/dev/null)",
+      "Bash(claude -v)",
+      "Bash(claude doctor *)",
+      "Read(//c/ProgramData/**)",
+      "Read(//c/Program Files/**)"
     ]
   }
 }

@@ -18,6 +18,15 @@ void URageInMageAbilityTask_AimMode::Activate()
 	bTickingTask = true;
 	bInputReleased = false;
 
+	// Switch the controller into spell-aim mode (right stick becomes the virtual cursor).
+	if (const FGameplayAbilityActorInfo* ActorInfo = Ability ? Ability->GetCurrentActorInfo() : nullptr)
+	{
+		if (ARageInMagePlayerController* MagePC = Cast<ARageInMagePlayerController>(ActorInfo->PlayerController.Get()))
+		{
+			MagePC->BeginGamepadAim(MaxRange);
+		}
+	}
+
 	// Check if input is already released before we start ticking
 	if (Ability)
 	{
@@ -75,6 +84,15 @@ void URageInMageAbilityTask_AimMode::HandleInputRelease()
 
 void URageInMageAbilityTask_AimMode::OnDestroy(bool bInOwnerFinished)
 {
+	// Restore normal right-stick facing/dodging behaviour.
+	if (const FGameplayAbilityActorInfo* ActorInfo = Ability ? Ability->GetCurrentActorInfo() : nullptr)
+	{
+		if (ARageInMagePlayerController* MagePC = Cast<ARageInMagePlayerController>(ActorInfo->PlayerController.Get()))
+		{
+			MagePC->EndGamepadAim();
+		}
+	}
+
 	// If destroyed without a release (ability cancelled), broadcast cancel
 	if (!bInputReleased && ShouldBroadcastAbilityTaskDelegates())
 	{

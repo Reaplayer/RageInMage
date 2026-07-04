@@ -383,6 +383,7 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 
 	
 	/* Resistance Tags */
+	FGameplayTag Resistance_Damage;
 	FGameplayTag Resistance_PhysicalDamage;
 	FGameplayTag Resistance_PhysicalDamage_Slashing;
 	FGameplayTag Resistance_PhysicalDamage_Piercing;
@@ -456,6 +457,7 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	/* Status Tags */
 	FGameplayTag Status_Shielded;
 	FGameplayTag Status_Channeling;
+	FGameplayTag Status_Reflecting;
 
 
 	/* Combat Socket Tags */

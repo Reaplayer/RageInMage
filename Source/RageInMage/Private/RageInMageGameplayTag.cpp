@@ -895,6 +895,9 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 
 
 	/* Resistance Tags */
+	GameplayTag.Resistance_Damage = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Resistance.Damage"), FString("Overall resistance applied to all incoming damage, regardless of type."));
+
 	GameplayTag.Resistance_PhysicalDamage = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Resistance.PhysicalDamage"), FString("Amount of Physical Damage Done."));
 	
@@ -1102,6 +1105,9 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 
 	GameplayTag.Status_Channeling = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Status.Channeling"), FString("Actor is channeling a spell. Blocks activation of other abilities."));
+
+	GameplayTag.Status_Reflecting = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Status.Reflecting"), FString("Target zaps incoming attackers back. Generic reflect-on-hit status."));
 
 
 	/* Combat Socket Tags */

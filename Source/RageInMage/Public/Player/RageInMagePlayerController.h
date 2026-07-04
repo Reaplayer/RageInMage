@@ -79,6 +79,15 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Input")
 	bool IsUsingGamepad() const { return bUsingGamepad; }
 
+	/** Enter spell-aim mode: the right stick becomes a velocity-driven virtual cursor
+	 *  (no snapback). Called by the AimMode ability task on activate. InitialReach seeds
+	 *  the cursor out in front of the caster (uses AimProjectionDistance if <= 0). */
+	void BeginGamepadAim(float InitialReach);
+
+	/** Leave spell-aim mode: the right stick returns to normal direction-based facing
+	 *  (with snapback) for turning/dodging. Called by the AimMode task on destroy. */
+	void EndGamepadAim();
+
 	/** Broadcast when the active input device changes between M&K and gamepad. */
 	UPROPERTY(BlueprintAssignable, Category = "Input")
 	FOnInputDeviceChanged OnInputDeviceChanged;
@@ -152,8 +161,21 @@ private:
 	FVector2D GamepadAimInput = FVector2D::ZeroVector;
 	bool bUsingGamepad = false;
 
+	/** True only while a spell is being aimed (driven by the AimMode task). Gates the
+	 *  velocity virtual-cursor model; when false the right stick does normal facing. */
+	bool bAimingSpell = false;
+
+	/** Persistent gamepad "virtual cursor" — a local XY offset from the caster that the
+	 *  right stick moves (velocity-integrated). Held between frames so there is no snapback,
+	 *  and because it is relative to the caster it keeps its screen position as they move. */
+	FVector2D AimCursorOffset = FVector2D::ZeroVector;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Aim")
 	float AimProjectionDistance = 1500.f;
+
+	/** How fast (world units/sec at full stick deflection) the gamepad virtual cursor travels. */
+	UPROPERTY(EditDefaultsOnly, Category = "Aim")
+	float AimCursorSpeed = 1500.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Aim")
 	float AimRotationInterpSpeed = 15.f;

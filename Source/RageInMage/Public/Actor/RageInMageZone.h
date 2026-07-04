@@ -66,6 +66,16 @@ protected:
 	/** Override in subclasses to add extra per-tick logic (e.g. progressive slow, freeze). */
 	virtual void DamageTickEnemiesInside();
 
+	/**
+	 * When true (default) the zone applies damage on the fixed DamageTickInterval timer AND
+	 * immediately on overlap entry. Subclasses can return false to opt out of both and drive
+	 * damage themselves (e.g. SparkingSphere's per-target cooldown checked every frame).
+	 */
+	virtual bool UsesBuiltinTickDamage() const { return true; }
+
+	/** Applies DamageEffectSpecHandle to the actor's ASC once. No cooldown/eligibility logic. */
+	void ApplyDamageSpecToActor(AActor* Actor) const;
+
 	/** Actors currently inside the zone. Maintained by overlap events. */
 	UPROPERTY()
 	TArray<TObjectPtr<AActor>> ActorsInside;

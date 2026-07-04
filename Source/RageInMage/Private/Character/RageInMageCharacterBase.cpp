@@ -9,6 +9,7 @@
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
 #include "Components/CapsuleComponent.h"
+#include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -154,6 +155,11 @@ void ARageInMageCharacterBase::MulticastHandleDeath_Implementation()
 void ARageInMageCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// TEMP DEBUG: tracking down the "MovementSpeed=0" bug — see LogMovementSpeedDebug().
+	// Silenced — re-enable this timer to bring the on-screen speed readout back.
+	// GetWorldTimerManager().SetTimer(MovementSpeedDebugTimerHandle, this,
+	// 	&ARageInMageCharacterBase::LogMovementSpeedDebug, 0.5f, true);
 }
 
 FVector ARageInMageCharacterBase::GetCombatSocketLocation_Implementation(const FGameplayTag& SocketTag)
@@ -453,6 +459,12 @@ void ARageInMageCharacterBase::UpdateMovementSpeed()
 	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed * RageAS->GetMovementSpeed();
 }
 
+void ARageInMageCharacterBase::SetBaseWalkSpeed(float NewBaseWalkSpeed)
+{
+	BaseWalkSpeed = NewBaseWalkSpeed;
+	UpdateMovementSpeed();
+}
+
 void ARageInMageCharacterBase::BindMovementSpeedDelegate()
 {
 	if (!AbilitySystemComponent) return;
@@ -468,6 +480,31 @@ void ARageInMageCharacterBase::BindMovementSpeedDelegate()
 void ARageInMageCharacterBase::OnMovementSpeedAttributeChanged(const FOnAttributeChangeData& Data)
 {
 	UpdateMovementSpeed();
+}
+
+// TEMP DEBUG: tracking down the "MovementSpeed=0" bug. Shows actual velocity alongside
+// MaxWalkSpeed and the raw MovementSpeed GAS attribute, per-actor, so it's possible to see
+// whether the attribute itself is zeroing out, whether MaxWalkSpeed isn't following it, or
+// whether MaxWalkSpeed is fine but something else (AI/pathing) just isn't moving the actor.
+void ARageInMageCharacterBase::LogMovementSpeedDebug()
+{
+	// Silenced — uncomment this body (and re-enable the timer in BeginPlay) to restore the readout.
+	// if (!GEngine) return;
+	//
+	// const URageInMageAttributeSet* RageAS = Cast<URageInMageAttributeSet>(AttributeSet);
+	// const UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	// if (!RageAS || !MoveComp) return;
+	//
+	// const float CurrentSpeed = GetVelocity().Size();
+	// const float MaxWalkSpeed = MoveComp->MaxWalkSpeed;
+	// const float MovementSpeedAttr = RageAS->GetMovementSpeed();
+	//
+	// const FColor Color = (MaxWalkSpeed <= 0.f || MovementSpeedAttr <= 0.f) ? FColor::Red : FColor::Green;
+	//
+	// int32 ID = GetUniqueID();
+	// GEngine->AddOnScreenDebugMessage(ID, 0.6f, Color,
+	// 	FString::Printf(TEXT("[Speed] %s | Vel=%.0f | MaxWalkSpeed=%.0f | MovementSpeedAttr=%.2f"),
+	// 		*GetName(), CurrentSpeed, MaxWalkSpeed, MovementSpeedAttr));
 }
 
 void ARageInMageCharacterBase::CreateHeatGlowDMIs()

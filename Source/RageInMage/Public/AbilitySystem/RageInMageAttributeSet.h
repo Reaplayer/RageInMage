@@ -46,6 +46,10 @@ using TStaticFuncPtr = TBaseStaticDelegateInstance<T, FDefaultDelegateUserPolicy
 /** Broadcast when a shielded target absorbs damage. Passes the amount of damage that was absorbed. */
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnShieldAbsorbedDamage, float /*AbsorbedAmount*/);
 
+/** Broadcast when a Status.Reflecting target takes damage. Passes the attacker, so the reflecting
+ *  ability (e.g. Static Megasurge) can zap them back. */
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnDamageReflected, AActor* /*Attacker*/);
+
 /*
  *
  */
@@ -59,6 +63,9 @@ public:
 
 	/** Broadcast when a shield absorbs incoming damage. Shield abilities bind to this. */
 	FOnShieldAbsorbedDamage OnShieldAbsorbedDamage;
+
+	/** Broadcast when a Status.Reflecting target takes damage. Reflect abilities bind to this. */
+	FOnDamageReflected OnDamageReflected;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
@@ -140,6 +147,9 @@ public:
 
 	/* Resistance Attributes */
 	
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Resistance_Damage, Category = "Resistance Attributes")
+	FGameplayAttributeData Resistance_Damage;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Resistance_Damage);
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Resistance_PhysicalDamage, Category = "Resistance Attributes")
 	FGameplayAttributeData Resistance_PhysicalDamage;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Resistance_PhysicalDamage);
@@ -309,6 +319,8 @@ public:
 
 	/* Resistance Attributes */
 	
+	UFUNCTION()
+	void OnRep_Resistance_Damage(const FGameplayAttributeData& OldResistance_Damage) const;
 	UFUNCTION()
 	void OnRep_Resistance_PhysicalDamage(const FGameplayAttributeData& OldResistance_PhysicalDamage) const;
 	UFUNCTION()
