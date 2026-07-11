@@ -1,7 +1,9 @@
 // Copyright Reaplays
 
-#include "AbilitySystem/Abilities/RageInMageZipNZapAbility.h"
+#include "AbilitySystem/Abilities/RageInMageCleanWindDashAbility.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
 #include "AbilitySystem/RageInMageAttributeSet.h"
 #include "Character/RageInMageCharacterBase.h"
@@ -10,7 +12,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-URageInMageZipNZapAbility::URageInMageZipNZapAbility()
+URageInMageCleanWindDashAbility::URageInMageCleanWindDashAbility()
 {
 	// Charge state (CurrentCharges, recharge timer, in-flight dash state) must survive between
 	// activations - InstancedPerActor keeps one persistent ability instance per ASC instead of a
@@ -18,13 +20,13 @@ URageInMageZipNZapAbility::URageInMageZipNZapAbility()
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
-void URageInMageZipNZapAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
+void URageInMageCleanWindDashAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
 {
 	Super::OnGiveAbility(ActorInfo, Spec);
 	CurrentCharges = MaxCharges;
 }
 
-bool URageInMageZipNZapAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
+bool URageInMageCleanWindDashAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags,
 	const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const
 {
@@ -32,15 +34,15 @@ bool URageInMageZipNZapAbility::CanActivateAbility(const FGameplayAbilitySpecHan
 	return Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
 }
 
-void URageInMageZipNZapAbility::EndAbility(const FGameplayAbilitySpecHandle Handle,
+void URageInMageCleanWindDashAbility::EndAbility(const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
 	bool bReplicateEndAbility, bool bWasCancelled)
 {
-	EndZip();
+	EndDash();
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
-void URageInMageZipNZapAbility::BeginZipNZap()
+void URageInMageCleanWindDashAbility::BeginCleanWindDash()
 {
 	AActor* AvatarActor = GetAvatarActorFromActorInfo();
 	ARageInMageCharacterBase* CharacterBase = Cast<ARageInMageCharacterBase>(AvatarActor);
@@ -55,7 +57,7 @@ void URageInMageZipNZapAbility::BeginZipNZap()
 	// current one first so OriginalBaseWalkSpeed below is always captured from the true resting state.
 	if (bIsDashing)
 	{
-		EndZip();
+		EndDash();
 	}
 
 	ConsumeCharge();
@@ -66,7 +68,7 @@ void URageInMageZipNZapAbility::BeginZipNZap()
 	OriginalBaseWalkSpeed = CharacterBase->GetBaseWalkSpeed();
 	CharacterBase->SetBaseWalkSpeed(CharacterSpeed.GetValueAtLevel(GetAbilityLevel()));
 
-	// Phase through other pawns for the duration of the zip (anime-style pass-through). Only the Pawn
+	// Phase through other pawns for the duration of the dash (anime-style pass-through). Only the Pawn
 	// channel is dropped, so world geometry still blocks and the safety timer still bails on a wall.
 	if (UCapsuleComponent* Capsule = CharacterBase->GetCapsuleComponent())
 	{
@@ -84,10 +86,10 @@ void URageInMageZipNZapAbility::BeginZipNZap()
 
 	DashStartLocation = AvatarActor->GetActorLocation();
 	// Same MovementSpeed coefficient that just boosted the dash's actual travel speed also extends
-	// how far it goes, so a faster character zips both quicker and further.
+	// how far it goes, so a faster character dashes both quicker and further.
 	ActualDashDistance = DashDistance.GetValueAtLevel(GetAbilityLevel()) * MovementSpeedCoefficient;
 
-	// Zap: one upfront sweep along the full dash path, chain-damaging everyone it crosses.
+	// Strike + stun: one upfront sweep along the full dash path, hitting everyone it crosses.
 	if (AvatarActor->HasAuthority())
 	{
 		const FVector SweepEnd = DashStartLocation + DashDirection * ActualDashDistance;
@@ -98,6 +100,8 @@ void URageInMageZipNZapAbility::BeginZipNZap()
 		GetWorld()->SweepMultiByChannel(HitResults, DashStartLocation, SweepEnd, FQuat::Identity,
 			ECC_Pawn, FCollisionShape::MakeSphere(DashWidth * 0.5f), QueryParams);
 
+		UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo();
+
 		TSet<AActor*> AlreadyHit;
 		for (const FHitResult& Hit : HitResults)
 		{
@@ -106,13 +110,19 @@ void URageInMageZipNZapAbility::BeginZipNZap()
 			if (URageInMageAbilitySystemLibrary::IsFriendly(AvatarActor, HitActor)) continue;
 
 			AlreadyHit.Add(HitActor);
-			CauseChainDamage(HitActor);
+			CauseDamage(HitActor);
+
+			if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor))
+			{
+				URageInMageAbilitySystemLibrary::ApplyGuaranteedStun(
+					SourceASC, TargetASC, AvatarActor, StunDuration, StunGraceSeconds);
+			}
 		}
 
 #if ENABLE_DRAW_DEBUG
 		if (bShowDebug)
 		{
-			DrawDebugLine(GetWorld(), DashStartLocation, SweepEnd, FColor::Cyan, false, 2.f, 0, DashWidth * 0.5f > 0.f ? 3.f : 1.f);
+			DrawDebugLine(GetWorld(), DashStartLocation, SweepEnd, FColor::Cyan, false, 2.f, 0, 3.f);
 		}
 #endif
 	}
@@ -120,10 +130,10 @@ void URageInMageZipNZapAbility::BeginZipNZap()
 	bIsDashing = true;
 	DashElapsedSafety = 0.f;
 	constexpr float TickInterval = 1.f / 60.f;
-	GetWorld()->GetTimerManager().SetTimer(DashTickTimerHandle, this, &URageInMageZipNZapAbility::ZipTick, TickInterval, true);
+	GetWorld()->GetTimerManager().SetTimer(DashTickTimerHandle, this, &URageInMageCleanWindDashAbility::DashTick, TickInterval, true);
 }
 
-void URageInMageZipNZapAbility::ZipTick()
+void URageInMageCleanWindDashAbility::DashTick()
 {
 	if (!bIsDashing) return;
 
@@ -135,7 +145,7 @@ void URageInMageZipNZapAbility::ZipTick()
 		return;
 	}
 
-	// Drive movement by setting velocity directly (same convention as RageInMageSurfAbility::SurfTick) -
+	// Drive movement by setting velocity directly (same convention as RageInMageZipNZapAbility::ZipTick) -
 	// MaxWalkSpeed already reflects CharacterSpeed * MovementSpeed coefficient via SetBaseWalkSpeed above.
 	MoveComp->Velocity = DashDirection * MoveComp->MaxWalkSpeed;
 
@@ -145,12 +155,12 @@ void URageInMageZipNZapAbility::ZipTick()
 	const float DistanceTravelled = FVector::Dist2D(Character->GetActorLocation(), DashStartLocation);
 	if (DistanceTravelled >= ActualDashDistance || DashElapsedSafety >= MaxDashSafetyDuration)
 	{
-		// Dash finished under its own power - end the ability (EndAbility -> EndZip does the cleanup).
+		// Dash finished under its own power - end the ability (EndAbility -> EndDash does the cleanup).
 		K2_EndAbility();
 	}
 }
 
-void URageInMageZipNZapAbility::EndZip()
+void URageInMageCleanWindDashAbility::EndDash()
 {
 	if (!bIsDashing) return;
 	bIsDashing = false;
@@ -164,7 +174,7 @@ void URageInMageZipNZapAbility::EndZip()
 	{
 		CharacterBase->SetBaseWalkSpeed(OriginalBaseWalkSpeed);
 
-		// Restore pawn-vs-pawn collision now the zip is over so the character blocks normally again.
+		// Restore pawn-vs-pawn collision now the dash is over so the character blocks normally again.
 		if (UCapsuleComponent* Capsule = CharacterBase->GetCapsuleComponent())
 		{
 			Capsule->SetCollisionResponseToChannel(ECC_Pawn, SavedPawnCollisionResponse);
@@ -177,18 +187,18 @@ void URageInMageZipNZapAbility::EndZip()
 	}
 }
 
-void URageInMageZipNZapAbility::ConsumeCharge()
+void URageInMageCleanWindDashAbility::ConsumeCharge()
 {
 	CurrentCharges = FMath::Max(0, CurrentCharges - 1);
 
 	if (GetWorld() && !GetWorld()->GetTimerManager().IsTimerActive(RechargeTimerHandle))
 	{
 		GetWorld()->GetTimerManager().SetTimer(
-			RechargeTimerHandle, this, &URageInMageZipNZapAbility::OnChargeRecharged, RechargeTime, false);
+			RechargeTimerHandle, this, &URageInMageCleanWindDashAbility::OnChargeRecharged, RechargeTime, false);
 	}
 }
 
-void URageInMageZipNZapAbility::OnChargeRecharged()
+void URageInMageCleanWindDashAbility::OnChargeRecharged()
 {
 	CurrentCharges = FMath::Min(MaxCharges, CurrentCharges + 1);
 
@@ -197,6 +207,6 @@ void URageInMageZipNZapAbility::OnChargeRecharged()
 	if (CurrentCharges < MaxCharges && GetWorld())
 	{
 		GetWorld()->GetTimerManager().SetTimer(
-			RechargeTimerHandle, this, &URageInMageZipNZapAbility::OnChargeRecharged, RechargeTime, false);
+			RechargeTimerHandle, this, &URageInMageCleanWindDashAbility::OnChargeRecharged, RechargeTime, false);
 	}
 }

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/EngineTypes.h"
 #include "AbilitySystem/Abilities/RageInMageLightningDamageAbility.h"
 #include "RageInMageZipNZapAbility.generated.h"
 
@@ -87,4 +88,8 @@ private:
 	float ActualDashDistance = 0.f;
 	float OriginalBaseWalkSpeed = 600.f;
 	float DashElapsedSafety = 0.f;
+
+	/** Capsule's Pawn-channel response captured at dash start, restored on end - the dash sets it to
+	 *  Ignore so the character phases through other pawns while zipping (walls still block). */
+	TEnumAsByte<ECollisionResponse> SavedPawnCollisionResponse = ECR_Block;
 };

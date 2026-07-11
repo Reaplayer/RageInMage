@@ -351,18 +351,9 @@ void ARageInMagePlayerController::BeginGamepadAim(float InitialReach)
 {
 	bAimingSpell = true;
 
-	// Seed the virtual cursor out in front of the caster so the spell starts aimed where
-	// the character faces, rather than on top of itself. The stick then moves it from here.
-	const float Reach = InitialReach > 0.f ? FMath::Min(InitialReach, AimProjectionDistance) : AimProjectionDistance;
-	if (const APawn* ControlledPawn = GetPawn())
-	{
-		const FVector Fwd = ControlledPawn->GetActorForwardVector();
-		AimCursorOffset = FVector2D(Fwd.X, Fwd.Y).GetSafeNormal() * Reach;
-	}
-	else
-	{
-		AimCursorOffset = FVector2D(Reach, 0.f);
-	}
+	// Seed the virtual cursor ON the caster so the spell starts aimed at the character's
+	// feet; the stick then pushes it outward from here (Reach kept only as the clamp bound).
+	AimCursorOffset = FVector2D::ZeroVector;
 }
 
 void ARageInMagePlayerController::EndGamepadAim()

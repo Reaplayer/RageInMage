@@ -32,6 +32,15 @@ public:
 	UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn = true))
 	FGameplayEffectSpecHandle DamageEffectSpecHandle;
 
+	/** Reflect this projectile back toward its original shooter and hand ownership to NewInstigator, so it now
+	 *  damages the shooter's team instead of NewInstigator's. Reverses velocity toward the old shooter, swaps
+	 *  instigator/owner (flips the IsFriendly / instigator checks in OnProjectileOverlap), and fixes the
+	 *  collision ignore-list (un-ignore the old shooter, ignore the reflector). Server-authoritative; used by
+	 *  Mountain Vortex. Safe to call repeatedly - once reflected the instigator is NewInstigator, so a reflector
+	 *  scanning by team will skip it on subsequent passes. */
+	UFUNCTION(BlueprintCallable, Category = "Projectile")
+	void ReflectFrom(AActor* NewInstigator);
+
 	/* AoE Explosion - if > 0, the projectile deals AoE damage on impact */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AoE")
 	float AoERadius = 0.f;

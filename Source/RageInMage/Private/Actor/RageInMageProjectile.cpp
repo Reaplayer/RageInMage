@@ -90,6 +90,53 @@ void ARageInMageProjectile::Destroyed()
 	Super::Destroyed();
 }
 
+void ARageInMageProjectile::ReflectFrom(AActor* NewInstigator)
+{
+	if (!NewInstigator) return;
+
+	APawn* OldInstigator = GetInstigator();
+
+	// Aim back toward the original shooter; fall back to simply reversing the current heading.
+	FVector NewDir = FVector::ZeroVector;
+	if (OldInstigator)
+	{
+		NewDir = (OldInstigator->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+	}
+	if (NewDir.IsNearlyZero() && ProjectileMovement)
+	{
+		NewDir = -ProjectileMovement->Velocity.GetSafeNormal();
+	}
+	if (NewDir.IsNearlyZero())
+	{
+		NewDir = GetActorForwardVector();
+	}
+
+	if (ProjectileMovement)
+	{
+		const float Speed = FMath::Max(ProjectileMovement->Velocity.Size(), ProjectileMovement->InitialSpeed);
+		ProjectileMovement->Velocity = NewDir * Speed;
+	}
+	SetActorRotation(NewDir.Rotation());
+
+	// Fix the collision ignore-list: the old shooter must now be hittable, and the reflector must be ignored.
+	if (UPrimitiveComponent* Collision = GetCollisionComponent())
+	{
+		if (OldInstigator)
+		{
+			Collision->IgnoreActorWhenMoving(OldInstigator, false);
+		}
+		Collision->IgnoreActorWhenMoving(NewInstigator, true);
+	}
+
+	// Hand ownership to the reflector so IsFriendly / instigator checks now protect the reflector's team and
+	// target the old shooter's team.
+	SetInstigator(Cast<APawn>(NewInstigator));
+	SetOwner(NewInstigator);
+
+	// In case it had grazed something, allow the impact FX/logic to fire on its new target.
+	bHit = false;
+}
+
 void ARageInMageProjectile::ApplyAoEDamage(const FVector& ImpactLocation)
 {
 	if (!DamageEffectSpecHandle.IsValid() || !DamageEffectSpecHandle.Data.IsValid()) return;
