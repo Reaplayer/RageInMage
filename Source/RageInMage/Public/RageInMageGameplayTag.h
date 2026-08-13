@@ -46,6 +46,7 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Attributes_Secondary_MaxHealth;
 	FGameplayTag Attributes_Secondary_MaxMana;
 	FGameplayTag Attributes_Secondary_Poise;
+	FGameplayTag Attributes_Secondary_CooldownReduction;
 
 	
 	/* Vital Attributes */
@@ -71,6 +72,14 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Attributes_Mechanics_ConstantCirculation;
 	FGameplayTag Attributes_Mechanics_LethalToxins;
 	FGameplayTag Attributes_Mechanics_XP;
+
+
+	/* Condition Attributes — per-character bonuses layered on top of the shared ConditionInfo base
+	 * values at apply time. Driven by passives/items via GameplayEffects, never by editing the asset. */
+	FGameplayTag Attributes_Conditions_DurationBonus;
+	FGameplayTag Attributes_Conditions_ImmunityBonus;
+	FGameplayTag Attributes_Conditions_StackBonus;
+	FGameplayTag Attributes_Conditions_DamageThresholdBonus;
 
 
 	/* Ability Tags */
@@ -127,7 +136,7 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 
 	/* Earth Mage Ability Tags */
 	FGameplayTag Ability_Earth_SlingRock;
-	FGameplayTag Ability_Earth_JewelFistShatter;
+	FGameplayTag Ability_Earth_JaggedTerraForm;
 	FGameplayTag Ability_Earth_ChargingBull;
 	FGameplayTag Ability_Earth_RockSolid;
 	FGameplayTag Ability_Earth_GemJail;
@@ -236,7 +245,7 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 
 	/* Earth Mage Cooldown Tags */
 	FGameplayTag Cooldown_Earth_SlingRock;
-	FGameplayTag Cooldown_Earth_JewelFistShatter;
+	FGameplayTag Cooldown_Earth_JaggedTerraForm;
 	FGameplayTag Cooldown_Earth_ChargingBull;
 	FGameplayTag Cooldown_Earth_RockSolid;
 	FGameplayTag Cooldown_Earth_GemJail;
@@ -412,16 +421,47 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Effects_HitReaction;
 
 	
-	/* Heat Stage Tags */
-	FGameplayTag HeatStage_Cold1;
-	FGameplayTag HeatStage_Cold2;
-	FGameplayTag HeatStage_Cold3;
-	FGameplayTag HeatStage_Frozen;
-	FGameplayTag HeatStage_Hot1;
-	FGameplayTag HeatStage_Hot2;
-	FGameplayTag HeatStage_Hot3;
-	FGameplayTag HeatStage_Ignited;
-
+	/* Mechanics Stage Tags */
+	FGameplayTag MechanicsStage_Heat_Cold_1;
+	FGameplayTag MechanicsStage_Heat_Cold_2;
+	FGameplayTag MechanicsStage_Heat_Cold_3;
+	FGameplayTag MechanicsStage_Heat_Frozen;
+	FGameplayTag MechanicsStage_Heat_Hot_1;
+	FGameplayTag MechanicsStage_Heat_Hot_2;
+	FGameplayTag MechanicsStage_Heat_Hot_3;
+	FGameplayTag MechanicsStage_Heat_Ignited;
+	FGameplayTag MechanicsStage_Charge_Charged;
+	FGameplayTag MechanicsStage_Charge_OverCharged;
+	FGameplayTag MechanicsStage_Momentum_0;
+	FGameplayTag MechanicsStage_Momentum_1;
+	FGameplayTag MechanicsStage_Momentum_2;
+	FGameplayTag MechanicsStage_Momentum_3;
+	FGameplayTag MechanicsStage_ImmovableMass_0;
+	FGameplayTag MechanicsStage_ImmovableMass_1;
+	FGameplayTag MechanicsStage_ImmovableMass_2;
+	FGameplayTag MechanicsStage_ImmovableMass_3;
+	FGameplayTag MechanicsStage_Overgrowth_0;
+	FGameplayTag MechanicsStage_Overgrowth_1;
+	FGameplayTag MechanicsStage_Overgrowth_2;
+	FGameplayTag MechanicsStage_Overgrowth_3;
+	FGameplayTag MechanicsStage_Crescendo_0;
+	FGameplayTag MechanicsStage_Crescendo_1;
+	FGameplayTag MechanicsStage_Crescendo_2;
+	FGameplayTag MechanicsStage_Crescendo_3;
+	FGameplayTag MechanicsStage_Obscurity_0;
+	FGameplayTag MechanicsStage_Obscurity_1;
+	FGameplayTag MechanicsStage_Obscurity_2;
+	FGameplayTag MechanicsStage_Obscurity_3;
+	FGameplayTag MechanicsStage_Retribution_0;
+	FGameplayTag MechanicsStage_Retribution_1;
+	FGameplayTag MechanicsStage_Retribution_2;
+	FGameplayTag MechanicsStage_Retribution_3;
+	FGameplayTag MechanicsStage_ConstantCirculation_0;
+	FGameplayTag MechanicsStage_ConstantCirculation_1;
+	FGameplayTag MechanicsStage_ConstantCirculation_2;
+	FGameplayTag MechanicsStage_ConstantCirculation_3;
+	
+	
 	/* Gameplay Cue Tags */
 	FGameplayTag GameplayCue_Heat_Glow;
 
@@ -433,12 +473,21 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Condition_Paralysed;
 	FGameplayTag Condition_Stunned;
 	FGameplayTag Condition_StunImmune;
+	/* Per-condition immunity grace tags — each CC blocks only ITSELF, so different CCs can be chained. */
+	FGameplayTag Condition_FrozenImmune;
+	FGameplayTag Condition_PetrifiedImmune;
+	FGameplayTag Condition_GrappledImmune;
+	FGameplayTag Condition_ConstrictedImmune;
+	FGameplayTag Condition_ParalysedImmune;
+	FGameplayTag Condition_ShockedImmune;
 	FGameplayTag Condition_Rooted;
 	FGameplayTag Condition_Pushed;
 	FGameplayTag Condition_Invisible;
 	FGameplayTag Condition_Airborne;
 	FGameplayTag Condition_Untouchable;
+	/* Blanket immunity — nothing lands at all (no damage, no conditions). Use DamageImmune for damage-only immunity. */
 	FGameplayTag Condition_Immune;
+	FGameplayTag Condition_DamageImmune;
 	FGameplayTag Condition_Petrified;
 	FGameplayTag Condition_Reflecting;
 	FGameplayTag Condition_Grappled;
@@ -458,6 +507,9 @@ static const FRageInMageGameplayTag& Get() {return GameplayTag;}
 	FGameplayTag Status_Shielded;
 	FGameplayTag Status_Channeling;
 	FGameplayTag Status_Reflecting;
+
+	/* Movement State Tags */
+	FGameplayTag State_Dashing;
 
 
 	/* Combat Socket Tags */

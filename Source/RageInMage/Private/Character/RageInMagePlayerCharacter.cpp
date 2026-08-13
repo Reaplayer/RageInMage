@@ -4,6 +4,8 @@
 #include "Character/RageInMagePlayerCharacter.h"
 
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
+#include "AbilitySystem/Components/ImmovableMassComponent.h"
+#include "AbilitySystem/Components/MomentumComponent.h"
 #include "AbilitySystem/Data/LevelUpInfo.h"
 #include "NiagaraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -28,6 +30,9 @@ ARageInMagePlayerCharacter::ARageInMagePlayerCharacter()
 	LevelUpNiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>("LevelUpNiagaraComponent");
 	LevelUpNiagaraComponent->SetupAttachment(GetRootComponent());
 	LevelUpNiagaraComponent->bAutoActivate = false;
+
+	ImmovableMassComponent = CreateDefaultSubobject<UImmovableMassComponent>("ImmovableMassComponent");
+	MomentumComponent = CreateDefaultSubobject<UMomentumComponent>("MomentumComponent");
 	
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 400.f, 0.f);
@@ -179,13 +184,26 @@ void ARageInMagePlayerCharacter::InitPlayerAbilityActorInfo()
 	BindIgniteStackDelegate();
 	// Bind heat glow delegate for material emissive
 	BindHeatGlowDelegate();
-	// Bind stun delegate to lock/unlock movement
-	BindStunDelegate();
+	// Bind crowd-control delegates to lock/unlock movement (all incapacitating conditions, not just stun)
+	BindCrowdControlDelegates();
 	// Bind hit reaction grace delegate to track when reactions end
 	BindHitReactionGraceDelegate();
 	// Bind movement speed delegate so slow/haste effects update walk speed live
 	BindMovementSpeedDelegate();
 	UpdateMovementSpeed();
+
+	// Activate the Immovable Mass juggernaut stance for the Earth mage. ActivateStance() is
+	// authority-gated internally, so the OnRep_PlayerState path on clients is a safe no-op.
+	if (ImmovableMassComponent && CharacterClass == ECharacterClass::EarthMage)
+	{
+		ImmovableMassComponent->ActivateStance();
+	}
+
+	// Activate the Momentum flow-state meter for the Air mage (authority-gated internally).
+	if (MomentumComponent && CharacterClass == ECharacterClass::AirMage)
+	{
+		MomentumComponent->ActivateMomentum();
+	}
 
 	// Try to initialize the overlay UI. TryInitOverlay is safe to call repeatedly
 	// and handles all cases: server, listen-server, and client (where PC/HUD may not

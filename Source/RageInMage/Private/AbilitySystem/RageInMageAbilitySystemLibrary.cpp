@@ -7,6 +7,7 @@
 #include "RageInMageAbilitySystemTypes.h"
 #include "AbilitySystem/Data/ConditionInfo.h"
 #include "AbilitySystem/RageInMageAttributeSet.h"
+#include "AbilitySystem/Components/ImmovableMassComponent.h"
 #include "AbilitySystem/Data/KeyIconData.h"
 #include "Character/RageInMageCharacterBase.h"
 #include "Components/DecalComponent.h"
@@ -29,6 +30,30 @@
 #include "UI/HUD/RageInMageHUD.h"
 #include "UI/WidgetController/SettingsWidgetController.h"
 #include "UI/WidgetController/InventoryWidgetController.h"
+
+int32 URageInMageAbilitySystemLibrary::GetImmovableMassStage(const AActor* Actor)
+{
+	if (!Actor) return 0;
+	if (const UImmovableMassComponent* Stance = Actor->FindComponentByClass<UImmovableMassComponent>())
+	{
+		return Stance->GetCurrentStage();
+	}
+	return 0;
+}
+
+float URageInMageAbilitySystemLibrary::GetImmovableMassStageScalar(
+	const AActor* Actor, float Stage1Percent, float Stage2Percent, float Stage3Percent)
+{
+	float Percent = 0.f;
+	switch (GetImmovableMassStage(Actor))
+	{
+	case 1: Percent = Stage1Percent; break;
+	case 2: Percent = Stage2Percent; break;
+	case 3: Percent = Stage3Percent; break;
+	default: break; // Stage 0 (or no stance) — no scaling.
+	}
+	return 1.f + Percent / 100.f;
+}
 
 bool URageInMageAbilitySystemLibrary::MakeGASReferences(
 	APlayerController* PC, FPlayerGASReferences& OutGASRefs, ARageInMageHUD*& OutRageHUD)
@@ -214,14 +239,24 @@ bool URageInMageAbilitySystemLibrary::ApplyConditionToTarget(
 
 	if (SpecHandle.IsValid())
 	{
-		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, ConditionTag, Info.BaseIntensity);
+		// Layer this character's bonuses onto the shared base values (see ResolveConditionValue).
+		const float Duration = ResolveConditionValue(
+			Info.BaseIntensity, Info.DurationBonusAttribute, Info.bDurationBonusFromTarget,
+			SourceASC, TargetASC, 0.f, 0.f);
+
+		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, ConditionTag, Duration);
 		TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 
 		// Treat this condition as a stun: grant immunity for its own duration plus the grace period,
 		// starting now rather than on natural expiry, so a refreshed/extended stun can't outrun it.
 		if (Info.StunImmunityGraceSeconds > 0.f)
 		{
-			ApplyStunImmunity(SourceASC, TargetASC, WorldContextObject, Info.BaseIntensity + Info.StunImmunityGraceSeconds);
+			const float Grace = ResolveConditionValue(
+				Info.StunImmunityGraceSeconds, Info.ImmunityBonusAttribute, Info.bImmunityBonusFromTarget,
+				SourceASC, TargetASC, 0.f, 0.f);
+
+			ApplyConditionImmunity(SourceASC, TargetASC, WorldContextObject,
+				Info.ImmunityEffect, Info.ImmunityTag, Duration + Grace);
 		}
 
 		return true;
@@ -230,22 +265,66 @@ bool URageInMageAbilitySystemLibrary::ApplyConditionToTarget(
 	return false;
 }
 
+float URageInMageAbilitySystemLibrary::ResolveConditionValue(
+	float BaseValue, FGameplayAttribute BonusAttribute, bool bFromTarget,
+	UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC,
+	float MinClamp, float MaxClamp)
+{
+	float Result = BaseValue;
+
+	if (BonusAttribute.IsValid())
+	{
+		// Whose investment is being read: the caster making their CC stronger, or the victim resisting it.
+		UAbilitySystemComponent* BonusASC = bFromTarget ? TargetASC : SourceASC;
+		if (BonusASC && BonusASC->HasAttributeSetForAttribute(BonusAttribute.GetUProperty()))
+		{
+			Result += BonusASC->GetNumericAttribute(BonusAttribute);
+		}
+	}
+
+	Result = FMath::Max(Result, MinClamp);
+	if (MaxClamp > 0.f)
+	{
+		Result = FMath::Min(Result, MaxClamp);
+	}
+	return Result;
+}
+
 void URageInMageAbilitySystemLibrary::ApplyStunImmunity(
 	UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC,
 	const UObject* WorldContextObject, float TotalDuration)
 {
+	// Shared-immunity path: no per-condition override, so this resolves to StunImmunityEffect/StunImmune.
+	ApplyConditionImmunity(SourceASC, TargetASC, WorldContextObject, nullptr, FGameplayTag(), TotalDuration);
+}
+
+void URageInMageAbilitySystemLibrary::ApplyConditionImmunity(
+	UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC,
+	const UObject* WorldContextObject, TSubclassOf<UGameplayEffect> ImmunityEffect,
+	FGameplayTag ImmunityTag, float TotalDuration)
+{
 	if (!SourceASC || !TargetASC || TotalDuration <= 0.f) return;
 
-	UConditionInfo* ConditionInfoData = GetConditionInfo(WorldContextObject);
-	if (!ConditionInfoData || !ConditionInfoData->StunImmunityEffect) return;
+	// Fall back to the shared stun immunity when a condition doesn't define its own, so rows that
+	// haven't been migrated to per-condition immunity keep working exactly as before.
+	TSubclassOf<UGameplayEffect> EffectToApply = ImmunityEffect;
+	FGameplayTag TagToApply = ImmunityTag;
+
+	if (!EffectToApply || !TagToApply.IsValid())
+	{
+		UConditionInfo* ConditionInfoData = GetConditionInfo(WorldContextObject);
+		if (!ConditionInfoData) return;
+		if (!EffectToApply) EffectToApply = ConditionInfoData->StunImmunityEffect;
+		if (!TagToApply.IsValid()) TagToApply = FRageInMageGameplayTag::Get().Condition_StunImmune;
+	}
+	if (!EffectToApply || !TagToApply.IsValid()) return;
 
 	FGameplayEffectContextHandle ContextHandle = SourceASC->MakeEffectContext();
 	ContextHandle.AddSourceObject(SourceASC->GetAvatarActor());
-	const FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(ConditionInfoData->StunImmunityEffect, 1, ContextHandle);
+	const FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(EffectToApply, 1, ContextHandle);
 	if (!SpecHandle.IsValid()) return;
 
-	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(
-		SpecHandle, FRageInMageGameplayTag::Get().Condition_StunImmune, TotalDuration);
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, TagToApply, TotalDuration);
 	TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 }
 

@@ -6,6 +6,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "RageInMageGameplayTag.h"
+#include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
 #include "Actor/RageInMageProjectile.h"
 #include "Interaction/CombatInterface.h"
 #include "Kismet/GameplayStatics.h"
@@ -236,8 +237,14 @@ void URageInMageProjectileSpell::SpawnProjectile(FVector& ProjectileTargetLocati
 		{
 			SpawnTransform.SetRotation(Rotation.Quaternion());
 		}
-		
-		
+
+		// Immovable Mass stance scaling (Earth). Scales the projectile's SIZE and KNOCKBACK only — damage is
+		// deliberately untouched, per the stance design. Stage bonuses default to 0, so this resolves to 1.0
+		// and is a no-op for every non-Earth projectile spell. Scale is set on the spawn transform so it
+		// covers the mesh AND the collision primitive (a bigger rock is genuinely easier to land).
+		const float StanceScalar = URageInMageAbilitySystemLibrary::GetImmovableMassStageScalar(
+			GetAvatarActorFromActorInfo(), StanceBonusStage1, StanceBonusStage2, StanceBonusStage3);
+		SpawnTransform.SetScale3D(FVector(StanceScalar));
 
 		// Start the Spawning of the Projectile
 		ARageInMageProjectile* Projectile = GetWorld()->SpawnActorDeferred<ARageInMageProjectile>(
@@ -271,8 +278,8 @@ void URageInMageProjectileSpell::SpawnProjectile(FVector& ProjectileTargetLocati
 		}
 		Projectile->DamageEffectSpecHandle = SpecHandle;
 
-		// Pass knockback from ability to projectile
-		Projectile->KnockbackStrength = KnockbackStrength.GetValueAtLevel(GetAbilityLevel());
+		// Pass knockback from ability to projectile (stance-scaled alongside size — see StanceScalar above)
+		Projectile->KnockbackStrength = KnockbackStrength.GetValueAtLevel(GetAbilityLevel()) * StanceScalar;
 		Projectile->KnockbackUpwardForce = KnockbackUpwardForce;
 
 		Projectile->FinishSpawning(SpawnTransform);

@@ -161,8 +161,8 @@ void ARageInMageEnemyCharacter::BeginPlay()
 			&ARageInMageEnemyCharacter::HitReactionTagChanged
 			);
 
-		// Bind stun delegate to lock/unlock movement
-		BindStunDelegate();
+		// Bind crowd-control delegates to lock/unlock movement (all incapacitating conditions, not just stun)
+		BindCrowdControlDelegates();
 		// Bind hit reaction grace delegate to track when reactions end
 		BindHitReactionGraceDelegate();
 

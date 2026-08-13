@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AttributeSet.h"
 #include "GameplayTagContainer.h"
 #include "Engine/DataAsset.h"
 #include "ConditionInfo.generated.h"
@@ -74,14 +75,79 @@ struct FRageInMageConditionInfo
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	float BaseIntensity = 10.f;
 
-	/* Stun Immunity */
+	/* Immunity — PER-CONDITION, so different CCs can be chained onto one target (stun -> petrify ->
+	 * freeze) while the SAME condition can't simply be spammed. */
 
-	/** If > 0, this condition is treated as a stun: right after it's applied, UConditionInfo's shared
-	 *  StunImmunityEffect is granted for (BaseIntensity + this) seconds — BaseIntensity being the
-	 *  stun's own duration for threshold-driven conditions (e.g. OverCharged). Leave at 0 for any
-	 *  condition that isn't a stun. */
+	/** If > 0, this condition grants itself an immunity window right after it lands, lasting
+	 *  (BaseIntensity + this) seconds — BaseIntensity being the condition's own duration. Leave at 0
+	 *  for any condition that shouldn't be immunity-protected. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	float StunImmunityGraceSeconds = 0.f;
+
+	/** GE granting THIS condition's own immunity tag. Its duration must read a SetByCaller keyed to
+	 *  ImmunityTag. If left null, falls back to UConditionInfo's shared StunImmunityEffect
+	 *  (Condition.StunImmune) — i.e. the old single-immunity behaviour. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<UGameplayEffect> ImmunityEffect;
+
+	/** The tag ImmunityEffect grants, and the SetByCaller key for its duration. Put this SAME tag in
+	 *  this row's BlockedByConditions so the condition blocks only ITSELF — that is what allows a
+	 *  different CC to still land on an already-CC'd target. Defaults to Condition.StunImmune when empty. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FGameplayTag ImmunityTag = FGameplayTag();
+
+	/* Per-character scaling — the values above are the shared BASE. Each field below optionally names an
+	 * attribute (normally one of Attributes.Conditions.*) whose value is ADDED at apply time, and which
+	 * character to read it from. Passives and items drive those attributes via GameplayEffects, so this
+	 * DataAsset is never mutated. Leave an attribute unset for "no scaling".
+	 *
+	 * bFromTarget picks who is scaling the condition, and it is the difference between two opposite
+	 * items: FALSE = the SOURCE ("my freezes last longer"), TRUE = the TARGET ("I stay frozen longer"). */
+
+	/** Added to BaseIntensity (the condition's duration). */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Scaling")
+	FGameplayAttribute DurationBonusAttribute;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Scaling")
+	bool bDurationBonusFromTarget = false;
+
+	/** Added to StunImmunityGraceSeconds (the post-expiry immunity window). Usually read from the TARGET. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Scaling")
+	FGameplayAttribute ImmunityBonusAttribute;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Scaling")
+	bool bImmunityBonusFromTarget = true;
+
+	/** Added to MaxStacks. Usually read from the SOURCE ("my fire stacks higher"). */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Scaling")
+	FGameplayAttribute StackBonusAttribute;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Scaling")
+	bool bStackBonusFromTarget = false;
+
+	/** Added to ExpirationDamageThreshold (damage absorbed before the condition breaks early). */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Scaling")
+	FGameplayAttribute DamageThresholdBonusAttribute;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Scaling")
+	bool bDamageThresholdBonusFromTarget = true;
+
+	/* Struggle — the "but can Struggle free" conditions (Petrified, Grappled) can be broken out of
+	 * early by mashing an input, instead of just waiting the duration out. Handled by
+	 * ARageInMageCharacterBase (BeginStruggle / AddStruggleProgress). */
+
+	/** Enables mash-to-escape for this condition. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Struggle")
+	bool bCanStruggleFree = false;
+
+	/** Total progress needed to break out. Progress runs 0 -> this. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Struggle")
+	float StruggleRequiredProgress = 100.f;
+
+	/** Progress gained per input mash. Required/PerMash = how many presses an unhindered escape takes. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Struggle")
+	float StruggleProgressPerMash = 10.f;
+
+	/** Progress bled per second, so escaping requires mashing FAST rather than just eventually.
+	 *  Keep below (PerMash x realistic mash rate) or escape becomes impossible. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Struggle")
+	float StruggleProgressDecayPerSecond = 5.f;
 
 	/* Stacking */
 

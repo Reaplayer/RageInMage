@@ -17,6 +17,7 @@ class IEnemyInterface;
 class URageInMageConfig;
 class URageInMageAbilitySystemComponent;
 class ARageInMageHUD;
+class ARageInMageBoulder;
 class USplineComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInputDeviceChanged, bool, bIsGamepad);
@@ -87,6 +88,39 @@ public:
 	/** Leave spell-aim mode: the right stick returns to normal direction-based facing
 	 *  (with snapback) for turning/dodging. Called by the AimMode task on destroy. */
 	void EndGamepadAim();
+
+	/** Enter DUAL-STICK aim mode: a placed ground point PLUS a direction (Jagged Terra Form's
+	 *  push direction, Rock Solid's wall facing). Gamepad: LEFT stick moves the point, RIGHT
+	 *  stick sets the direction — the pawn does NOT move while this is active. M&K: the point is
+	 *  locked at the cursor on entry and the mouse then only sets direction; release confirms.
+	 *  Called by the DualAimMode ability task on activate. */
+	void BeginDualAim(float InMaxRange);
+
+	/** Leave dual-stick aim mode: the left stick returns to movement and the right stick to
+	 *  normal facing. Called by the DualAimMode task on destroy. */
+	void EndDualAim();
+
+	/** Current dual-aim placed point (world space, projected onto the ground). */
+	UFUNCTION(BlueprintPure, Category = "Aim")
+	FVector GetDualAimPoint() const { return DualAimPoint; }
+
+	/** Current dual-aim direction (normalized, horizontal). */
+	UFUNCTION(BlueprintPure, Category = "Aim")
+	FVector GetDualAimDirection() const { return DualAimDirection; }
+
+	/** Whether dual-stick aim is currently active. */
+	UFUNCTION(BlueprintPure, Category = "Aim")
+	bool IsDualAiming() const { return bDualAimActive; }
+
+	/** Take over the movement stick to steer a boulder. Called by the Boulder ability on mount. */
+	void BeginBoulderRide(ARageInMageBoulder* Boulder);
+
+	/** Hand movement back to the pawn. Called on dismount and when the boulder is destroyed. */
+	void EndBoulderRide();
+
+	/** Whether the movement stick is currently steering a boulder rather than the pawn. */
+	UFUNCTION(BlueprintPure, Category = "Boulder")
+	bool IsRidingBoulder() const { return RiddenBoulder != nullptr; }
 
 	/** Broadcast when the active input device changes between M&K and gamepad. */
 	UPROPERTY(BlueprintAssignable, Category = "Input")
@@ -179,6 +213,40 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Aim")
 	float AimRotationInterpSpeed = 15.f;
+
+	// ── Dual-stick aim (position + direction) ──
+
+	/** Per-frame update for dual-stick aim. Owns the whole aim model while active. */
+	void UpdateDualAim(float DeltaTime);
+
+	bool bDualAimActive = false;
+	float DualAimMaxRange = 0.f;
+
+	/** The placed ground point, and the direction chosen from it. */
+	FVector DualAimPoint = FVector::ZeroVector;
+	FVector DualAimDirection = FVector::ForwardVector;
+
+	/** Left-stick input captured in Move() while dual-aiming (movement is swallowed there). */
+	FVector2D DualAimMoveInput = FVector2D::ZeroVector;
+
+	/** Local XY offset of the placed point from the caster, velocity-integrated by the left
+	 *  stick. Same no-snapback model as AimCursorOffset. */
+	FVector2D DualAimPointOffset = FVector2D::ZeroVector;
+
+	/** How fast (world units/sec at full deflection) the left stick moves the dual-aim point. */
+	UPROPERTY(EditDefaultsOnly, Category = "Aim")
+	float DualAimPointSpeed = 1200.f;
+
+	/** Minimum cursor distance from the placed point before the mouse re-aims the direction.
+	 *  Stops the direction flipping wildly when the cursor sits on top of the point. */
+	UPROPERTY(EditDefaultsOnly, Category = "Aim")
+	float DualAimMinDirectionDistance = 50.f;
+
+	// ── Boulder riding ──
+
+	/** The boulder currently being steered, if any. Set by BeginBoulderRide. */
+	UPROPERTY()
+	TObjectPtr<ARageInMageBoulder> RiddenBoulder;
 
 	void CursorTrace();
 	IEnemyInterface* LastActor;

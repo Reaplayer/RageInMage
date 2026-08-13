@@ -581,7 +581,23 @@ void URageInMageAbilitySystemComponent::AddIgniteStack(float DamagePerSecond, AA
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 
-	if (IgniteStacks.Num() < MaxIgniteStacks)
+	// The stack cap is the INSTIGATOR's investment, not the victim's — a fire mage with a
+	// stack-bonus passive stacks higher on everyone, while another caster burning the same target
+	// still caps at the base. (MaxIgniteStacks lives on the burning character, so reading the bonus
+	// off the victim would have raised the cap for every attacker at once.)
+	int32 EffectiveMaxStacks = MaxIgniteStacks;
+	if (const UAbilitySystemComponent* InstigatorASC =
+		UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(InInstigator))
+	{
+		const FGameplayAttribute StackBonus = URageInMageAttributeSet::GetConditionStackBonusAttribute();
+		if (InstigatorASC->HasAttributeSetForAttribute(StackBonus.GetUProperty()))
+		{
+			EffectiveMaxStacks += FMath::RoundToInt(InstigatorASC->GetNumericAttribute(StackBonus));
+		}
+	}
+	EffectiveMaxStacks = FMath::Max(EffectiveMaxStacks, 1);
+
+	if (IgniteStacks.Num() < EffectiveMaxStacks)
 	{
 		// Add a new stack
 		FIgniteStack NewStack;

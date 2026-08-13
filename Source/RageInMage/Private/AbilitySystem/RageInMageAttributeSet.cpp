@@ -43,6 +43,11 @@ void URageInMageAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, CriticalDamage, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, AttackSpeed, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, MovementSpeed, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Slow, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, ConditionDurationBonus, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, ConditionImmunityBonus, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, ConditionStackBonus, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, ConditionDamageThresholdBonus, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, PhysicalDefence, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, MagicalDefence, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, PhysicalDefencePenetration, COND_None, REPNOTIFY_Always);
@@ -50,6 +55,7 @@ void URageInMageAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, MaxMana, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Poise, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, CooldownReduction, COND_None, REPNOTIFY_Always);
 
 	// Vital Attributes
 	DOREPLIFETIME_CONDITION_NOTIFY(URageInMageAttributeSet, Health, COND_None, REPNOTIFY_Always);
@@ -379,7 +385,7 @@ void URageInMageAttributeSet::PostAttributeChange(const FGameplayAttribute& Attr
 					FrozenTag.AddTag(Tags.Condition_Frozen);
 					ASC->RemoveActiveEffectsWithGrantedTags(FrozenTag);
 					FGameplayTagContainer FrozenStageTag;
-					FrozenStageTag.AddTag(Tags.HeatStage_Frozen);
+					FrozenStageTag.AddTag(Tags.MechanicsStage_Heat_Frozen);
 					ASC->RemoveActiveEffectsWithGrantedTags(FrozenStageTag);
 
 					ApplyShatterDamage();
@@ -443,6 +449,13 @@ void URageInMageAttributeSet::InitialiseTagsToAttributes()
 	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MaxHealth, GetMaxHealthAttribute);
 	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MaxMana, GetMaxManaAttribute);
 	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_Poise, GetPoiseAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_CooldownReduction, GetCooldownReductionAttribute);
+
+	// Condition bonuses — exposed by tag so items/passives can target them the same way as any other attribute.
+	TagsToAttributes.Add(GameplayTags.Attributes_Conditions_DurationBonus, GetConditionDurationBonusAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Conditions_ImmunityBonus, GetConditionImmunityBonusAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Conditions_StackBonus, GetConditionStackBonusAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Conditions_DamageThresholdBonus, GetConditionDamageThresholdBonusAttribute);
 }
 
 
@@ -531,7 +544,13 @@ void URageInMageAttributeSet::ApplyConditionFromData(const FRageInMageConditionI
 
 	if (SpecHandle.IsValid())
 	{
-		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, CondInfo->ConditionTag, CondInfo->BaseIntensity);
+		// Layer this character's bonuses onto the shared base values. Same resolver the generic
+		// ApplyConditionToTarget path uses, so the two can't drift apart.
+		const float Duration = URageInMageAbilitySystemLibrary::ResolveConditionValue(
+			CondInfo->BaseIntensity, CondInfo->DurationBonusAttribute, CondInfo->bDurationBonusFromTarget,
+			Properties.SourceASC, Properties.TargetASC, 0.f, 0.f);
+
+		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, CondInfo->ConditionTag, Duration);
 		Properties.TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 
 		// Treat this condition as a stun: grant immunity for its own duration plus the grace period,
@@ -539,9 +558,14 @@ void URageInMageAttributeSet::ApplyConditionFromData(const FRageInMageConditionI
 		// Mirrors URageInMageAbilitySystemLibrary::ApplyConditionToTarget, which this threshold pipeline bypasses.
 		if (CondInfo->StunImmunityGraceSeconds > 0.f)
 		{
-			URageInMageAbilitySystemLibrary::ApplyStunImmunity(
+			const float Grace = URageInMageAbilitySystemLibrary::ResolveConditionValue(
+				CondInfo->StunImmunityGraceSeconds, CondInfo->ImmunityBonusAttribute,
+				CondInfo->bImmunityBonusFromTarget, Properties.SourceASC, Properties.TargetASC, 0.f, 0.f);
+
+			// Per-condition immunity where the row defines one, otherwise the shared stun immunity.
+			URageInMageAbilitySystemLibrary::ApplyConditionImmunity(
 				Instigator, Properties.TargetASC, Properties.TargetAvatarActor,
-				CondInfo->BaseIntensity + CondInfo->StunImmunityGraceSeconds);
+				CondInfo->ImmunityEffect, CondInfo->ImmunityTag, Duration + Grace);
 		}
 	}
 }
@@ -566,14 +590,14 @@ FGameplayTag URageInMageAttributeSet::GetHeatStageTag(int32 Stage) const
 	const FRageInMageGameplayTag& Tags = FRageInMageGameplayTag::Get();
 	switch (Stage)
 	{
-	case -4: return Tags.HeatStage_Frozen;
-	case -3: return Tags.HeatStage_Cold3;
-	case -2: return Tags.HeatStage_Cold2;
-	case -1: return Tags.HeatStage_Cold1;
-	case 1:  return Tags.HeatStage_Hot1;
-	case 2:  return Tags.HeatStage_Hot2;
-	case 3:  return Tags.HeatStage_Hot3;
-	case 4:  return Tags.HeatStage_Ignited;
+	case -4: return Tags.MechanicsStage_Heat_Frozen;
+	case -3: return Tags.MechanicsStage_Heat_Cold_3;
+	case -2: return Tags.MechanicsStage_Heat_Cold_2;
+	case -1: return Tags.MechanicsStage_Heat_Cold_1;
+	case 1:  return Tags.MechanicsStage_Heat_Hot_1;
+	case 2:  return Tags.MechanicsStage_Heat_Hot_2;
+	case 3:  return Tags.MechanicsStage_Heat_Hot_3;
+	case 4:  return Tags.MechanicsStage_Heat_Ignited;
 	default: return FGameplayTag();
 	}
 }
@@ -731,9 +755,9 @@ void URageInMageAttributeSet::HandleHeatChange(float OldHeat, float NewHeat, con
 
 		// Also remove the Frozen stage tag
 		FGameplayTagContainer FrozenStageTag;
-		FrozenStageTag.AddTag(Tags.HeatStage_Frozen);
+		FrozenStageTag.AddTag(Tags.MechanicsStage_Heat_Frozen);
 		Properties.TargetASC->RemoveActiveEffectsWithGrantedTags(FrozenStageTag);
-		Properties.TargetASC->RemoveLooseGameplayTag(Tags.HeatStage_Frozen);
+		Properties.TargetASC->RemoveLooseGameplayTag(Tags.MechanicsStage_Heat_Frozen);
 	}
 
 	// Ice hit on Burning target -> Extinguish (remove Burning immediately + clear ignite stacks)
@@ -745,9 +769,9 @@ void URageInMageAttributeSet::HandleHeatChange(float OldHeat, float NewHeat, con
 
 		// Also remove the Ignited stage tag
 		FGameplayTagContainer IgnitedStageTag;
-		IgnitedStageTag.AddTag(Tags.HeatStage_Ignited);
+		IgnitedStageTag.AddTag(Tags.MechanicsStage_Heat_Ignited);
 		Properties.TargetASC->RemoveActiveEffectsWithGrantedTags(IgnitedStageTag);
-		Properties.TargetASC->RemoveLooseGameplayTag(Tags.HeatStage_Ignited);
+		Properties.TargetASC->RemoveLooseGameplayTag(Tags.MechanicsStage_Heat_Ignited);
 
 		// Clear all ignite stacks (extinguish)
 		if (URageInMageAbilitySystemComponent* RageASC = Cast<URageInMageAbilitySystemComponent>(Properties.TargetASC))
@@ -853,6 +877,31 @@ void URageInMageAttributeSet::OnRep_MovementSpeed(const FGameplayAttributeData& 
 	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, MovementSpeed, OldMovementSpeed);
 }
 
+void URageInMageAttributeSet::OnRep_Slow(const FGameplayAttributeData& OldSlow) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Slow, OldSlow);
+}
+
+void URageInMageAttributeSet::OnRep_ConditionDurationBonus(const FGameplayAttributeData& OldConditionDurationBonus) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, ConditionDurationBonus, OldConditionDurationBonus);
+}
+
+void URageInMageAttributeSet::OnRep_ConditionImmunityBonus(const FGameplayAttributeData& OldConditionImmunityBonus) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, ConditionImmunityBonus, OldConditionImmunityBonus);
+}
+
+void URageInMageAttributeSet::OnRep_ConditionStackBonus(const FGameplayAttributeData& OldConditionStackBonus) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, ConditionStackBonus, OldConditionStackBonus);
+}
+
+void URageInMageAttributeSet::OnRep_ConditionDamageThresholdBonus(const FGameplayAttributeData& OldConditionDamageThresholdBonus) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, ConditionDamageThresholdBonus, OldConditionDamageThresholdBonus);
+}
+
 void URageInMageAttributeSet::OnRep_PhysicalDefence(const FGameplayAttributeData& OldPhysicalDefence) const
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, PhysicalDefence, OldPhysicalDefence);
@@ -896,6 +945,11 @@ void URageInMageAttributeSet::OnRep_MaxMana(const FGameplayAttributeData& OldMax
 void URageInMageAttributeSet::OnRep_Poise(const FGameplayAttributeData& OldPoise) const
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, Poise, OldPoise);
+}
+
+void URageInMageAttributeSet::OnRep_CooldownReduction(const FGameplayAttributeData& OldCooldownReduction) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URageInMageAttributeSet, CooldownReduction, OldCooldownReduction);
 }
 
 void URageInMageAttributeSet::OnRep_Resistance_Damage(const FGameplayAttributeData& OldResistance_Damage) const

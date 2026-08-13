@@ -39,6 +39,18 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Projectile")
 	void SpawnProjectile(UPARAM(ref) FVector& ProjectileTargetLocation, const FGameplayTag& SocketTag, TSubclassOf<AActor> ProjectileClass, bool bCalculatePitch = false, AActor* LeadingTarget = nullptr);
 
+	/** Immovable Mass stance bonus (percent) applied to the spawned projectile's SIZE and KNOCKBACK — never its
+	 *  damage. Read off the caster's stance stage at spawn time via GetImmovableMassStageScalar.
+	 *  Left at 0/0/0 (the default) this is a no-op, so non-Earth projectile spells are unaffected. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile|ImmovableMass")
+	float StanceBonusStage1 = 0.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile|ImmovableMass")
+	float StanceBonusStage2 = 0.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile|ImmovableMass")
+	float StanceBonusStage3 = 0.f;
+
 private:
 	UPROPERTY()
 	AActor* TrackedActor;

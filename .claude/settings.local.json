@@ -54,7 +54,23 @@
       "Read(//c/ProgramData/**)",
       "Read(//c/Program Files/**)",
       "Bash(grep -iv \"//\")",
-      "Bash(xargs ls -lt)"
+      "Bash(xargs ls -lt)",
+      "PowerShell(Get-Process UnrealEditor -ErrorAction SilentlyContinue)",
+      "PowerShell(if \\(-not $?\\) { \"no editor\" })",
+      "PowerShell(\"checked\")",
+      "Bash(tee /tmp/rim_build.log)",
+      "Read(//c/Program Files/Epic Games/UE_5.8/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/**)",
+      "Bash(python -)",
+      "Bash(grep -ril --binary-files=text -e \"low on memory\" -e \"killed due to\" \"/c/Users/reapw/AppData/Local/UnrealBuildTool/\" \"/c/Users/reapw/Documents/UnrealProjects/RageInMage5.8/Saved/\" 2>/dev/null | head -10; echo \"=== recent UBT logs ===\"; ls -lt \"/c/Users/reapw/AppData/Local/UnrealBuildTool/\" 2>/dev/null | head -10)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\reapw\\\\Documents\\\\UnrealProjects\\\\RageInMage5.8\\\\Saved\\\\Logs\" -File -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 10 Name, LastWriteTime, @{n='MB';e={[math]::Round\\($_.Length/1MB,2\\)}})",
+      "Bash(ls \"/c/Program Files/Epic Games/UE_5.8/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/\" 2>/dev/null | grep -i scalable)",
+      "Bash(grep -n \"ENGINE_API void DrawDebugCircle\" -A 3 \"/c/Program Files/Epic Games/UE_5.8/Engine/Source/Runtime/Engine/Public/DrawDebugHelpers.h\" | head -20)",
+      "Bash(echo \"--- exit: $? \\(1 = no matches\\) ---\")",
+      "Bash(grep -n \"ApplyCooldown\\\\|GetCooldownGameplayEffect\" \"/c/Program Files/Epic Games/UE_5.8/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/Abilities/GameplayAbility.h\" | head -40)",
+      "Bash(grep -n \"void UGameplayAbility::ApplyCooldown\" -A 20 \"/c/Program Files/Epic Games/UE_5.8/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/Abilities/GameplayAbility.cpp\")",
+      "Bash(cd \"/c/Program Files/Epic Games/UE_5.8/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public\"; grep -n \"MakeOutgoingGameplayEffectSpec\\\\|ApplyGameplayEffectSpecToOwner\" Abilities/GameplayAbility.h; echo ---; grep -n \"void SetDuration\\\\|float GetDuration\\\\|SetSetByCallerMagnitude\" GameplayEffectTypes.h GameplayEffect.h GameplayEffectSpec.h 2>/dev/null | head -20)",
+      "Bash(grep -v \"^\\\\s*$\")",
+      "Bash(awk 'NR>6950' Saved/Logs/RageInMage.log)"
     ]
   }
 }

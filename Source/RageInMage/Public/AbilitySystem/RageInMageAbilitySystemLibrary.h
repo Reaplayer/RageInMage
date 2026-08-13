@@ -113,6 +113,29 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "RageInMageAbilitySystemLibrary|Conditions")
 	static void ApplyStunImmunity(UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, const UObject* WorldContextObject, float TotalDuration);
 
+	/** Composes a ConditionInfo base value with a per-character bonus attribute.
+	 *  The ConditionInfo DataAsset is shared by every character and must never be mutated, so all
+	 *  per-character variation (passives, items) is layered on HERE, at apply time, by reading an
+	 *  attribute that those passives/items drive via GameplayEffects.
+	 *  BonusAttribute unset -> returns BaseValue untouched. bFromTarget selects whose attribute is read:
+	 *  false = the source ("my CCs are stronger"), true = the target ("I resist CC").
+	 *  MaxClamp <= 0 means "no ceiling". Clamping matters: enough stacked bonuses could otherwise
+	 *  produce a zero-length condition or an effectively permanent immunity window. */
+	UFUNCTION(BlueprintPure, Category = "RageInMageAbilitySystemLibrary|Conditions")
+	static float ResolveConditionValue(float BaseValue, FGameplayAttribute BonusAttribute, bool bFromTarget,
+		UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC,
+		float MinClamp = 0.f, float MaxClamp = 0.f);
+
+	/** Per-condition immunity. Applies ImmunityEffect for TotalDuration with its duration fed via
+	 *  SetByCaller(ImmunityTag). Falls back to UConditionInfo's shared StunImmunityEffect /
+	 *  Condition.StunImmune when either argument is unset, which reproduces the old single-immunity
+	 *  behaviour. Giving each CC its own immunity tag is what lets a stun, a petrify and a freeze be
+	 *  chained on one target while none of them can be re-applied on top of itself. */
+	UFUNCTION(BlueprintCallable, Category = "RageInMageAbilitySystemLibrary|Conditions")
+	static void ApplyConditionImmunity(UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC,
+		const UObject* WorldContextObject, TSubclassOf<UGameplayEffect> ImmunityEffect,
+		FGameplayTag ImmunityTag, float TotalDuration);
+
 	/** For abilities with a guaranteed, unconditional stun (e.g. Flash And Awe) that should land even
 	 *  through an existing Condition.StunImmune grace window. Strips any active StunImmunity from
 	 *  TargetASC, applies UConditionInfo's shared StunnedEffect for StunDuration, then re-grants
@@ -141,6 +164,20 @@ public:
 		float DamageFalloffPerJump = 0.1f,
 		int32 MaxJumps = 10,
 		UNiagaraSystem* ImpactEffect = nullptr);
+
+	// ── Immovable Mass (Earth) ──
+
+	/** The Actor's current Immovable Mass stance stage (0-3). Returns 0 if it has no
+	 *  UImmovableMassComponent or the stance is inactive. Any Earth ability/actor reads this to scale
+	 *  itself off the caster's stance stage. */
+	UFUNCTION(BlueprintPure, Category = "RageInMageAbilitySystemLibrary|ImmovableMass")
+	static int32 GetImmovableMassStage(const AActor* Actor);
+
+	/** Convenience: 1 + (per-stage percent / 100) for the Actor's current stance stage (1.0 at stage 0).
+	 *  Pass the three stage percents (e.g. 10, 20, 30). Negative percents give reductions — e.g. the
+	 *  Boulder's grow-time cut (-15, -30, -50) yields 0.85 / 0.70 / 0.50. */
+	UFUNCTION(BlueprintPure, Category = "RageInMageAbilitySystemLibrary|ImmovableMass")
+	static float GetImmovableMassStageScalar(const AActor* Actor, float Stage1Percent, float Stage2Percent, float Stage3Percent);
 
 	static int32 GetXPRewardForClassAndLevel(ECharacterClass CharacterClass, int32 Level, const UObject* WorldContextObject);
 

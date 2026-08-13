@@ -19,6 +19,9 @@ class UGameplayAbility;
 class UAnimMontage;
 class UNiagaraComponent;
 
+/** Struggle (mash-to-escape) progress, 0-1. For driving a break-free UI bar. */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStruggleProgressChanged, float, ProgressPercent);
+
 UCLASS(Abstract)
 class RAGEINMAGE_API ARageInMageCharacterBase : public ACharacter, public IAbilitySystemInterface, public ICombatInterface
 {
@@ -145,10 +148,16 @@ protected:
 
 	bool bDead = false;
 
-	UPROPERTY()
+	// Transient on purpose. Both are established at runtime — the player's come from the PlayerState in
+	// InitPlayerAbilityActorInfo(), the enemy's from CreateDefaultSubobject in its constructor — so neither
+	// should ever be written to disk. Without Transient the pointer serializes into any child Blueprint's
+	// CDO and can outlive the code that set it: that is exactly how BP_RageInMagePlayerCharacter ended up
+	// carrying a phantom pawn-owned ASC with zero attribute sets long after the constructor stopped
+	// creating one. See the "STRAY PAWN-OWNED ASC" section in .claude/memory.md (2026-07-24).
+	UPROPERTY(Transient)
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
-	UPROPERTY()
+	UPROPERTY(Transient)
 	TObjectPtr<UAttributeSet> AttributeSet;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Class Defaults")
@@ -206,10 +215,45 @@ protected:
 	/** Binds the Heat attribute change delegate. Call after ASC is initialized. */
 	void BindHeatGlowDelegate();
 
-	/* Stun — Condition.Stunned blocks abilities (see URageInMageGameplayAbility) and movement (here) */
+	/* Crowd control — every incapacitating condition locks movement here, and blocks ability activation
+	 * via URageInMageGameplayAbility's ActivationBlockedTags. Driven by tag SETS rather than
+	 * Condition.Stunned alone, so Frozen/Petrified/Grappled/... each work on their own and, crucially,
+	 * CHAINED CCs overlap safely (stun -> petrify -> freeze stays locked until the last one clears). */
 
-	/** Binds the Condition.Stunned tag delegate to lock/unlock movement. Call after ASC is initialized. */
-	void BindStunDelegate();
+	/** Conditions that stop BOTH movement and actions ("unable to Move or make any Action").
+	 *  Left empty it lazily fills with the full-incapacitation set in BindCrowdControlDelegates. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|CrowdControl")
+	FGameplayTagContainer IncapacitationTags;
+
+	/** Conditions that stop movement ONLY - the character can still act (e.g. Rooted). */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|CrowdControl")
+	FGameplayTagContainer MovementOnlyBlockTags;
+
+	/** Every tag that blocks movement: IncapacitationTags + MovementOnlyBlockTags. */
+	FGameplayTagContainer GetMovementBlockingTags() const;
+
+	/** Binds all movement-blocking condition tags to lock/unlock movement. Call after ASC is initialized. */
+	void BindCrowdControlDelegates();
+
+	/* Struggle — conditions flagged bCanStruggleFree in ConditionInfo (Petrified, Grappled) can be
+	 * escaped early by mashing an input rather than waiting the duration out. */
+
+	/** Call from input on every mash. Safe to call on the owning client - it routes to the server,
+	 *  which owns the progress and the actual break-out. No-op when not struggling. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Struggle")
+	void AddStruggleProgress();
+
+	/** True while an escapable condition is active on this character. */
+	UFUNCTION(BlueprintPure, Category = "Combat|Struggle")
+	bool IsStruggling() const { return ActiveStruggleTag.IsValid(); }
+
+	/** Current escape progress as 0-1, for a mash/struggle UI bar. */
+	UFUNCTION(BlueprintPure, Category = "Combat|Struggle")
+	float GetStruggleProgressPercent() const;
+
+	/** Broadcast (server + owning client) whenever struggle progress changes. 0-1. */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|Struggle")
+	FOnStruggleProgressChanged OnStruggleProgressChanged;
 
 	/* Hit Reaction Grace — deliberately separate from Condition.Stunned. GA_HitReaction already
 	 * blocks retriggering while one is still playing (InstancedPerActor, bRetriggerInstancedAbility
@@ -274,9 +318,35 @@ private:
 	bool bHeatGlowDMIsCreated = false;
 	void CreateHeatGlowDMIs();
 
-	/* Stun */
-	void StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
-	TEnumAsByte<EMovementMode> MovementModeBeforeStun = MOVE_Walking;
+	/* Crowd control */
+	void CrowdControlTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
+	/** Movement mode captured on the FIRST lock only, so overlapping CCs can't save an already-disabled mode. */
+	TEnumAsByte<EMovementMode> MovementModeBeforeCC = MOVE_Walking;
+	bool bMovementBlockedByCC = false;
+
+	/* Struggle (server-authoritative) */
+
+	/** Server owns progress and the break-out; clients just report mashes. */
+	UFUNCTION(Server, Reliable)
+	void ServerAddStruggleProgress();
+
+	/** Starts a struggle for CondTag if its ConditionInfo row allows it. */
+	void BeginStruggle(const FGameplayTag& CondTag);
+	/** Clears struggle state (condition expired, broken out of, or replaced). */
+	void EndStruggle();
+	/** Bleeds StruggleDecayPerSecond so escaping needs fast mashing, not patient mashing. */
+	void TickStruggleDecay();
+	/** Removes the struggled-out-of condition and clears state. */
+	void BreakFreeFromStruggle();
+
+	/** The escapable condition currently being struggled against; invalid when not struggling. */
+	FGameplayTag ActiveStruggleTag;
+	float StruggleProgress = 0.f;
+	/** Cached from the ConditionInfo row when the struggle begins. */
+	float StruggleRequiredProgress = 100.f;
+	float StruggleProgressPerMash = 10.f;
+	float StruggleDecayPerSecond = 5.f;
+	FTimerHandle StruggleDecayTimerHandle;
 
 	/* Hit Reaction Grace */
 	void HitReactionGraceTagChanged(const FGameplayTag CallbackTag, int32 NewCount);

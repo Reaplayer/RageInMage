@@ -74,6 +74,9 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.Attributes_Secondary_Poise = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Attributes.Secondary.Poise"), FString("Resistance to knockback and being shoved by other characters' collisions."));
 
+	GameplayTag.Attributes_Secondary_CooldownReduction = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Attributes.Secondary.CooldownReduction"), FString("Percentage reduction to the cooldown of every ability you cast."));
+
 
 	/* Vital Tags */
 	GameplayTag.Attributes_Vital_Health = UGameplayTagsManager::Get().AddNativeGameplayTag
@@ -129,6 +132,23 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	
 	GameplayTag.Attributes_Mechanics_XP = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Attributes.Mechanics.XP"), FString("How much XP a Character has for determining Leveling up."));
+
+	/* Condition Attributes — per-character bonuses added to the shared ConditionInfo base values when a
+	 * condition is applied. Passives and items modify these via GameplayEffects, so they replicate and
+	 * revert automatically; the ConditionInfo DataAsset itself is never mutated. Each ConditionInfo row
+	 * chooses which of these it reads, and whether to read it from the source or the target. */
+
+	GameplayTag.Attributes_Conditions_DurationBonus = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Attributes.Conditions.DurationBonus"), FString("Seconds added to an applied condition's duration."));
+
+	GameplayTag.Attributes_Conditions_ImmunityBonus = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Attributes.Conditions.ImmunityBonus"), FString("Seconds added to a condition's post-expiry immunity grace window."));
+
+	GameplayTag.Attributes_Conditions_StackBonus = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Attributes.Conditions.StackBonus"), FString("Extra stacks allowed for a stacking condition (e.g. ignite stacks)."));
+
+	GameplayTag.Attributes_Conditions_DamageThresholdBonus = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Attributes.Conditions.DamageThresholdBonus"), FString("Extra damage a condition can absorb before it expires early."));
 
 
 	/* Ability Tags */
@@ -250,8 +270,8 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.Ability_Earth_SlingRock = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Ability.Earth.SlingRock"), FString("Tag for when casting Sling Rock."));
 
-	GameplayTag.Ability_Earth_JewelFistShatter = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Ability.Earth.JewelFistShatter"), FString("Tag for when casting Jewel Fist Shatter."));
+	GameplayTag.Ability_Earth_JaggedTerraForm = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Ability.Earth.JaggedTerraForm"), FString("Tag for when casting Jagged Terra Form."));
 
 	GameplayTag.Ability_Earth_ChargingBull = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Ability.Earth.ChargingBull"), FString("Tag for when casting Charging Bull."));
@@ -493,8 +513,8 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.Cooldown_Earth_SlingRock = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Cooldown.Earth.SlingRock"), FString("Cooldown Tag for Sling Rock."));
 
-	GameplayTag.Cooldown_Earth_JewelFistShatter = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Cooldown.Earth.JewelFistShatter"), FString("Cooldown Tag for Jewel Fist Shatter."));
+	GameplayTag.Cooldown_Earth_JaggedTerraForm = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Cooldown.Earth.JaggedTerraForm"), FString("Cooldown Tag for Jagged Terra Form."));
 
 	GameplayTag.Cooldown_Earth_ChargingBull = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Cooldown.Earth.ChargingBull"), FString("Cooldown Tag for Charging Bull."));
@@ -693,7 +713,7 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.AbilityTypeToAirAbilityTag.Add(GameplayTag.Ability_Type_Ultimate, GameplayTag.Ability_Air_DanceOfTheWindDragon);
 	/* Earth */
 	GameplayTag.AbilityTypeToEarthAbilityTag.Add(GameplayTag.Ability_Type_Primary, GameplayTag.Ability_Earth_SlingRock);
-	GameplayTag.AbilityTypeToEarthAbilityTag.Add(GameplayTag.Ability_Type_Secondary, GameplayTag.Ability_Earth_JewelFistShatter);
+	GameplayTag.AbilityTypeToEarthAbilityTag.Add(GameplayTag.Ability_Type_Secondary, GameplayTag.Ability_Earth_JaggedTerraForm);
 	GameplayTag.AbilityTypeToEarthAbilityTag.Add(GameplayTag.Ability_Type_Movement, GameplayTag.Ability_Earth_ChargingBull);
 	GameplayTag.AbilityTypeToEarthAbilityTag.Add(GameplayTag.Ability_Type_Defensive, GameplayTag.Ability_Earth_RockSolid);
 	GameplayTag.AbilityTypeToEarthAbilityTag.Add(GameplayTag.Ability_Type_CrowdControl, GameplayTag.Ability_Earth_GemJail);
@@ -982,31 +1002,122 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.InputTagToControllerInputTag.Add(GameplayTag.InputTag_4, GameplayTag.InputTag_Controller_Y);
 
 
-	/* Heat Stage Tags */
-	GameplayTag.HeatStage_Cold1 = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("HeatStage.Cold1"), FString("Heat -25 to -49: 10% Movement Slow."));
+	/* Mechanics Stage Tags */
+	GameplayTag.MechanicsStage_Heat_Cold_1 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Heat.Cold1"), FString("Heat -25 to -49: 10% Movement Slow."));
 
-	GameplayTag.HeatStage_Cold2 = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("HeatStage.Cold2"), FString("Heat -50 to -74: 20% Movement Slow."));
+	GameplayTag.MechanicsStage_Heat_Cold_2 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Heat.Cold2"), FString("Heat -50 to -74: 20% Movement Slow."));
 
-	GameplayTag.HeatStage_Cold3 = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("HeatStage.Cold3"), FString("Heat -75 to -99: 30% Movement Slow."));
+	GameplayTag.MechanicsStage_Heat_Cold_3 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Heat.Cold3"), FString("Heat -75 to -99: 30% Movement Slow."));
 
-	GameplayTag.HeatStage_Frozen = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("HeatStage.Frozen"), FString("Heat -100 or lower: Frozen, unable to Move or make any Action."));
+	GameplayTag.MechanicsStage_Heat_Frozen = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Heat.Frozen"), FString("Heat -100 or lower: Frozen, unable to Move or make any Action."));
 
-	GameplayTag.HeatStage_Hot1 = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("HeatStage.Hot1"), FString("Heat 25 to 49: 10% increased Fire Damage taken."));
+	GameplayTag.MechanicsStage_Heat_Hot_1 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Heat.Hot1"), FString("Heat 25 to 49: 10% increased Fire Damage taken."));
 
-	GameplayTag.HeatStage_Hot2 = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("HeatStage.Hot2"), FString("Heat 50 to 74: 20% increased Fire Damage taken."));
+	GameplayTag.MechanicsStage_Heat_Hot_2 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Heat.Hot2"), FString("Heat 50 to 74: 20% increased Fire Damage taken."));
 
-	GameplayTag.HeatStage_Hot3 = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("HeatStage.Hot3"), FString("Heat 75 to 99: 30% increased Fire Damage taken."));
+	GameplayTag.MechanicsStage_Heat_Hot_3 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Heat.Hot3"), FString("Heat 75 to 99: 30% increased Fire Damage taken."));
 
-	GameplayTag.HeatStage_Ignited = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("HeatStage.Ignited"), FString("Heat 100 or higher: Burning DoT and 40% increased Fire Damage taken."));
+	GameplayTag.MechanicsStage_Heat_Ignited = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Heat.Ignited"), FString("Heat 100 or higher: Burning DoT and 40% increased Fire Damage taken."));
+	
+	GameplayTag.MechanicsStage_Charge_Charged = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Charge.Charged"), FString("Charge 50 or higher: Electric Damage can now chain to you."));
+	
+	GameplayTag.MechanicsStage_Charge_OverCharged = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Charge.OverCharged"), FString("Charge 100 or higher: Electric Damage can now chain from you to nearby allies."));
+	
+	GameplayTag.MechanicsStage_Momentum_0 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Momentum.0"), FString("Momentum 0: No effect."));
+	
+	GameplayTag.MechanicsStage_Momentum_1 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Momentum.1"), FString("Momentum 1: 10% increased Movement Speed."));
 
+	GameplayTag.MechanicsStage_Momentum_2 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Momentum.2"), FString("Momentum 2: 20% increased Movement Speed."));
+	
+	GameplayTag.MechanicsStage_Momentum_3 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Momentum.3"), FString("Momentum 3: 30% increased Movement Speed."));
+	
+	GameplayTag.MechanicsStage_ImmovableMass_0 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.ImmovableMass.0"), FString("Immovable Mass 0: No effect."));
+	
+	GameplayTag.MechanicsStage_ImmovableMass_1 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.ImmovableMass.1"), FString("Immovable Mass 1: 20% increased Damage and Knockback Resistance and MovementSpeed - 15%."));
+	
+	GameplayTag.MechanicsStage_ImmovableMass_2 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.ImmovableMass.2"), FString("Immovable Mass 2: 40% increased Damage and Knockback Resistance and MovementSpeed -30%."));
+	
+	GameplayTag.MechanicsStage_ImmovableMass_3 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.ImmovableMass.3"), FString("Immovable Mass 3: 60% increased Damage and Knockback Resistance and MovementSpeed halved."));
+	
+	GameplayTag.MechanicsStage_Overgrowth_0 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Overgrowth.0"), FString("Overgrowth 0: No effect."));
+	
+	GameplayTag.MechanicsStage_Overgrowth_1 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Overgrowth.1"), FString("Overgrowth 1: Spell AoE Size increased by 15%."));
+	
+	GameplayTag.MechanicsStage_Overgrowth_2 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Overgrowth.2"), FString("Overgrowth 2: Spell AoE Size increased by 25%. Attack Speed increased by 10%. Plant Attack Speed increased by 10% and pulse a small heal while you are standing in their zone."));
+	
+	GameplayTag.MechanicsStage_Overgrowth_3 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Overgrowth.3"), FString("Overgrowth 3: Spell AoE Size increased by 35%. Attack Speed increased by 20%. Plant Attack Speed increased by 20% and pulse a medium heal while you are standing in their zone."));
+	
+	GameplayTag.MechanicsStage_Crescendo_0 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Crescendo.0"), FString("Crescendo 0: No effect."));
+	
+	GameplayTag.MechanicsStage_Crescendo_1 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Crescendo.1"), FString("Crescendo 1: Spell AoE Size increased by 25%."));
+	
+	GameplayTag.MechanicsStage_Crescendo_2 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Crescendo.2"), FString("Crescendo 2: Spell AoE Size increased by 35%. Attack Speed increased by 10%. Plant Attack Speed increased by 10% and pulse a small heal while you are standing in their zone."));
+	
+	GameplayTag.MechanicsStage_Crescendo_3 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Crescendo.3"), FString("Crescendo 3: Spell AoE Size increased by 45%. Attack Speed increased by 20%. Plant Attack Speed increased by 20% and pulse a medium heal while you are standing in their zone."));
+
+	GameplayTag.MechanicsStage_Obscurity_0 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Obscurity.0"), FString("Obscurity 0: No effect."));
+	
+	GameplayTag.MechanicsStage_Obscurity_1 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Obscurity.1"), FString("Obscurity 1: Clones/Decoys last 1 second longer. Enemies cannot see you casting during the first 20% of your cast animation."));
+	
+	GameplayTag.MechanicsStage_Obscurity_2 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Obscurity.2"), FString("Obscurity 2: Clones/Decoys last 2 seconds longer. Enemies cannot see you casting during the first 40% of your cast animation. Decoy swap cooldown reduced by 1 second."));
+	
+	GameplayTag.MechanicsStage_Obscurity_3 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Obscurity.3"), FString(
+		"Obscurity 3: Clones/Decoys last 3 seconds longer. Enemies cannot see you casting during the first 60% of your cast animation. Decoy swap cooldown reduced by 2 seconds. The first Spell cast in this stage gains a bonus effect."));
+	
+	GameplayTag.MechanicsStage_Retribution_0 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Retribution.0"), FString("Retribution 0: No effect."));
+
+	GameplayTag.MechanicsStage_Retribution_1 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Retribution.1"), FString("Retribution 1: Spell AoE Size increased by 35%. Attack Speed increased by 10%. Plant Attack Speed increased by 10% and pulse a small heal while you are standing in their zone."));
+
+	GameplayTag.MechanicsStage_Retribution_2 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Retribution.2"), FString("Retribution 2: Spell AoE Size increased by 45%. Attack Speed increased by 20%. Plant Attack Speed increased by 20% and pulse a medium heal while you are standing in their zone."));
+
+	GameplayTag.MechanicsStage_Retribution_3 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.Retribution.3"), FString("Retribution 3: Spell AoE Size increased by 55%. Attack Speed increased by 30%. Plant Attack Speed increased by 30% and pulse a large heal while you are standing in their zone."));
+	
+	GameplayTag.MechanicsStage_ConstantCirculation_0 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.ConstantCirculation.0"), FString("Constant Circulation 0: No effect."));
+	
+	GameplayTag.MechanicsStage_ConstantCirculation_1 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.ConstantCirculation.1"), FString("Constant Circulation 1: Spell AoE Size increased by 15%."));
+	
+	GameplayTag.MechanicsStage_ConstantCirculation_2 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.ConstantCirculation.2"), FString("Constant Circulation 2: Spell AoE Size increased by 25%."));
+	
+	GameplayTag.MechanicsStage_ConstantCirculation_3 = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("MechanicsStage.ConstantCirculation.3"), FString("Constant Circulation 3: Spell AoE Size increased by 35%."));
+	
 	/* Gameplay Cue Tags */
 	GameplayTag.GameplayCue_Heat_Glow = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("GameplayCue.Heat.Glow"), FString("Gameplay Cue for Heat glow visual effect on character."));
@@ -1054,6 +1165,28 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	GameplayTag.Condition_StunImmune = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Condition.StunImmune"), FString("Tag for a brief grace period after Stunned ends, preventing immediate re-stunning (stun-lock protection)."));
 
+	/* Per-condition immunity grace tags. Each CC grants only its OWN immunity and lists only that same
+	 * tag in BlockedByConditions, so a target can be chained with DIFFERENT crowd control
+	 * (stun -> petrify -> freeze) but never re-hit by the same one inside its grace window. */
+
+	GameplayTag.Condition_FrozenImmune = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.FrozenImmune"), FString("Grace period after Frozen ends, preventing immediate re-freezing."));
+
+	GameplayTag.Condition_PetrifiedImmune = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.PetrifiedImmune"), FString("Grace period after Petrified ends, preventing immediate re-petrification."));
+
+	GameplayTag.Condition_GrappledImmune = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.GrappledImmune"), FString("Grace period after Grappled ends, preventing immediate re-grappling."));
+
+	GameplayTag.Condition_ConstrictedImmune = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.ConstrictedImmune"), FString("Grace period after Constricted ends, preventing immediate re-constriction."));
+
+	GameplayTag.Condition_ParalysedImmune = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.ParalysedImmune"), FString("Grace period after Paralysed ends, preventing immediate re-paralysis."));
+
+	GameplayTag.Condition_ShockedImmune = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.ShockedImmune"), FString("Grace period after Shocked ends, preventing immediate re-shocking."));
+
 	GameplayTag.Condition_Paralysed = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Condition.Paralysed"), FString("Tag for when Paralysed, unable to Move or make any Action."));
 	
@@ -1082,7 +1215,10 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 	(FName("Condition.Untouchable"), FString("Tag for when Untouchable, can not be Damaged by Abilities."));
 	
 	GameplayTag.Condition_Immune = UGameplayTagsManager::Get().AddNativeGameplayTag
-	(FName("Condition.Immune"), FString("Tag for when Immune, can not be Damaged by certain Type(s)."));
+	(FName("Condition.Immune"), FString("Tag for when Immune to everything, can not be Damaged NOR affected by any Condition."));
+
+	GameplayTag.Condition_DamageImmune = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("Condition.DamageImmune"), FString("Tag for when Immune to Damage, can not be Damaged by certain Type(s)."));
 
 	GameplayTag.Condition_Shocked = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Condition.Shocked"), FString("Tag for when Shocked, unable to Move or make any Action."));
@@ -1108,6 +1244,10 @@ void FRageInMageGameplayTag::InitializeNativeGameplayTags()
 
 	GameplayTag.Status_Reflecting = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(FName("Status.Reflecting"), FString("Target zaps incoming attackers back. Generic reflect-on-hit status."));
+
+	/* Movement State Tags */
+	GameplayTag.State_Dashing = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(FName("State.Dashing"), FString("Granted while a dash/charge movement ability is active. Drives increased ImmovableMass decay for the Earth mage."));
 
 
 	/* Combat Socket Tags */

@@ -8,6 +8,8 @@
 #include "RageInMageGameplayTag.h"
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
 #include "AbilitySystem/RageInMageAbilitySystemLibrary.h"
+#include "AbilitySystem/Data/ConditionInfo.h"
+#include "AbilitySystem/Components/ImmovableMassComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
@@ -39,6 +41,26 @@ URageInMageAttributeSet* ARageInMageCharacterBase::GetRageInMageAttributeSet() c
 
 void ARageInMageCharacterBase::ApplyKnockbackImpulse(FVector Impulse, bool bXYOverride, bool bZOverride)
 {
+	// Immovable Mass stance (Earth mage): heavy knockback / airborne is absorbed or converted to a slow
+	// (no launch); light knockback still launches but scaled down by the current stage's resistance.
+	// The component only exists (and only reports active) on the stanced Earth mage — everyone else
+	// falls straight through to the normal Poise-scaled launch below.
+	if (UImmovableMassComponent* ImmovableMass = FindComponentByClass<UImmovableMassComponent>())
+	{
+		if (ImmovableMass->IsStanceActive())
+		{
+			const EImmovableKnockbackDecision Decision = ImmovableMass->EvaluateIncomingKnockback(Impulse);
+			if (Decision == EImmovableKnockbackDecision::Blocked)
+			{
+				return;
+			}
+			if (Decision == EImmovableKnockbackDecision::Reduced)
+			{
+				Impulse *= ImmovableMass->GetKnockbackMultiplier();
+			}
+		}
+	}
+
 	const URageInMageAttributeSet* AS = GetRageInMageAttributeSet();
 	const float MyPoise = AS ? FMath::Max(0.f, AS->GetPoise()) : 0.f;
 	const float PoiseMultiplier = 100.f / (100.f + MyPoise);
@@ -156,10 +178,10 @@ void ARageInMageCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// TEMP DEBUG: tracking down the "MovementSpeed=0" bug — see LogMovementSpeedDebug().
-	// Silenced — re-enable this timer to bring the on-screen speed readout back.
-	// GetWorldTimerManager().SetTimer(MovementSpeedDebugTimerHandle, this,
-	// 	&ARageInMageCharacterBase::LogMovementSpeedDebug, 0.5f, true);
+	// TEMP DEBUG: on-screen speed readout (name / MaxWalkSpeed / Slow) — see LogMovementSpeedDebug().
+	// Comment this timer out again to silence it.
+	GetWorldTimerManager().SetTimer(MovementSpeedDebugTimerHandle, this,
+		&ARageInMageCharacterBase::LogMovementSpeedDebug, 0.5f, true);
 }
 
 FVector ARageInMageCharacterBase::GetCombatSocketLocation_Implementation(const FGameplayTag& SocketTag)
@@ -456,7 +478,11 @@ void ARageInMageCharacterBase::UpdateMovementSpeed()
 	const URageInMageAttributeSet* RageAS = GetRageInMageAttributeSet();
 	if (!RageAS || !GetCharacterMovement()) return;
 
-	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed * RageAS->GetMovementSpeed();
+	// MovementSpeed is the base/buff multiplier (self-slow, item slows, Momentum live here). Slow is the
+	// dedicated "real slow" channel in percent — factored in as Clamp(1 - Slow/100, 0, 1) so Slow=0 leaves
+	// speed untouched and Slow>=100 fully stops the character (without ever forcing MaxWalkSpeed negative).
+	const float SlowMultiplier = FMath::Clamp(1.f - RageAS->GetSlow() / 100.f, 0.f, 1.f);
+	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed * RageAS->GetMovementSpeed() * SlowMultiplier;
 }
 
 void ARageInMageCharacterBase::SetBaseWalkSpeed(float NewBaseWalkSpeed)
@@ -475,6 +501,11 @@ void ARageInMageCharacterBase::BindMovementSpeedDelegate()
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
 		RageAS->GetMovementSpeedAttribute()
 	).AddUObject(this, &ARageInMageCharacterBase::OnMovementSpeedAttributeChanged);
+
+	// Slow feeds the same MaxWalkSpeed recompute — reuse the handler (it just calls UpdateMovementSpeed).
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+		RageAS->GetSlowAttribute()
+	).AddUObject(this, &ARageInMageCharacterBase::OnMovementSpeedAttributeChanged);
 }
 
 void ARageInMageCharacterBase::OnMovementSpeedAttributeChanged(const FOnAttributeChangeData& Data)
@@ -488,23 +519,28 @@ void ARageInMageCharacterBase::OnMovementSpeedAttributeChanged(const FOnAttribut
 // whether MaxWalkSpeed is fine but something else (AI/pathing) just isn't moving the actor.
 void ARageInMageCharacterBase::LogMovementSpeedDebug()
 {
-	// Silenced — uncomment this body (and re-enable the timer in BeginPlay) to restore the readout.
-	// if (!GEngine) return;
-	//
-	// const URageInMageAttributeSet* RageAS = Cast<URageInMageAttributeSet>(AttributeSet);
-	// const UCharacterMovementComponent* MoveComp = GetCharacterMovement();
-	// if (!RageAS || !MoveComp) return;
-	//
-	// const float CurrentSpeed = GetVelocity().Size();
-	// const float MaxWalkSpeed = MoveComp->MaxWalkSpeed;
-	// const float MovementSpeedAttr = RageAS->GetMovementSpeed();
-	//
-	// const FColor Color = (MaxWalkSpeed <= 0.f || MovementSpeedAttr <= 0.f) ? FColor::Red : FColor::Green;
-	//
-	// int32 ID = GetUniqueID();
-	// GEngine->AddOnScreenDebugMessage(ID, 0.6f, Color,
-	// 	FString::Printf(TEXT("[Speed] %s | Vel=%.0f | MaxWalkSpeed=%.0f | MovementSpeedAttr=%.2f"),
-	// 		*GetName(), CurrentSpeed, MaxWalkSpeed, MovementSpeedAttr));
+	// Re-enabled to verify the Slow attribute drives MaxWalkSpeed. Comment this body out (and the
+	// timer in BeginPlay) to silence it again.
+	if (!GEngine) return;
+
+	const URageInMageAttributeSet* RageAS = Cast<URageInMageAttributeSet>(AttributeSet);
+	const UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	if (!RageAS || !MoveComp) return;
+
+	const float CurrentSpeed = GetVelocity().Size();
+	const float MaxWalkSpeed = MoveComp->MaxWalkSpeed;
+	const float MovementSpeedAttr = RageAS->GetMovementSpeed();
+	const float SlowAttr = RageAS->GetSlow();
+
+	// Amber once a slow is actually biting, red if movement has been zeroed outright.
+	FColor Color = FColor::Green;
+	if (MaxWalkSpeed <= 0.f || MovementSpeedAttr <= 0.f) Color = FColor::Red;
+	else if (SlowAttr > 0.f) Color = FColor::Orange;
+
+	const int32 ID = GetUniqueID();
+	GEngine->AddOnScreenDebugMessage(ID, 0.6f, Color,
+		FString::Printf(TEXT("[Speed] %s | MaxWalkSpeed=%.0f | Vel=%.0f | MoveSpeed=%.2f | Slow=%.0f%%"),
+			*GetName(), MaxWalkSpeed, CurrentSpeed, MovementSpeedAttr, SlowAttr));
 }
 
 void ARageInMageCharacterBase::CreateHeatGlowDMIs()
@@ -565,36 +601,186 @@ void ARageInMageCharacterBase::OnHeatAttributeChanged(const FOnAttributeChangeDa
 	}
 }
 
-// ── Stun ──
+// ── Crowd control ──
 
-void ARageInMageCharacterBase::BindStunDelegate()
+FGameplayTagContainer ARageInMageCharacterBase::GetMovementBlockingTags() const
 {
-	if (URageInMageAbilitySystemComponent* RageASC = Cast<URageInMageAbilitySystemComponent>(AbilitySystemComponent))
+	FGameplayTagContainer Blockers = IncapacitationTags;
+	Blockers.AppendTags(MovementOnlyBlockTags);
+	return Blockers;
+}
+
+void ARageInMageCharacterBase::BindCrowdControlDelegates()
+{
+	URageInMageAbilitySystemComponent* RageASC = Cast<URageInMageAbilitySystemComponent>(AbilitySystemComponent);
+	if (!RageASC) return;
+
+	const FRageInMageGameplayTag& ConditionTags = FRageInMageGameplayTag::Get();
+
+	// Lazy defaults straight from the Condition.* tag descriptions. Setting either container in the
+	// editor overrides these. (Filled here rather than in the constructor because native tags are not
+	// guaranteed registered at CDO construction time - same pattern as UImmovableMassComponent.)
+	if (IncapacitationTags.IsEmpty())
 	{
-		const FGameplayTag StunTag = FRageInMageGameplayTag::Get().Condition_Stunned;
+		// "unable to Move or make any Action"
+		IncapacitationTags.AddTag(ConditionTags.Condition_Stunned);
+		IncapacitationTags.AddTag(ConditionTags.Condition_Frozen);
+		IncapacitationTags.AddTag(ConditionTags.Condition_Petrified);
+		IncapacitationTags.AddTag(ConditionTags.Condition_Grappled);
+		IncapacitationTags.AddTag(ConditionTags.Condition_Constricted);
+		IncapacitationTags.AddTag(ConditionTags.Condition_Paralysed);
+		IncapacitationTags.AddTag(ConditionTags.Condition_Shocked);
+	}
+	if (MovementOnlyBlockTags.IsEmpty())
+	{
+		// "unable to Move" - can still act
+		MovementOnlyBlockTags.AddTag(ConditionTags.Condition_Rooted);
+	}
+
+	for (const FGameplayTag& Tag : GetMovementBlockingTags())
+	{
+		if (!Tag.IsValid()) continue;
 		// Guard against double-bind (PlayerCharacter calls this from both PossessedBy and OnRep_PlayerState)
-		if (!RageASC->RegisterGameplayTagEvent(StunTag, EGameplayTagEventType::NewOrRemoved).IsBoundToObject(this))
+		if (!RageASC->RegisterGameplayTagEvent(Tag, EGameplayTagEventType::NewOrRemoved).IsBoundToObject(this))
 		{
-			RageASC->RegisterGameplayTagEvent(StunTag, EGameplayTagEventType::NewOrRemoved)
-				.AddUObject(this, &ARageInMageCharacterBase::StunTagChanged);
+			RageASC->RegisterGameplayTagEvent(Tag, EGameplayTagEventType::NewOrRemoved)
+				.AddUObject(this, &ARageInMageCharacterBase::CrowdControlTagChanged);
 		}
 	}
 }
 
-void ARageInMageCharacterBase::StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
+void ARageInMageCharacterBase::CrowdControlTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
 {
 	UCharacterMovementComponent* Movement = GetCharacterMovement();
-	if (!Movement) return;
+	if (!Movement || !AbilitySystemComponent) return;
 
-	if (NewCount > 0)
+	// Re-evaluate against EVERY movement-blocking tag rather than trusting this one tag's count.
+	// Chained CCs deliberately overlap (stun -> petrify -> freeze), so movement must stay locked until
+	// the last one clears. The bMovementBlockedByCC latch also means the pre-CC movement mode is
+	// captured only on the FIRST lock - otherwise a second CC would save the already-disabled
+	// MOVE_None and the character would never regain movement once everything expired.
+	const bool bBlocked = AbilitySystemComponent->HasAnyMatchingGameplayTags(GetMovementBlockingTags());
+
+	if (bBlocked && !bMovementBlockedByCC)
 	{
-		MovementModeBeforeStun = Movement->MovementMode;
+		bMovementBlockedByCC = true;
+		MovementModeBeforeCC = Movement->MovementMode;
 		Movement->DisableMovement();
+	}
+	else if (!bBlocked && bMovementBlockedByCC)
+	{
+		bMovementBlockedByCC = false;
+		Movement->SetMovementMode(MovementModeBeforeCC);
+	}
+
+	// Struggle bookkeeping rides the same tag events (server owns it).
+	if (HasAuthority())
+	{
+		if (NewCount > 0)
+		{
+			// A newly-applied escapable condition takes over the struggle. Applying a second escapable
+			// CC therefore resets progress - chaining Grapple onto a Petrify is a real reset, by design.
+			BeginStruggle(CallbackTag);
+		}
+		else if (CallbackTag == ActiveStruggleTag)
+		{
+			// The condition we were struggling against ended on its own (expired, or was removed).
+			EndStruggle();
+		}
+	}
+}
+
+// ── Struggle (mash to break free) ──
+
+void ARageInMageCharacterBase::BeginStruggle(const FGameplayTag& CondTag)
+{
+	UConditionInfo* ConditionInfoData = URageInMageAbilitySystemLibrary::GetConditionInfo(this);
+	if (!ConditionInfoData) return;
+
+	const FRageInMageConditionInfo Row = ConditionInfoData->FindConditionInfoForTag(CondTag);
+	if (!Row.ConditionTag.IsValid() || !Row.bCanStruggleFree) return;
+
+	ActiveStruggleTag = CondTag;
+	StruggleProgress = 0.f;
+	StruggleRequiredProgress = FMath::Max(Row.StruggleRequiredProgress, 1.f);
+	StruggleProgressPerMash = Row.StruggleProgressPerMash;
+	StruggleDecayPerSecond = Row.StruggleProgressDecayPerSecond;
+
+	OnStruggleProgressChanged.Broadcast(0.f);
+
+	if (StruggleDecayPerSecond > 0.f && GetWorld())
+	{
+		constexpr float DecayInterval = 0.1f;
+		GetWorldTimerManager().SetTimer(
+			StruggleDecayTimerHandle, this, &ARageInMageCharacterBase::TickStruggleDecay, DecayInterval, true);
+	}
+}
+
+void ARageInMageCharacterBase::EndStruggle()
+{
+	ActiveStruggleTag = FGameplayTag();
+	StruggleProgress = 0.f;
+
+	if (GetWorld())
+	{
+		GetWorldTimerManager().ClearTimer(StruggleDecayTimerHandle);
+	}
+
+	OnStruggleProgressChanged.Broadcast(0.f);
+}
+
+void ARageInMageCharacterBase::TickStruggleDecay()
+{
+	if (!ActiveStruggleTag.IsValid()) return;
+
+	constexpr float DecayInterval = 0.1f;
+	StruggleProgress = FMath::Max(0.f, StruggleProgress - StruggleDecayPerSecond * DecayInterval);
+	OnStruggleProgressChanged.Broadcast(GetStruggleProgressPercent());
+}
+
+void ARageInMageCharacterBase::AddStruggleProgress()
+{
+	// Owning client mashes locally; the server is the only place progress actually counts.
+	if (HasAuthority())
+	{
+		ServerAddStruggleProgress_Implementation();
 	}
 	else
 	{
-		Movement->SetMovementMode(MovementModeBeforeStun);
+		ServerAddStruggleProgress();
 	}
+}
+
+void ARageInMageCharacterBase::ServerAddStruggleProgress_Implementation()
+{
+	if (!ActiveStruggleTag.IsValid()) return;
+
+	StruggleProgress += StruggleProgressPerMash;
+	OnStruggleProgressChanged.Broadcast(GetStruggleProgressPercent());
+
+	if (StruggleProgress >= StruggleRequiredProgress)
+	{
+		BreakFreeFromStruggle();
+	}
+}
+
+void ARageInMageCharacterBase::BreakFreeFromStruggle()
+{
+	if (!ActiveStruggleTag.IsValid() || !AbilitySystemComponent) return;
+
+	// Strip the condition. Removing the tag re-fires CrowdControlTagChanged, which releases the
+	// movement lock (unless another CC still holds it) and clears struggle state via EndStruggle.
+	FGameplayTagContainer ToRemove;
+	ToRemove.AddTag(ActiveStruggleTag);
+	AbilitySystemComponent->RemoveActiveEffectsWithGrantedTags(ToRemove);
+
+	EndStruggle();
+}
+
+float ARageInMageCharacterBase::GetStruggleProgressPercent() const
+{
+	if (!ActiveStruggleTag.IsValid() || StruggleRequiredProgress <= 0.f) return 0.f;
+	return FMath::Clamp(StruggleProgress / StruggleRequiredProgress, 0.f, 1.f);
 }
 
 void ARageInMageCharacterBase::BindHitReactionGraceDelegate()

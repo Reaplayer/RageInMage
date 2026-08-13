@@ -83,4 +83,29 @@ public:
 	/** Get the current aim world position from the owning player controller. */
 	UFUNCTION(BlueprintPure, Category = "Aim")
 	FVector GetAimWorldPosition() const;
+
+	// ── Cooldown Reduction ──
+
+	/** If true, the caster's CooldownReduction attribute shortens this ability's cooldown.
+	 *  Turn off for abilities whose cooldown is part of their design (ultimates, long-form utility). */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cooldown")
+	bool bAffectedByCooldownReduction = true;
+
+	/** Hard cap on how much CooldownReduction can shorten this ability, in percent. Stops stacked gear
+	 *  from driving cooldowns to zero. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cooldown",
+		meta = (EditCondition = "bAffectedByCooldownReduction", EditConditionHides, ClampMin = "0.0", ClampMax = "100.0"))
+	float MaxCooldownReductionPercent = 80.f;
+
+	/** Floor (seconds) the reduced cooldown is never allowed to drop below. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cooldown",
+		meta = (EditCondition = "bAffectedByCooldownReduction", EditConditionHides, ClampMin = "0.0"))
+	float MinCooldownAfterReduction = 0.5f;
+
+	/** The caster's CooldownReduction attribute, already clamped to [0, MaxCooldownReductionPercent]. */
+	UFUNCTION(BlueprintPure, Category = "Cooldown")
+	float GetEffectiveCooldownReduction() const;
+
+	/** Applies the cooldown effect with its duration scaled down by the caster's CooldownReduction. */
+	virtual void ApplyCooldown(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) const override;
 };

@@ -121,6 +121,31 @@ public:
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MovementSpeed, Category = "Secondary Attributes")
 	FGameplayAttributeData MovementSpeed;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, MovementSpeed);
+	/* Slow — accumulated slow PERCENT (0 = none, 100 = fully slowed). Defaults to 0, so no initialization
+	 * is needed. MaxWalkSpeed multiplies in Clamp(1 - Slow/100, 0, 1), so 0 leaves speed untouched.
+	 * This is the dedicated "real slow" channel (enemy/converted-CC slows stack additively here and grant
+	 * Condition.Slowed); movement de/buffs and item slows use MovementSpeed instead, so they never feed the
+	 * Immovable Mass overload (which shatters at Slow >= 100). */
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Slow, Category = "Secondary Attributes")
+	FGameplayAttributeData Slow;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Slow);
+	/* Condition Attributes — per-character bonuses layered onto the shared ConditionInfo base values at
+	 * apply time (see URageInMageAbilitySystemLibrary::ResolveConditionValue). Passives and items modify
+	 * these through GameplayEffects, so multiple sources aggregate and revert correctly and the
+	 * ConditionInfo DataAsset stays immutable. All default to 0 = no change. */
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ConditionDurationBonus, Category = "Condition Attributes")
+	FGameplayAttributeData ConditionDurationBonus;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, ConditionDurationBonus);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ConditionImmunityBonus, Category = "Condition Attributes")
+	FGameplayAttributeData ConditionImmunityBonus;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, ConditionImmunityBonus);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ConditionStackBonus, Category = "Condition Attributes")
+	FGameplayAttributeData ConditionStackBonus;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, ConditionStackBonus);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ConditionDamageThresholdBonus, Category = "Condition Attributes")
+	FGameplayAttributeData ConditionDamageThresholdBonus;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, ConditionDamageThresholdBonus);
+
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_PhysicalDefence, Category = "Secondary Attributes")
 	FGameplayAttributeData PhysicalDefence;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, PhysicalDefence);
@@ -143,6 +168,13 @@ public:
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Poise, Category = "Secondary Attributes")
 	FGameplayAttributeData Poise;
 	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, Poise);
+	/** Cooldown Reduction PERCENT (0 = none, 50 = all cooldowns last half as long). Defaults to 0, so no
+	 *  initialization is needed. Applied in URageInMageGameplayAbility::ApplyCooldown, which scales the
+	 *  cooldown effect's duration by (1 - CooldownReduction/100) — clamped there to the ability's
+	 *  MaxCooldownReductionPercent cap and MinCooldownAfterReduction floor. Granted by gear/passives. */
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_CooldownReduction, Category = "Secondary Attributes")
+	FGameplayAttributeData CooldownReduction;
+	ATTRIBUTE_ACCESSORS(URageInMageAttributeSet, CooldownReduction);
 
 
 	/* Resistance Attributes */
@@ -294,6 +326,16 @@ public:
 	UFUNCTION()
 	void OnRep_MovementSpeed(const FGameplayAttributeData& OldMovementSpeed) const;
 	UFUNCTION()
+	void OnRep_Slow(const FGameplayAttributeData& OldSlow) const;
+	UFUNCTION()
+	void OnRep_ConditionDurationBonus(const FGameplayAttributeData& OldConditionDurationBonus) const;
+	UFUNCTION()
+	void OnRep_ConditionImmunityBonus(const FGameplayAttributeData& OldConditionImmunityBonus) const;
+	UFUNCTION()
+	void OnRep_ConditionStackBonus(const FGameplayAttributeData& OldConditionStackBonus) const;
+	UFUNCTION()
+	void OnRep_ConditionDamageThresholdBonus(const FGameplayAttributeData& OldConditionDamageThresholdBonus) const;
+	UFUNCTION()
 	void OnRep_PhysicalDefence(const FGameplayAttributeData& OldPhysicalDefence) const;
 	UFUNCTION()
 	void OnRep_MagicalDefence(const FGameplayAttributeData& OldMagicalDefence) const;
@@ -307,6 +349,8 @@ public:
 	void OnRep_MaxMana(const FGameplayAttributeData& OldMaxMana) const;
 	UFUNCTION()
 	void OnRep_Poise(const FGameplayAttributeData& OldPoise) const;
+	UFUNCTION()
+	void OnRep_CooldownReduction(const FGameplayAttributeData& OldCooldownReduction) const;
 
 
 	/* Vital Attributes */

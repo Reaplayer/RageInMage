@@ -10,6 +10,7 @@
 #include "NavigationPath.h"
 #include "NavigationSystem.h"
 #include "AbilitySystem/RageInMageAbilitySystemComponent.h"
+#include "Actor/RageInMageBoulder.h"
 #include "Components/SplineComponent.h"
 #include "Game/RageInMageSettingsSaveGame.h"
 #include "Input/RageInMageConfig.h"
@@ -219,6 +220,25 @@ void ARageInMagePlayerController::SetupInputComponent()
 void ARageInMagePlayerController::Move(const FInputActionValue& InputActionValue)
 {
 	const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
+
+	// Riding a boulder takes the movement stick over entirely: the pawn is attached to the boulder
+	// and can't walk, so the stick steers instead. X only — the boulder never stops, so there is
+	// nothing for the forward axis to do.
+	if (RiddenBoulder)
+	{
+		RiddenBoulder->AddSteerInput(InputAxisVector.X);
+		return;
+	}
+
+	// While dual-stick aiming on a gamepad the LEFT stick repositions the aim point instead of
+	// driving the pawn, so capture it here and swallow the movement input entirely. On M&K the
+	// point is locked at the cursor, so movement is left alone.
+	if (bDualAimActive && bUsingGamepad)
+	{
+		DualAimMoveInput = InputAxisVector;
+		return;
+	}
+
 	const FRotator Rotation = GetControlRotation();
 	const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
 
@@ -260,6 +280,14 @@ void ARageInMagePlayerController::UpdateAimDirection()
 			UpdateCursorForDevice();
 			OnInputDeviceChanged.Broadcast(false);
 		}
+	}
+
+	// Dual-stick aim owns the entire aim model while it is active (both sticks are repurposed),
+	// so it takes over completely rather than layering on the single-stick paths below.
+	if (bDualAimActive)
+	{
+		UpdateDualAim(GetWorld() ? GetWorld()->GetDeltaSeconds() : 0.f);
+		return;
 	}
 
 	if (bUsingGamepad)
@@ -359,6 +387,141 @@ void ARageInMagePlayerController::BeginGamepadAim(float InitialReach)
 void ARageInMagePlayerController::EndGamepadAim()
 {
 	bAimingSpell = false;
+}
+
+void ARageInMagePlayerController::BeginDualAim(float InMaxRange)
+{
+	bDualAimActive = true;
+	DualAimMaxRange = InMaxRange;
+	DualAimMoveInput = FVector2D::ZeroVector;
+	DualAimPointOffset = FVector2D::ZeroVector;
+
+	APawn* ControlledPawn = GetPawn();
+	const FVector Origin = ControlledPawn ? ControlledPawn->GetActorLocation() : FVector::ZeroVector;
+
+	// Direction starts as the caster's facing on both devices, so a spell released instantly
+	// (tap rather than hold) still gets a sane direction instead of a zero vector.
+	DualAimDirection = ControlledPawn ? ControlledPawn->GetActorForwardVector().GetSafeNormal2D() : FVector::ForwardVector;
+
+	if (bUsingGamepad)
+	{
+		// Gamepad: the point starts ON the caster and the left stick pushes it outward — same
+		// start-at-character behaviour Reaper asked for on the single-stick cursor.
+		DualAimPoint = Origin;
+	}
+	else
+	{
+		// M&K: PRESS places the point at the cursor; from here the mouse only sets direction.
+		DualAimPoint = CursorTraceHit.bBlockingHit ? CursorTraceHit.ImpactPoint : Origin;
+
+		if (DualAimMaxRange > 0.f)
+		{
+			const FVector ToPoint = DualAimPoint - Origin;
+			if (ToPoint.Size2D() > DualAimMaxRange)
+			{
+				const FVector Clamped = Origin + ToPoint.GetSafeNormal2D() * DualAimMaxRange;
+				DualAimPoint = FVector(Clamped.X, Clamped.Y, DualAimPoint.Z);
+			}
+		}
+	}
+
+	CurrentAimWorldPosition = DualAimPoint;
+}
+
+void ARageInMagePlayerController::EndDualAim()
+{
+	bDualAimActive = false;
+	DualAimMoveInput = FVector2D::ZeroVector;
+}
+
+void ARageInMagePlayerController::BeginBoulderRide(ARageInMageBoulder* Boulder)
+{
+	RiddenBoulder = Boulder;
+}
+
+void ARageInMagePlayerController::EndBoulderRide()
+{
+	RiddenBoulder = nullptr;
+}
+
+void ARageInMagePlayerController::UpdateDualAim(float DeltaTime)
+{
+	APawn* ControlledPawn = GetPawn();
+	if (!ControlledPawn) return;
+
+	const FVector Origin = ControlledPawn->GetActorLocation();
+
+	if (bUsingGamepad)
+	{
+		// LEFT stick repositions the point. Velocity-integrated with no snapback, the same model
+		// as the single-stick virtual cursor — it just reads the Move input, which Move() swallows
+		// while dual-aiming so the pawn stays put.
+		if (DualAimMoveInput.SizeSquared() > 0.04f) // past dead zone
+		{
+			const FRotator CamYaw(0.f, GetControlRotation().Yaw, 0.f);
+			const FVector Forward = FRotationMatrix(CamYaw).GetUnitAxis(EAxis::X);
+			const FVector Right = FRotationMatrix(CamYaw).GetUnitAxis(EAxis::Y);
+
+			const FVector MoveDir = Forward * DualAimMoveInput.Y + Right * DualAimMoveInput.X;
+			DualAimPointOffset += FVector2D(MoveDir.X, MoveDir.Y) * DualAimPointSpeed * DeltaTime;
+
+			const float Reach = DualAimMaxRange > 0.f ? DualAimMaxRange : AimProjectionDistance;
+			if (DualAimPointOffset.Size() > Reach)
+			{
+				DualAimPointOffset = DualAimPointOffset.GetSafeNormal() * Reach;
+			}
+		}
+
+		FVector Point = Origin + FVector(DualAimPointOffset.X, DualAimPointOffset.Y, 0.f);
+
+		// Snap the point onto whatever is under it, same downward column trace the single-stick
+		// cursor uses (no enemy highlight here — this aims at ground, not at actors).
+		FHitResult GroundHit;
+		FCollisionQueryParams GroundParams;
+		GroundParams.AddIgnoredActor(ControlledPawn);
+		if (GetWorld() && GetWorld()->LineTraceSingleByChannel(
+			GroundHit, Point + FVector(0.f, 0.f, 10000.f), Point - FVector(0.f, 0.f, 10000.f),
+			ECC_Visibility, GroundParams))
+		{
+			Point.Z = GroundHit.ImpactPoint.Z;
+		}
+		else
+		{
+			Point.Z = Origin.Z;
+		}
+		DualAimPoint = Point;
+
+		// RIGHT stick sets the DIRECTION. Absolute rather than velocity-integrated: a rotation
+		// should point where the stick points, not drift toward it.
+		if (GamepadAimInput.SizeSquared() > 0.04f)
+		{
+			const FRotator CamYaw(0.f, GetControlRotation().Yaw, 0.f);
+			const FVector Forward = FRotationMatrix(CamYaw).GetUnitAxis(EAxis::X);
+			const FVector Right = FRotationMatrix(CamYaw).GetUnitAxis(EAxis::Y);
+
+			const FVector Dir = (Forward * GamepadAimInput.Y + Right * GamepadAimInput.X).GetSafeNormal2D();
+			if (!Dir.IsNearlyZero())
+			{
+				DualAimDirection = Dir;
+			}
+		}
+	}
+	else
+	{
+		// M&K: the point is already locked; the mouse only swings the direction around it.
+		if (CursorTraceHit.bBlockingHit)
+		{
+			const FVector ToCursor = CursorTraceHit.ImpactPoint - DualAimPoint;
+			if (ToCursor.SizeSquared2D() > FMath::Square(DualAimMinDirectionDistance))
+			{
+				DualAimDirection = ToCursor.GetSafeNormal2D();
+			}
+		}
+	}
+
+	// Keep the shared aim position in sync so pawn facing and any existing indicator logic
+	// follow the placed point rather than a stale value.
+	CurrentAimWorldPosition = DualAimPoint;
 }
 
 void ARageInMagePlayerController::RotatePawnToFaceAim(float DeltaSeconds)

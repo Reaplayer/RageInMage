@@ -12,6 +12,8 @@ class ARageInMagePlayerState;
 class USpringArmComponent;
 class UCameraComponent;
 class UNiagaraComponent;
+class UImmovableMassComponent;
+class UMomentumComponent;
 /**
  * 
  */
@@ -44,6 +46,14 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<UNiagaraComponent> LevelUpNiagaraComponent;
+
+	/** Earth mage juggernaut stance. Present on every player but only activated for ECharacterClass::EarthMage. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ImmovableMass")
+	TObjectPtr<UImmovableMassComponent> ImmovableMassComponent;
+
+	/** Air mage flow-state meter. Present on every player but only activated for ECharacterClass::AirMage. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Momentum")
+	TObjectPtr<UMomentumComponent> MomentumComponent;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
